@@ -2,7 +2,7 @@ module-name:
     gaprice_SPAdes
 
 module-description:
-    A KBase module
+    SPAdes wrapper - http://bioinf.spbau.ru/spades
 
 service-language:
     python
