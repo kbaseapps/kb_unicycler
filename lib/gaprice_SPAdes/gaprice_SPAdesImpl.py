@@ -340,6 +340,50 @@ Does not currently support assembling metagenomics reads.
         self.log('Conversion completed.')
         return contig_set_dict
 
+
+    def load_report(self, contigset,cs_ref, params, wscli, wsid, provenance):
+        lengths = [contig['length'] for contig in contigset['contigs']]
+        
+        report = ''
+        report += 'ContigSet saved to: ' + params[self.PARAM_IN_WS] + '/' + \
+            params[self.PARAM_IN_CS_NAME]+'\n'
+        report += 'Assembled into ' + str(len(lengths)) + ' contigs.\n'
+        report += 'Avg Length: ' + str(sum(lengths) / float(len(lengths))) + \
+            ' bp.\n'
+
+        # compute a simple contig length distribution
+        bins = 10
+        counts, edges = np.histogram(lengths, bins)
+        report += 'Contig Length Distribution (# of contigs -- min to max ' +\
+            'basepairs):\n'
+        for c in range(bins):
+            report += '   ' + str(counts[c]) + '\t--\t' + str(edges[c]) +\
+                ' to ' + str(edges[c + 1]) + ' bp\n'
+
+        reportObj = {
+            'objects_created':[{'ref': cs_ref,
+                                'description':'Assembled contigs'}],
+            'text_message':report
+        }
+
+        reportName = 'SPAdes_report_'+str(hex(uuid.getnode()))
+        report_obj_info = wscli.save_objects({
+                'id': wsid,
+                'objects':[
+                    {
+                        'type':'KBaseReport.Report',
+                        'data':reportObj,
+                        'name':reportName,
+                        'meta':{},
+                        'hidden':1,
+                        'provenance':provenance
+                    }
+                ]
+            })[0]
+        reportRef = str(report_obj_info[6]) + '/' + \
+            str(report_obj_info[0]) + '/' + str(report_obj_info[4])
+        return reportName, reportRef
+                                                            
     #END_CLASS_HEADER
 
     # config contains contents of config file in a hash or None if it couldn't
@@ -381,10 +425,10 @@ Does not currently support assembling metagenomics reads.
 
         #### Get the read library
         ws = workspaceService(self.workspaceURL, token=token)
-        objects = ws.get_objects([{'ref': params[self.PARAM_IN_WS] + '/' +
-                                   params[self.PARAM_IN_LIB]}])
-        data = objects[0]['data']
-        info = objects[0]['info']
+        reads = ws.get_objects([{'ref': params[self.PARAM_IN_WS] + '/' +
+                                   params[self.PARAM_IN_LIB]}])[0]
+        data = reads['data']
+        info = reads['info']
         # Object Info Contents
         # 0 - obj_id objid
         # 1 - obj_name name
@@ -440,15 +484,12 @@ Does not currently support assembling metagenomics reads.
         cs = self.convert_to_contigs(output_contigs,
                                      params[self.PARAM_IN_CS_NAME], shockid)
         
-        # everything below here is crap
-        
-        
         # load the method provenance from the context object
         provenance = [{}]
         if 'provenance' in ctx:
             provenance = ctx['provenance']
         # add additional info to provenance here, in this case the input data object reference
-        provenance[0]['input_ws_objects']=[params['workspace_name']+'/'+params['read_library_name']]
+        provenance[0]['input_ws_objects']=[in_lib_ref]
 
         # save the contigset output
         new_obj_info = ws.save_objects({
@@ -456,59 +497,21 @@ Does not currently support assembling metagenomics reads.
                 'objects':[
                     {
                         'type':'KBaseGenomes.ContigSet',
-                        'data':contigset_data,
-                        'name':params['output_contigset_name'],
+                        'data':cs,
+                        'name':params[self.PARAM_IN_CS_NAME],
                         'meta':{},
                         'provenance':provenance
                     }
                 ]
             })
+        cs_ref = new_obj_info[6] + '/' + new_obj_info[0] + '/' + new_obj_info[4]
+       
+        report_name, report_ref = load_report(cs, cs_ref, params, ws, info[6],
+                                              provenance)
 
-        # HACK for testing on Mac!!
-        #shutil.move(output_dir,self.host_scratch)
-        # END HACK!!
-
-        # create a Report
-        report = ''
-        report += 'ContigSet saved to: '+params['workspace_name']+'/'+params['output_contigset_name']+'\n'
-        report += 'Assembled into '+str(len(contigset_data['contigs'])) + ' contigs.\n'
-        report += 'Avg Length: '+str(sum(lengths)/float(len(lengths))) + ' bp.\n'
-
-        # compute a simple contig length distribution
-        bins = 10
-        counts, edges = np.histogram(lengths, bins)
-        report += 'Contig Length Distribution (# of contigs -- min to max basepairs):\n'
-        for c in range(bins):
-            report += '   '+str(counts[c]) + '\t--\t' + str(edges[c]) + ' to ' + str(edges[c+1]) + ' bp\n'
-
-        reportObj = {
-            'objects_created':[{'ref':params['workspace_name']+'/'+params['output_contigset_name'], 'description':'Assembled contigs'}],
-            'text_message':report
-        }
-
-        reportName = 'megahit_report_'+str(hex(uuid.getnode()))
-        report_obj_info = ws.save_objects({
-                'id':info[6],
-                'objects':[
-                    {
-                        'type':'KBaseReport.Report',
-                        'data':reportObj,
-                        'name':reportName,
-                        'meta':{},
-                        'hidden':1,
-                        'provenance':provenance
-                    }
-                ]
-            })[0]
-
-        output = { 'report_name': reportName, 'report_ref': str(report_obj_info[6]) + '/' + str(report_obj_info[0]) + '/' + str(report_obj_info[4]) }
-        #END run_megahit
-        
-        rep_name = 'foo'
-        rep_ref = 'bar'
-        output = {'report_name': rep_name,
-                  'report_ref': rep_ref}
-        
+        output = {'report_name': report_name,
+                  'report_ref': report_ref
+                  }
         #END run_SPAdes
 
         # At some point might do deeper type checking...
