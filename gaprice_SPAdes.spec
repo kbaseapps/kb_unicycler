@@ -24,15 +24,15 @@ module gaprice_SPAdes {
     typedef string paired_end_lib;
     
     /* Input parameters for running SPAdes.
-        string workspace - the name of the workspace from which to take input
+        string workspace_name - the name of the workspace from which to take input
            and store output.
-        paired_end_lib library - a PairedEndLibrary file to assemble.
+        paired_end_lib read_library_name - a PairedEndLibrary file to assemble.
         bool single_cell - true if the reads are amplified data from a single
             cell (e.g. MDA data).
     */
     typedef structure {
-        string workspace;
-        paired_end_lib library;
+        string workspace_name;
+        paired_end_lib read_library_name;
         bool single_cell;
     } SPAdesParams;
     

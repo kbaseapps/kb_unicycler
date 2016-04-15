@@ -15,9 +15,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * <p>Original spec-file type: SPAdesParams</p>
  * <pre>
  * Input parameters for running SPAdes.
- * string workspace - the name of the workspace from which to take input
+ * string workspace_name - the name of the workspace from which to take input
  *    and store output.
- * paired_end_lib library - a PairedEndLibrary file to assemble.
+ * paired_end_lib read_library_name - a PairedEndLibrary file to assemble.
  * bool single_cell - true if the reads are amplified data from a single
  *     cell (e.g. MDA data).
  * </pre>
@@ -26,47 +26,47 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Generated("com.googlecode.jsonschema2pojo")
 @JsonPropertyOrder({
-    "workspace",
-    "library",
+    "workspace_name",
+    "read_library_name",
     "single_cell"
 })
 public class SPAdesParams {
 
-    @JsonProperty("workspace")
-    private String workspace;
-    @JsonProperty("library")
-    private String library;
+    @JsonProperty("workspace_name")
+    private String workspaceName;
+    @JsonProperty("read_library_name")
+    private String readLibraryName;
     @JsonProperty("single_cell")
     private Long singleCell;
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-    @JsonProperty("workspace")
-    public String getWorkspace() {
-        return workspace;
+    @JsonProperty("workspace_name")
+    public String getWorkspaceName() {
+        return workspaceName;
     }
 
-    @JsonProperty("workspace")
-    public void setWorkspace(String workspace) {
-        this.workspace = workspace;
+    @JsonProperty("workspace_name")
+    public void setWorkspaceName(String workspaceName) {
+        this.workspaceName = workspaceName;
     }
 
-    public SPAdesParams withWorkspace(String workspace) {
-        this.workspace = workspace;
+    public SPAdesParams withWorkspaceName(String workspaceName) {
+        this.workspaceName = workspaceName;
         return this;
     }
 
-    @JsonProperty("library")
-    public String getLibrary() {
-        return library;
+    @JsonProperty("read_library_name")
+    public String getReadLibraryName() {
+        return readLibraryName;
     }
 
-    @JsonProperty("library")
-    public void setLibrary(String library) {
-        this.library = library;
+    @JsonProperty("read_library_name")
+    public void setReadLibraryName(String readLibraryName) {
+        this.readLibraryName = readLibraryName;
     }
 
-    public SPAdesParams withLibrary(String library) {
-        this.library = library;
+    public SPAdesParams withReadLibraryName(String readLibraryName) {
+        this.readLibraryName = readLibraryName;
         return this;
     }
 
@@ -97,7 +97,7 @@ public class SPAdesParams {
 
     @Override
     public String toString() {
-        return ((((((((("SPAdesParams"+" [workspace=")+ workspace)+", library=")+ library)+", singleCell=")+ singleCell)+", additionalProperties=")+ additionalProperties)+"]");
+        return ((((((((("SPAdesParams"+" [workspaceName=")+ workspaceName)+", readLibraryName=")+ readLibraryName)+", singleCell=")+ singleCell)+", additionalProperties=")+ additionalProperties)+"]");
     }
 
 }

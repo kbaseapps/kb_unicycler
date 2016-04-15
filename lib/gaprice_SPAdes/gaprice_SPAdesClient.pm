@@ -30,13 +30,13 @@ A KBase module: gaprice_SPAdes
 Simple wrapper for the SPAdes assembler.
 http://bioinf.spbau.ru/spades
 
-Currently supports assembling up to 9 Illumina paired end library files.
-Does not currently support assembling metagenomics reads.
+Currently only supports assembling one PairedEndLibrary at a time.
 Always runs in careful mode.
 Runs 3 threads / CPU.
 Maximum memory use is set to available memory - 1G.
 Autodetection is used for the PHRED quality offset and k-mer sizes.
 A coverage cutoff is not specified.
+Does not currently support assembling metagenomics reads.
 
 
 =cut
@@ -133,8 +133,8 @@ sub new
 $params is a gaprice_SPAdes.SPAdesParams
 $output is a gaprice_SPAdes.SPAdesOutput
 SPAdesParams is a reference to a hash where the following keys are defined:
-	workspace has a value which is a string
-	library has a value which is a gaprice_SPAdes.paired_end_lib
+	workspace_name has a value which is a string
+	read_library_name has a value which is a gaprice_SPAdes.paired_end_lib
 	single_cell has a value which is a gaprice_SPAdes.bool
 paired_end_lib is a string
 bool is an int
@@ -151,8 +151,8 @@ SPAdesOutput is a reference to a hash where the following keys are defined:
 $params is a gaprice_SPAdes.SPAdesParams
 $output is a gaprice_SPAdes.SPAdesOutput
 SPAdesParams is a reference to a hash where the following keys are defined:
-	workspace has a value which is a string
-	library has a value which is a gaprice_SPAdes.paired_end_lib
+	workspace_name has a value which is a string
+	read_library_name has a value which is a gaprice_SPAdes.paired_end_lib
 	single_cell has a value which is a gaprice_SPAdes.bool
 paired_end_lib is a string
 bool is an int
@@ -347,9 +347,9 @@ a string
 =item Description
 
 Input parameters for running SPAdes.
-string workspace - the name of the workspace from which to take input
+string workspace_name - the name of the workspace from which to take input
    and store output.
-paired_end_lib library - a PairedEndLibrary file to assemble.
+paired_end_lib read_library_name - a PairedEndLibrary file to assemble.
 bool single_cell - true if the reads are amplified data from a single
     cell (e.g. MDA data).
 
@@ -360,8 +360,8 @@ bool single_cell - true if the reads are amplified data from a single
 
 <pre>
 a reference to a hash where the following keys are defined:
-workspace has a value which is a string
-library has a value which is a gaprice_SPAdes.paired_end_lib
+workspace_name has a value which is a string
+read_library_name has a value which is a gaprice_SPAdes.paired_end_lib
 single_cell has a value which is a gaprice_SPAdes.bool
 
 </pre>
@@ -371,8 +371,8 @@ single_cell has a value which is a gaprice_SPAdes.bool
 =begin text
 
 a reference to a hash where the following keys are defined:
-workspace has a value which is a string
-library has a value which is a gaprice_SPAdes.paired_end_lib
+workspace_name has a value which is a string
+read_library_name has a value which is a gaprice_SPAdes.paired_end_lib
 single_cell has a value which is a gaprice_SPAdes.bool
 
 
