@@ -2,7 +2,6 @@
 package us.kbase.gapricespades;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -18,8 +17,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * Input parameters for running SPAdes.
  * string workspace - the name of the workspace from which to take input
  *    and store output.
- * list<paired_end_lib> libraries - a list of PairedEndLibrary files to
- *     assemble. Currently assembling up to 9 files at once is supported.
+ * paired_end_lib library - a PairedEndLibrary file to assemble.
  * bool single_cell - true if the reads are amplified data from a single
  *     cell (e.g. MDA data).
  * </pre>
@@ -29,46 +27,46 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("com.googlecode.jsonschema2pojo")
 @JsonPropertyOrder({
     "workspace",
-    "libraries",
+    "library",
     "single_cell"
 })
 public class SPAdesParams {
 
     @JsonProperty("workspace")
-    private java.lang.String workspace;
-    @JsonProperty("libraries")
-    private List<String> libraries;
+    private String workspace;
+    @JsonProperty("library")
+    private String library;
     @JsonProperty("single_cell")
     private Long singleCell;
-    private Map<java.lang.String, Object> additionalProperties = new HashMap<java.lang.String, Object>();
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("workspace")
-    public java.lang.String getWorkspace() {
+    public String getWorkspace() {
         return workspace;
     }
 
     @JsonProperty("workspace")
-    public void setWorkspace(java.lang.String workspace) {
+    public void setWorkspace(String workspace) {
         this.workspace = workspace;
     }
 
-    public SPAdesParams withWorkspace(java.lang.String workspace) {
+    public SPAdesParams withWorkspace(String workspace) {
         this.workspace = workspace;
         return this;
     }
 
-    @JsonProperty("libraries")
-    public List<String> getLibraries() {
-        return libraries;
+    @JsonProperty("library")
+    public String getLibrary() {
+        return library;
     }
 
-    @JsonProperty("libraries")
-    public void setLibraries(List<String> libraries) {
-        this.libraries = libraries;
+    @JsonProperty("library")
+    public void setLibrary(String library) {
+        this.library = library;
     }
 
-    public SPAdesParams withLibraries(List<String> libraries) {
-        this.libraries = libraries;
+    public SPAdesParams withLibrary(String library) {
+        this.library = library;
         return this;
     }
 
@@ -88,18 +86,18 @@ public class SPAdesParams {
     }
 
     @JsonAnyGetter
-    public Map<java.lang.String, Object> getAdditionalProperties() {
+    public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperties(java.lang.String name, Object value) {
+    public void setAdditionalProperties(String name, Object value) {
         this.additionalProperties.put(name, value);
     }
 
     @Override
-    public java.lang.String toString() {
-        return ((((((((("SPAdesParams"+" [workspace=")+ workspace)+", libraries=")+ libraries)+", singleCell=")+ singleCell)+", additionalProperties=")+ additionalProperties)+"]");
+    public String toString() {
+        return ((((((((("SPAdesParams"+" [workspace=")+ workspace)+", library=")+ library)+", singleCell=")+ singleCell)+", additionalProperties=")+ additionalProperties)+"]");
     }
 
 }

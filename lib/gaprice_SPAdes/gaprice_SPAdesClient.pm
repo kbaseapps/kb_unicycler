@@ -134,7 +134,7 @@ $params is a gaprice_SPAdes.SPAdesParams
 $output is a gaprice_SPAdes.SPAdesOutput
 SPAdesParams is a reference to a hash where the following keys are defined:
 	workspace has a value which is a string
-	libraries has a value which is a reference to a list where each element is a gaprice_SPAdes.paired_end_lib
+	library has a value which is a gaprice_SPAdes.paired_end_lib
 	single_cell has a value which is a gaprice_SPAdes.bool
 paired_end_lib is a string
 bool is an int
@@ -152,7 +152,7 @@ $params is a gaprice_SPAdes.SPAdesParams
 $output is a gaprice_SPAdes.SPAdesOutput
 SPAdesParams is a reference to a hash where the following keys are defined:
 	workspace has a value which is a string
-	libraries has a value which is a reference to a list where each element is a gaprice_SPAdes.paired_end_lib
+	library has a value which is a gaprice_SPAdes.paired_end_lib
 	single_cell has a value which is a gaprice_SPAdes.bool
 paired_end_lib is a string
 bool is an int
@@ -349,8 +349,7 @@ a string
 Input parameters for running SPAdes.
 string workspace - the name of the workspace from which to take input
    and store output.
-list<paired_end_lib> libraries - a list of PairedEndLibrary files to
-    assemble. Currently assembling up to 9 files at once is supported.
+paired_end_lib library - a PairedEndLibrary file to assemble.
 bool single_cell - true if the reads are amplified data from a single
     cell (e.g. MDA data).
 
@@ -362,7 +361,7 @@ bool single_cell - true if the reads are amplified data from a single
 <pre>
 a reference to a hash where the following keys are defined:
 workspace has a value which is a string
-libraries has a value which is a reference to a list where each element is a gaprice_SPAdes.paired_end_lib
+library has a value which is a gaprice_SPAdes.paired_end_lib
 single_cell has a value which is a gaprice_SPAdes.bool
 
 </pre>
@@ -373,7 +372,7 @@ single_cell has a value which is a gaprice_SPAdes.bool
 
 a reference to a hash where the following keys are defined:
 workspace has a value which is a string
-libraries has a value which is a reference to a list where each element is a gaprice_SPAdes.paired_end_lib
+library has a value which is a gaprice_SPAdes.paired_end_lib
 single_cell has a value which is a gaprice_SPAdes.bool
 
 

@@ -3,13 +3,13 @@ A KBase module: gaprice_SPAdes
 Simple wrapper for the SPAdes assembler.
 http://bioinf.spbau.ru/spades
 
-Currently supports assembling up to 9 Illumina paired end library files.
-Does not currently support assembling metagenomics reads.
+Currently only supports assembling one PairedEndLibrary at a time.
 Always runs in careful mode.
 Runs 3 threads / CPU.
 Maximum memory use is set to available memory - 1G.
 Autodetection is used for the PHRED quality offset and k-mer sizes.
 A coverage cutoff is not specified.
+Does not currently support assembling metagenomics reads.
 
 */
 
@@ -26,14 +26,13 @@ module gaprice_SPAdes {
     /* Input parameters for running SPAdes.
         string workspace - the name of the workspace from which to take input
            and store output.
-        list<paired_end_lib> libraries - a list of PairedEndLibrary files to
-            assemble. Currently assembling up to 9 files at once is supported.
+        paired_end_lib library - a PairedEndLibrary file to assemble.
         bool single_cell - true if the reads are amplified data from a single
             cell (e.g. MDA data).
     */
     typedef structure {
         string workspace;
-        list<paired_end_lib> libraries;
+        paired_end_lib library;
         bool single_cell;
     } SPAdesParams;
     
