@@ -7,6 +7,9 @@ import traceback
 import uuid
 from pprint import pprint, pformat
 from biokbase.workspace.client import Workspace as workspaceService
+from requests_toolbelt import MultipartEncoder
+import requests
+import json
 #END_HEADER
 
 
@@ -43,6 +46,7 @@ Does not currently support assembling metagenomics reads.
     
     PARAM_IN_WS = 'workspace_name'
     PARAM_IN_LIB = 'read_library_name'
+    PARAM_IN_CS_NAME = 'output_contigset_name'
     PARAM_IN_SINGLE_CELL = 'single_cell'
     VERSION = '0.0.1'
     
@@ -51,8 +55,7 @@ Does not currently support assembling metagenomics reads.
     MIN_MEMORY = 5000000000
     
     URL_WS = 'workspace-url'
-    
-    workspaceURL = None
+    URL_SHOCK = 'shock-url'
     
     def log(self, message):
         print(message);
@@ -72,10 +75,271 @@ Does not currently support assembling metagenomics reads.
             headers = {'Authorization': 'OAuth ' + token}
             node_url = handle['url'] + '/node/' + handle['id'] + '?download'
             r = requests.get(node_url, stream=True, headers=headers)
-            for chunk in r.iter_content(8192):
+            if not response.ok:
+                try:
+                    err = json.loads(response.content)['error'][0]
+                except:
+                    self.log("Couldn't parse response error content: " +
+                         response.content)
+                    response.raise_for_status()
+                raise Exception(str(err))
+            for chunk in r.iter_content(1024):
+                if not block: break
                 forward_reads_file.write(chunk)
         self.log('done')
         return file_path
+    
+    # Helper script borrowed from the transform service, logger removed
+    def upload_file_to_shock(self, shock_service_url, filePath, token):
+        """
+        Use HTTP multi-part POST to save a file to a SHOCK instance.
+        """
+
+        if token is None:
+            raise Exception("Authentication token required!")
+
+        #build the header
+        header = dict()
+        header["Authorization"] = "Oauth {0}".format(token)
+
+        if filePath is None:
+            raise Exception("No file given for upload to SHOCK!")
+        
+        with open(os.path.abspath(filePath), 'rb') as dataFile:
+            m = MultipartEncoder(
+                fields={'upload': (os.path.split(filePath)[-1], dataFile)})
+            header['Content-Type'] = m.content_type
+
+            response = requests.post(
+                shock_service_url + "/node", headers=header, data=m,
+                allow_redirects=True)
+
+        if not response.ok:
+            response.raise_for_status()
+
+        result = response.json()
+
+        if result['error']:
+            raise Exception(result['error'][0])
+        else:
+            return result["data"]
+    
+    def exec_spades(self, single_cell, for_file, rev_file):
+        # construct the SPAdes command
+        threads = psutil.cpu_count() * self.THREADS_PER_CORE
+        mem = psutil.virtual_memory().available - self.MEMORY_OFFSET
+        if mem < self.MIN_MEMORY:
+            raise ValueError(
+                'Only ' + str(psutil.virtual_memory().available) +
+                ' bytes of memory are available. The SPAdes wrapper will ' +
+                ' not run without at least ' +
+                str(self.MIN_MEMORY + self.MEMORY_OFFSET) + ' bytes available')
+        outdir = os.path.join(self.scratch, 'spades_output_dir')
+        tmpdir = os.path.join(self.scratch, 'tmp')
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
+        if not os.path.exists(tmpdir):
+            os.makedirs(tmpdir)
+        cmd = ['spades.py', '--careful', '--threads', threads, '--memory', mem,
+               '-o', outdir, '--tmp-dir', tmpdir]
+        if single_cell:
+            cmd += ['--sc']
+        if rev_file:
+            cmd += ['--pe1-1', for_file, '--pe1-2', rev_file]
+        else:
+            cmd += ['--pe1-12', for_file]
+        self.log('Running SPAdes command line:')
+        self.log(cmd)
+        stdout_file = os.path.join(self.scratch, 'spades_stdout')
+        stderr_file = os.path.join(self.scratch, 'spades_stderr')
+        
+        with open(stdout_file, 'w') as spdout, open(stderr_file, 'w') as spderr:
+            p = subprocess.Popen(cmd,
+                    cwd = self.scratch,
+                    stdout = spdout, 
+                    stderr = spderr, shell = False)
+            retcode = p.wait()
+        
+        self.log('Standard out:')
+        with open(stdout_file) as spdout:
+            for line in spdout:
+                self.log(line)
+        
+        self.log('Standard error:')
+        with open(stderr_file) as spderr:
+            for line in spderr:
+                self.log(line)
+        
+        self.log('Return code: ' + str(retcode))
+        if p.returncode != 0:
+            errsize = os.stat(stderr_file).st_size
+            if errsize > 50000:
+                errmsg = 'Standard error too large to return'
+            else:
+                with open(stderr_file) as spderr:
+                    errmsg = 'Standard error:\n' + spderr.read()
+            raise ValueError('Error running SPAdes, return code: ' + 
+                             str(retcode) + '\n' + errmsg)
+        
+        return outdir
+
+    # adapted from 
+    # https://github.com/kbase/transform/blob/master/plugins/scripts/convert/trns_transform_KBaseFile_AssemblyFile_to_KBaseGenomes_ContigSet.py
+    def convert_to_contigs(input_file_name, contigset_id, shock_id):
+        """
+        Converts fasta to KBaseGenomes.ContigSet and saves to WS.
+        Note the MD5 for the contig is generated by uppercasing the sequence.
+        The ContigSet MD5 is generated by taking the MD5 of joining the sorted list
+        of individual contig's MD5s with a comma separator
+        Args:
+            input_file_name: A file name for the input FASTA data.
+            contigset_id: The id of the ContigSet. If not
+                specified the name will default to the name of the input file
+                appended with "_contig_set"'
+            shock_id: Shock id for the fasta file if it already exists in shock
+        """
+    
+        self.log('Starting conversion of FASTA to KBaseGenomes.ContigSet')
+    
+        self.log('Building Object.')
+    
+        if not os.path.isfile(input_file_name):
+            raise Exception('The input file name {0} is not a file!'.format(
+                input_file_name))
+    
+        # default if not too large
+        contig_set_has_sequences = True
+    
+        fasta_filesize = os.stat(input_file_name).st_size
+        if fasta_filesize > 900000000:
+            # Fasta file too large to save sequences into the ContigSet object.
+            self.log(
+                'The FASTA input file is too large to fit in the workspace. ' +
+                'A ContigSet object will be created without sequences, but ' +
+                'will contain a reference to the file.')
+            contig_set_has_sequences = False
+    
+        with open(input_file_name, 'r') as input_file_handle:
+            fasta_header = None
+            sequence_list = []
+            fasta_dict = dict()
+            first_header_found = False
+            contig_set_md5_list = []
+            # Pattern for replacing white space
+            pattern = re.compile(r'\s+')
+            for current_line in input_file_handle:
+                if (current_line[0] == '>'):
+                    # found a header line
+                    # Wrap up previous fasta sequence
+                    if (not sequence_list) and first_header_found:
+                        raise Exception(
+                            'There is no sequence related to FASTA record: {0}'
+                            .format(fasta_header))
+                    if not first_header_found:
+                        first_header_found = True
+                    else:
+                        # build up sequence and remove all white space
+                        total_sequence = ''.join(sequence_list)
+                        total_sequence = re.sub(pattern, '', total_sequence)
+                        if not total_sequence:
+                            raise Exception(
+                                'There is no sequence related to FASTA record: '
+                                + fasta_header)
+                        try:
+                            fasta_key, fasta_description = \
+                                fasta_header.strip().split(' ', 1)
+                        except:
+                            fasta_key = fasta_header.strip()
+                            fasta_description = None
+                        contig_dict = dict()
+                        contig_dict['id'] = fasta_key
+                        contig_dict['length'] = len(total_sequence)
+                        contig_dict['name'] = fasta_key
+                        md5wrds = 'Note MD5 is generated from uppercasing ' + \
+                            'the sequence'
+                        if fasta_description:
+                            fasta_description += '. ' + md5wrds
+                        else:
+                            fasta_description = md5wrds
+                        contig_dict['description'] = fasta_description
+                        contig_md5 = hashlib.md5(
+                            total_sequence.upper()).hexdigest()
+                        contig_dict['md5'] = contig_md5
+                        contig_set_md5_list.append(contig_md5)
+                        if contig_set_has_sequences:
+                            contig_dict['sequence'] = total_sequence
+                        else:
+                            contig_dict['sequence'] = None
+                        fasta_dict[fasta_header] = contig_dict
+        
+                        # get set up for next fasta sequence
+                        sequence_list = []
+                    fasta_header = current_line.replace('>', '').strip()
+                else:
+                    sequence_list.append(current_line)
+        
+        # wrap up last fasta sequence, should really make this a method
+        if (not sequence_list) and first_header_found:
+            raise Exception(
+                "There is no sequence related to FASTA record: {0}".format(
+                    fasta_header))
+        elif not first_header_found:
+            raise Exception("There are no contigs in this file")
+        else:
+            # build up sequence and remove all white space
+            total_sequence = ''.join(sequence_list)
+            total_sequence = re.sub(pattern, '', total_sequence)
+            if not total_sequence:
+                raise Exception(
+                    "There is no sequence related to FASTA record: " +
+                    fasta_header)
+            try:
+                fasta_key, fasta_description = \
+                    fasta_header.strip().split(' ', 1)
+            except:
+                fasta_key = fasta_header.strip()
+                fasta_description = None
+            contig_dict = dict()
+            contig_dict['id'] = fasta_key
+            contig_dict['length'] = len(total_sequence)
+            contig_dict['name'] = fasta_key
+            md5wrds = 'Note MD5 is generated from uppercasing ' + \
+                'the sequence'
+            if fasta_description:
+                fasta_description += '. ' + md5wrds
+            else:
+                fasta_description = md5wrds
+            contig_dict['description'] = fasta_description
+            contig_md5 = hashlib.md5(total_sequence.upper()).hexdigest()
+            contig_dict['md5'] = contig_md5
+            contig_set_md5_list.append(contig_md5)
+            if contig_set_has_sequences:
+                contig_dict['sequence'] = total_sequence
+            else:
+                contig_dict['sequence'] = None
+            fasta_dict[fasta_header] = contig_dict
+    
+        contig_set_dict = dict()
+        contig_set_dict['md5'] = hashlib.md5(','.join(sorted(
+            contig_set_md5_list))).hexdigest()
+        contig_set_dict['id'] = contigset_id
+        contig_set_dict['name'] = contigset_id
+        s = 'unknown'
+        if source and source['source']:
+            s = source['source']
+        contig_set_dict['source'] = s
+        sid = os.path.basename(input_file_name)
+        if source and source['source_id']:
+            sid = source['source_id']
+        contig_set_dict['source_id'] = sid
+        contig_set_dict['contigs'] = [fasta_dict[x] for x in sorted(
+            fasta_dict.keys())]
+    
+        contig_set_dict['fasta_ref'] = shock_id
+    
+        self.log('Conversion completed.')
+        return contig_set_dict
+
     #END_CLASS_HEADER
 
     # config contains contents of config file in a hash or None if it couldn't
@@ -83,6 +347,7 @@ Does not currently support assembling metagenomics reads.
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
         self.workspaceURL = config[self.URL_WS]
+        self.shockURL = config[self.URL_SHOCK]
         self.scratch = os.path.abspath(config['scratch'])
         if not os.path.exists(self.scratch):
             os.makedirs(self.scratch)
@@ -101,12 +366,16 @@ Does not currently support assembling metagenomics reads.
         
         token = ctx['token']
 
+        # TODO check contents of types - e.g. metagenomics, outside reads, check gzip etc.
+
         #### do some basic checks
         objref = ''
         if self.PARAM_IN_WS not in params:
             raise ValueError(self.PARAM_IN_WS + ' parameter is required')
         if self.PARAM_IN_LIB not in params:
             raise ValueError(self.PARAM_IN_LIB + ' parameter is required')
+        if self.PARAM_IN_CS_NAME not in params:
+            raise ValueError(self.PARAM_IN_CS_NAME + ' parameter is required')
         single_cell = (self.PARAM_IN_SINGLE_CELL in params and
             params[self.PARAM_IN_SINGLE_CELL] == 0)
 
@@ -159,21 +428,86 @@ Does not currently support assembling metagenomics reads.
             rev_file = shock_download(token, reverse_reads)
             
         
-        # construct the SPAdes command
-        threads = psutil.cpu_count() * self.THREADS_PER_CORE
-        mem = psutil.virtual_memory().available - self.MEMORY_OFFSET
-        if mem < self.MIN_MEMORY:
-            raise ValueError(
-                'Only ' + str(psutil.virtual_memory().available) +
-                ' bytes of memory are available. The SPAdes wrapper will ' +
-                ' not run without at least ' +
-                str(self.MIN_MEMORY + self.MEMORY_OFFSET) + ' bytes available')
-        cmd = ['spades.py', '--careful', '--threads', threads, '--memory', mem]
-        if single_cell:
-            cmd += ['--sc']
+        spades_out = self.exec_spades(single_cell, for_file, rev_file)
+        self.log('SPAdes output dir: ' + spades_out)
+        
+        # parse the output and save back to KBase
+        output_contigs = os.path.join(spades_out, 'scaffolds.fasta')
+        
+        shockid = self.upload_file_to_shock(
+            self.shock_service_url, output_contigs, token)['id']
+            
+        cs = self.convert_to_contigs(output_contigs,
+                                     params[self.PARAM_IN_CS_NAME], shockid)
+        
+        # everything below here is crap
         
         
+        # load the method provenance from the context object
+        provenance = [{}]
+        if 'provenance' in ctx:
+            provenance = ctx['provenance']
+        # add additional info to provenance here, in this case the input data object reference
+        provenance[0]['input_ws_objects']=[params['workspace_name']+'/'+params['read_library_name']]
+
+        # save the contigset output
+        new_obj_info = ws.save_objects({
+                'id':info[6], # set the output workspace ID
+                'objects':[
+                    {
+                        'type':'KBaseGenomes.ContigSet',
+                        'data':contigset_data,
+                        'name':params['output_contigset_name'],
+                        'meta':{},
+                        'provenance':provenance
+                    }
+                ]
+            })
+
+        # HACK for testing on Mac!!
+        #shutil.move(output_dir,self.host_scratch)
+        # END HACK!!
+
+        # create a Report
+        report = ''
+        report += 'ContigSet saved to: '+params['workspace_name']+'/'+params['output_contigset_name']+'\n'
+        report += 'Assembled into '+str(len(contigset_data['contigs'])) + ' contigs.\n'
+        report += 'Avg Length: '+str(sum(lengths)/float(len(lengths))) + ' bp.\n'
+
+        # compute a simple contig length distribution
+        bins = 10
+        counts, edges = np.histogram(lengths, bins)
+        report += 'Contig Length Distribution (# of contigs -- min to max basepairs):\n'
+        for c in range(bins):
+            report += '   '+str(counts[c]) + '\t--\t' + str(edges[c]) + ' to ' + str(edges[c+1]) + ' bp\n'
+
+        reportObj = {
+            'objects_created':[{'ref':params['workspace_name']+'/'+params['output_contigset_name'], 'description':'Assembled contigs'}],
+            'text_message':report
+        }
+
+        reportName = 'megahit_report_'+str(hex(uuid.getnode()))
+        report_obj_info = ws.save_objects({
+                'id':info[6],
+                'objects':[
+                    {
+                        'type':'KBaseReport.Report',
+                        'data':reportObj,
+                        'name':reportName,
+                        'meta':{},
+                        'hidden':1,
+                        'provenance':provenance
+                    }
+                ]
+            })[0]
+
+        output = { 'report_name': reportName, 'report_ref': str(report_obj_info[6]) + '/' + str(report_obj_info[0]) + '/' + str(report_obj_info[4]) }
+        #END run_megahit
         
+        rep_name = 'foo'
+        rep_ref = 'bar'
+        output = {'report_name': rep_name,
+                  'report_ref': rep_ref}
         
         #END run_SPAdes
 
