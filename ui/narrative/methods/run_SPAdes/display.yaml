@@ -1,0 +1,47 @@
+#
+# define display information
+#
+name: SPAdes
+tooltip: |
+    Runs the SPAdes assembler on reads.
+screenshots: []
+
+icon: icon.png
+
+#
+# define a set of similar methods that might be useful to the user
+#
+suggestions:
+    apps:
+        related:
+            []
+        next:
+            []
+    methods:
+        related:
+            []
+        next:
+            [annotate_contigset]
+
+#
+# Configure the display and description of parameters
+#
+parameters :
+    read_library_name :
+        ui-name : |
+            Read library
+        short-hint : |
+            The library of reads to be assembled
+    output_contigset_name :
+        ui-name : |
+            Output ContigSet
+        short-hint : |
+            The name under which the resulting ContigSet will be saved in the Narrative
+    single_cell :
+        ui-name : |
+            Single cell data
+        short-hint : |
+            True if the reads are from amplified DNA from a single cell via
+            MDA.
+description : |
+    <p>Runs the SPAdes assembler on Illumina FASTQ reads libraries.</p>

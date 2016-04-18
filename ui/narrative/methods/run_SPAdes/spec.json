@@ -1,0 +1,109 @@
+{
+    "ver": "0.0.1",
+    "authors": [
+        "gaprice"
+    ],
+    "contact": "help@kbase.us",
+    "categories": ["active"],
+    "widgets": {
+        "input": null,
+        "output": "kbaseReportView"
+    },
+    "parameters": [ 
+        {
+            "id": "read_library_name",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": [ "" ],
+            "field_type": "text",
+            "text_options": {
+                "valid_ws_types": ["KBaseFile.PairedEndLibrary", "KBaseAssembly.PairedEndLibrary"]
+            }
+        },
+        {
+            "id": "output_contigset_name",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": ["SPAdes.contigs"],
+            "field_type": "text",
+            "text_options": {
+                "valid_ws_types" : [ "KBaseGenomes.ContigSet" ],
+                "is_output_name":true
+            }
+        },
+        {
+            "id": "single_cell",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": [""],
+            "field_type" : "checkbox",
+            "checkbox_options":{
+                "checked_value": 1,
+                "unchecked_value": 0
+            }
+        }
+    ],
+    "behavior": {
+        "service-mapping": {
+            "url": "",
+            "name": "gaprice_SPAdes",
+            "method": "filter_contigs",
+            "input_mapping": [
+                {
+                    "narrative_system_variable": "workspace",
+                    "target_property": "workspace_name"
+                },
+                {
+                    "input_parameter": "read_library_name",
+                    "target_property": "read_library_name"
+                },
+                {
+                    "input_parameter": "output_contigset_name",
+                    "target_property": "output_contigset_name"
+                },
+                {
+                    "input_parameter": "single_cell",
+                    "target_property": "single_cell"
+                }
+            ],
+            "output_mapping": [
+                {
+                    "service_method_output_path": [0,"report_name"],
+                    "target_property": "report_name"
+                },
+                {
+                    "service_method_output_path": [0,"report_ref"],
+                    "target_property": "report_ref"
+                },
+                {
+                    "constant_value": "5",
+                    "target_property": "report_window_line_height"
+                },
+                {
+                    "service_method_output_path": [0],
+                    "target_property": "SPAdes_result"
+                },
+                {
+                    "input_parameter": "read_library_name",
+                    "target_property": "input_read_library_name"
+                },
+                {
+                    "input_parameter": "output_contigset_name",
+                    "target_property": "input_output_contigset_name"
+                },
+                {
+                    "input_parameter": "single_cell",
+                    "target_property": "input_single_cell"
+                },
+                {
+                    "narrative_system_variable": "workspace",
+                    "target_property": "workspace_name"
+                }
+            ]
+        }
+    },
+    "job_id_output_field": "docker"
+}
