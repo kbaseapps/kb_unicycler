@@ -53,8 +53,9 @@ Does not currently support assembling metagenomics reads.
     VERSION = '0.0.1'
     
     THREADS_PER_CORE = 3
-    MEMORY_OFFSET = 1000000000 # 1GB
-    MIN_MEMORY = 5000000000
+    MEMORY_OFFSET_GB = 1 # 1GB
+    MIN_MEMORY_GB = 5
+    GB = 1000000000
     
     URL_WS = 'workspace-url'
     URL_SHOCK = 'shock-url'
@@ -131,13 +132,15 @@ Does not currently support assembling metagenomics reads.
     def exec_spades(self, single_cell, for_file, rev_file):
         # construct the SPAdes command
         threads = psutil.cpu_count() * self.THREADS_PER_CORE
-        mem = psutil.virtual_memory().available - self.MEMORY_OFFSET
-        if mem < self.MIN_MEMORY:
+        mem = (psutil.virtual_memory().available / self.GB -
+               self.MEMORY_OFFSET_GB)
+        if mem < self.MIN_MEMORY_GB:
             raise ValueError(
                 'Only ' + str(psutil.virtual_memory().available) +
                 ' bytes of memory are available. The SPAdes wrapper will ' +
                 ' not run without at least ' +
-                str(self.MIN_MEMORY + self.MEMORY_OFFSET) + ' bytes available')
+                str(self.MIN_MEMORY_GB + self.MEMORY_OFFSET_GB) +
+                ' bytes available')
         outdir = os.path.join(self.scratch, 'spades_output_dir')
         if not os.path.exists(outdir):
             os.makedirs(outdir)

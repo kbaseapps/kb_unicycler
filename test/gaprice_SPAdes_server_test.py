@@ -7,6 +7,7 @@ import time
 from os import environ
 from ConfigParser import ConfigParser
 from pprint import pprint
+import psutil
 
 import requests
 from requests_toolbelt import MultipartEncoder
@@ -195,6 +196,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
         print('Shock url ' + cls.shockURL)
         print('WS url ' + cls.wsClient.url)
         print('Handle service url ' + cls.hs.url)
+        print('CPUs detected ' + str(psutil.cpu_count()))
+        print('Available memory ' + str(psutil.virtual_memory().available))
         print('staging data')
         cls.upload_assembly('basic', 'basic', {}, 'data/small.forward.fq',
                             'fasta', 'data/small.reverse.fq', 'fasta', token)
