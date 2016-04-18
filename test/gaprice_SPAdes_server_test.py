@@ -1,18 +1,15 @@
 from __future__ import print_function
 import unittest
 import os
-import json
 import time
 
 from os import environ
 from ConfigParser import ConfigParser
-from pprint import pprint
 import psutil
 
 import requests
-from requests_toolbelt import MultipartEncoder
-from biokbase.workspace.client import Workspace as workspaceService
-from biokbase.AbstractHandle.Client import AbstractHandle as HandleService
+from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
+from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from gaprice_SPAdes.gaprice_SPAdesImpl import gaprice_SPAdes
 
 
@@ -21,9 +18,13 @@ class gaprice_SPAdesTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         token = environ.get('KB_AUTH_TOKEN', None)
-        cls.ctx = {'token': token, 'provenance': [{'service': 'gaprice_SPAdes',
-            'method': 'please_never_use_it_in_production', 'method_params': []}],
-            'authenticated': 1}
+        cls.ctx = {'token': token,
+                   'provenance': [
+                        {'service': 'gaprice_SPAdes',
+                         'method': 'please_never_use_it_in_production',
+                         'method_params': []
+                         }],
+                   'authenticated': 1}
         config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
         cls.cfg = {}
         config = ConfigParser()
@@ -51,11 +52,10 @@ class gaprice_SPAdesTest(unittest.TestCase):
             return cls.wsName
         suffix = int(time.time() * 1000)
         wsName = "test_gaprice_SPAdes_" + str(suffix)
-        ret = cls.wsClient.create_workspace({'workspace': wsName})
+        cls.wsClient.create_workspace({'workspace': wsName})
         cls.wsName = wsName
         print('created workspace ' + wsName)
         return wsName
-
 
     def getImpl(self):
         return self.__class__.serviceImpl
@@ -73,23 +73,16 @@ class gaprice_SPAdesTest(unittest.TestCase):
         if token is None:
             raise Exception("Authentication token required!")
 
-        #build the header
         header = dict()
         header["Authorization"] = "Oauth {0}".format(token)
 
         if filePath is None:
             raise Exception("No file given for upload to SHOCK!")
-        
+
         with open(os.path.abspath(filePath), 'rb') as dataFile:
-#             m = MultipartEncoder(
-#                 fields={'upload': (os.path.split(filePath)[-1], dataFile)})
-#             header['Content-Type'] = m.content_type
             print('POSTing data')
-            response = requests.post(cls.shockURL + '/node', headers = header,
+            response = requests.post(cls.shockURL + '/node', headers=header,
                                      data=dataFile, allow_redirects=True)
-#             response = requests.post(
-#                 cls.shockURL + "/node", headers=header, data=m,
-#                 allow_redirects=True)
             print('got response')
 
         if not response.ok:
@@ -119,7 +112,6 @@ class gaprice_SPAdesTest(unittest.TestCase):
         md5 = node['file']['checksum']['md5']
         return node['id'], handle_id, md5, node['file']['size']
 
-
     @classmethod
     def upload_assembly(cls, key, wsobjname, object_body,
                         fwd_reads, fwd_reads_type,
@@ -129,7 +121,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         print('uploading forward reads file ' + fwd_reads)
         fwd_id, fwd_handle, fwd_md5, fwd_size = \
             cls.upload_file_to_shock_and_get_handle(fwd_reads, token)
-        
+
         rev_id = None
         rev_handle = None
         if rev_reads:
@@ -137,50 +129,50 @@ class gaprice_SPAdesTest(unittest.TestCase):
             rev_id, rev_handle, rev_md5, rev_size = \
                 cls.upload_file_to_shock_and_get_handle(rev_reads, token)
 
-        ob = dict(object_body) # copy
+        ob = dict(object_body)  # copy
         ob['sequencing_tech'] = 'fake data'
         if not kbase_assy:
             wstype = 'KBaseFile.PairedEndLibrary'
             ob['lib1'] = \
                 {'file': {
-                          'hid':fwd_handle,
+                          'hid': fwd_handle,
                           'file_name': os.path.split(fwd_reads)[1],
                           'id': fwd_id,
                           'url': cls.shockURL,
-                          'type':'shock',
+                          'type': 'shock',
                           'remote_md5': fwd_md5
                           },
-                 'encoding':'UTF8',
-                 'type':'fastq',
-                 'size': rev_size
+                 'encoding': 'UTF8',
+                 'type': fwd_reads_type,
+                 'size': fwd_size
                  }
             if rev_reads:
                 ob['lib2'] = \
                     {'file': {
-                              'hid':rev_handle,
+                              'hid': rev_handle,
                               'file_name': os.path.split(rev_reads)[1],
                               'id': rev_id,
                               'url': cls.shockURL,
-                              'type':'shock',
+                              'type': 'shock',
                               'remote_md5': rev_md5
                               },
-                     'encoding':'UTF8',
-                     'type':'fastq',
+                     'encoding': 'UTF8',
+                     'type': rev_reads_type,
                      'size': rev_size
                      }
         else:
             wstype = 'KBaseAssembly.PairedEndLibrary'
-            pass # TODO KBaseAssembly
-        
+            pass  # TODO KBaseAssembly
+
         print('Saving object data')
         objdata = cls.wsClient.save_objects({
-            'workspace':cls.getWsName(),
-            'objects':[
-                       {
-                        'type': wstype,
-                        'data': ob,
-                        'name': wsobjname
-                        }]
+            'workspace': cls.getWsName(),
+            'objects': [
+                        {
+                         'type': wstype,
+                         'data': ob,
+                         'name': wsobjname
+                         }]
             })[0]
         print('Saved object: ')
         print(objdata)
@@ -189,7 +181,6 @@ class gaprice_SPAdesTest(unittest.TestCase):
                            'fwd_node': fwd_id,
                            'rev_node': rev_id,
                            'ref': ref}
-
 
     @classmethod
     def setupTestData(cls, token):
@@ -202,12 +193,11 @@ class gaprice_SPAdesTest(unittest.TestCase):
         cls.upload_assembly('basic', 'basic', {}, 'data/small.forward.fq',
                             'fasta', 'data/small.reverse.fq', 'fasta', token)
         print('Data staged.')
-    
+
     # TODO test KBaseAssy vs. KBFile
     # TODO test single cell vs. normal
     # TODO test separate vs. interlaced
-    
-    
+
     def test_basic_ops(self):
         print('running test_basic_ops')
         ret = self.getImpl().run_SPAdes(
