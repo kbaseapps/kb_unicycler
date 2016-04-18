@@ -42,7 +42,7 @@ Does not currently support assembling metagenomics reads.
     #########################################
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
-    REPRESS_SPADES_OUTPUT = True # for testing. Should be false in production.
+    REPRESS_SPADES_OUTPUT = False # for testing. Should be false in production.
     
     PAIRED_END_TYPE = 'PairedEndLibrary'
     # one of these should be deprecated
