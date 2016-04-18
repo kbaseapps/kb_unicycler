@@ -434,7 +434,7 @@ Does not currently support assembling metagenomics reads.
         if self.PARAM_IN_CS_NAME not in params:
             raise ValueError(self.PARAM_IN_CS_NAME + ' parameter is required')
         single_cell = (self.PARAM_IN_SINGLE_CELL in params and
-            params[self.PARAM_IN_SINGLE_CELL] == 0)
+            params[self.PARAM_IN_SINGLE_CELL] != 0)
 
         #### Get the read library
         ws = workspaceService(self.workspaceURL, token=token)
