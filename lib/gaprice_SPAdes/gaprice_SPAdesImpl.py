@@ -160,33 +160,34 @@ Does not currently support assembling metagenomics reads.
         with open(stdout_file, 'w') as spdout, open(stderr_file, 'w') as spderr:
             p = subprocess.Popen(cmd,
                     cwd = self.scratch,
-                    stdout = spdout, 
-                    stderr = spderr, shell = False)
+#                     stdout = spdout, 
+#                     stderr = spderr,
+                    shell = False)
             retcode = p.wait()
         
-        self.log('Standard out:')
-        if self.REPRESS_SPADES_OUTPUT:
-            print('SPAdes output repressed but saved locally.')
-        else:
-            with open(stdout_file) as spdout:
-                for line in spdout:
-                    self.log(line)
-        
-        self.log('Standard error:')
-        with open(stderr_file) as spderr:
-            for line in spderr:
-                self.log(line)
+#         self.log('Standard out:')
+#         if self.REPRESS_SPADES_OUTPUT:
+#             print('SPAdes output repressed but saved locally.')
+#         else:
+#             with open(stdout_file) as spdout:
+#                 for line in spdout:
+#                     self.log(line)
+#         
+#         self.log('Standard error:')
+#         with open(stderr_file) as spderr:
+#             for line in spderr:
+#                 self.log(line)
         
         self.log('Return code: ' + str(retcode))
         if p.returncode != 0:
-            errsize = os.stat(stderr_file).st_size
-            if errsize > 50000:
-                errmsg = 'Standard error too large to return'
-            else:
-                with open(stderr_file) as spderr:
-                    errmsg = 'Standard error:\n' + spderr.read()
+#             errsize = os.stat(stderr_file).st_size
+#             if errsize > 50000:
+#                 errmsg = 'Standard error too large to return'
+#             else:
+#                 with open(stderr_file) as spderr:
+#                     errmsg = 'Standard error:\n' + spderr.read()
             raise ValueError('Error running SPAdes, return code: ' + 
-                             str(retcode) + '\n' + errmsg)
+                             str(retcode) + '\n') # + errmsg)
         
         return outdir
 

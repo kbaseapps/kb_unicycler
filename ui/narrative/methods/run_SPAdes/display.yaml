@@ -44,4 +44,13 @@ parameters :
             True if the reads are from amplified DNA from a single cell via
             MDA.
 description : |
-    <p>Runs the SPAdes assembler on Illumina FASTQ reads libraries.</p>
+    <p>
+    Runs the <a href="http://bioinf.spbau.ru/spades" target="_blank">SPAdes assembler</a>
+    on Illumina FASTQ reads libraries.</br>
+    </p>
+    
+publications :
+    -
+        display-text: |
+            S. Nurk, A. Bankevich, D. Antipov, A. A. Gurevich, A. Korobeynikov, A. Lapidus, A. D. Prjibelsky, A. Pyshkin, A. Sirotkin, Y. Sirotkin, R. Stepanauskas, J. S. McLean, R. Lasken, S. R. Clingenpeel, T. Woyke, G. Tesler, M. A. Alekseyev, and P. A. Pevzner. Assembling Single-Cell Genomes and Mini-Metagenomes From Chimeric MDA Products. Journal of Computational Biology 20(10) (2013), 714-737. doi:10.1089/cmb.2013.0084
+        link: http://bioinf.spbau.ru/spades
