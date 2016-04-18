@@ -50,7 +50,7 @@
         "service-mapping": {
             "url": "",
             "name": "gaprice_SPAdes",
-            "method": "filter_contigs",
+            "method": "run_SPAdes",
             "input_mapping": [
                 {
                     "narrative_system_variable": "workspace",
