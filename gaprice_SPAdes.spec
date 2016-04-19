@@ -11,9 +11,6 @@ Autodetection is used for the PHRED quality offset and k-mer sizes.
 A coverage cutoff is not specified.
 Does not currently support assembling metagenomics reads.
 
-The resulting contigset is stored in the workspace and therefore is limited to
-1GB.
-
 */
 
 module gaprice_SPAdes {
@@ -30,15 +27,19 @@ module gaprice_SPAdes {
         string workspace_name - the name of the workspace from which to take
            input and store output.
         string output_contigset_name - the name of the output contigset
-        paired_end_lib read_library_name - a PairedEndLibrary file to assemble.
-        bool single_cell - true if the reads are amplified data from a single
-            cell (e.g. MDA data).
+        list<paired_end_lib> read_libraries - Illumina PairedEndLibrary files
+            to assemble.
+        string dna_source - the source of the DNA used for sequencing
+            'single_cell': DNA amplified from a single cell via MDA
+            'metagenome': Metagenomic data
+            anything else: Standard DNA sample from multiple cells
+        
     */
     typedef structure {
         string workspace_name;
         string output_contigset_name;
-        paired_end_lib read_library_name;
-        bool single_cell;
+        list<paired_end_lib> read_libraries;
+        string dna_source;
     } SPAdesParams;
     
     /* Output parameters for SPAdes run.

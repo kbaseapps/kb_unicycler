@@ -38,6 +38,9 @@ Autodetection is used for the PHRED quality offset and k-mer sizes.
 A coverage cutoff is not specified.
 Does not currently support assembling metagenomics reads.
 
+The resulting contigset is stored in the workspace and therefore is limited to
+1GB.
+
 
 =cut
 
@@ -134,10 +137,10 @@ $params is a gaprice_SPAdes.SPAdesParams
 $output is a gaprice_SPAdes.SPAdesOutput
 SPAdesParams is a reference to a hash where the following keys are defined:
 	workspace_name has a value which is a string
-	read_library_name has a value which is a gaprice_SPAdes.paired_end_lib
-	single_cell has a value which is a gaprice_SPAdes.bool
+	output_contigset_name has a value which is a string
+	read_libraries has a value which is a reference to a list where each element is a gaprice_SPAdes.paired_end_lib
+	dna_source has a value which is a string
 paired_end_lib is a string
-bool is an int
 SPAdesOutput is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
 	report_ref has a value which is a string
@@ -152,10 +155,10 @@ $params is a gaprice_SPAdes.SPAdesParams
 $output is a gaprice_SPAdes.SPAdesOutput
 SPAdesParams is a reference to a hash where the following keys are defined:
 	workspace_name has a value which is a string
-	read_library_name has a value which is a gaprice_SPAdes.paired_end_lib
-	single_cell has a value which is a gaprice_SPAdes.bool
+	output_contigset_name has a value which is a string
+	read_libraries has a value which is a reference to a list where each element is a gaprice_SPAdes.paired_end_lib
+	dna_source has a value which is a string
 paired_end_lib is a string
-bool is an int
 SPAdesOutput is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
 	report_ref has a value which is a string
@@ -347,11 +350,15 @@ a string
 =item Description
 
 Input parameters for running SPAdes.
-string workspace_name - the name of the workspace from which to take input
-   and store output.
-paired_end_lib read_library_name - a PairedEndLibrary file to assemble.
-bool single_cell - true if the reads are amplified data from a single
-    cell (e.g. MDA data).
+string workspace_name - the name of the workspace from which to take
+   input and store output.
+string output_contigset_name - the name of the output contigset
+list<paired_end_lib> read_libraries - Illumina PairedEndLibrary files
+    to assemble.
+string dna_source - the source of the DNA used for sequencing
+    'single_cell': DNA amplified from a single cell via MDA
+    'metagenome': Metagenomic data
+    anything else: Standard DNA sample from multiple cells
 
 
 =item Definition
@@ -361,8 +368,9 @@ bool single_cell - true if the reads are amplified data from a single
 <pre>
 a reference to a hash where the following keys are defined:
 workspace_name has a value which is a string
-read_library_name has a value which is a gaprice_SPAdes.paired_end_lib
-single_cell has a value which is a gaprice_SPAdes.bool
+output_contigset_name has a value which is a string
+read_libraries has a value which is a reference to a list where each element is a gaprice_SPAdes.paired_end_lib
+dna_source has a value which is a string
 
 </pre>
 
@@ -372,8 +380,9 @@ single_cell has a value which is a gaprice_SPAdes.bool
 
 a reference to a hash where the following keys are defined:
 workspace_name has a value which is a string
-read_library_name has a value which is a gaprice_SPAdes.paired_end_lib
-single_cell has a value which is a gaprice_SPAdes.bool
+output_contigset_name has a value which is a string
+read_libraries has a value which is a reference to a list where each element is a gaprice_SPAdes.paired_end_lib
+dna_source has a value which is a string
 
 
 =end text

@@ -222,17 +222,16 @@ class gaprice_SPAdesTest(unittest.TestCase):
     # TODO std vs meta vs single cell
     # TODO multiple illumina reads
 
-    @unittest.skip('temp')
-    def test_fr_pair(self):
-        ret = self.getImpl().run_SPAdes(
-            self.getContext(),
-            {'workspace_name': self.getWsName(),
-             'read_library_name': self.staged['frbasic']['obj_info'][1],
-             'output_contigset_name': 'frbasic_out'
-             })[0]
-        print(ret)
-        report = self.wsClient.get_objects([{'ref': ret['report_ref']}])
-        print(report)
+#     def test_fr_pair(self):
+#         ret = self.getImpl().run_SPAdes(
+#             self.getContext(),
+#             {'workspace_name': self.getWsName(),
+#              'read_library_name': self.staged['frbasic']['obj_info'][1],
+#              'output_contigset_name': 'frbasic_out'
+#              })[0]
+#         print(ret)
+#         report = self.wsClient.get_objects([{'ref': ret['report_ref']}])
+#         print(report)
 
     def test_interlaced(self):
         key = 'intbasic'
@@ -257,7 +256,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         fasta_md5 = '7f6093a7e56a8dc5cbf1343b166eda67'
 
         params = {'workspace_name': self.getWsName(),
-                  'read_library_name': self.staged[key]['obj_info'][1],
+                  'read_libraries': [self.staged[key]['obj_info'][1]],
                   'output_contigset_name': output_name
                   }
 
