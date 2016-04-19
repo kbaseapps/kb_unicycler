@@ -125,7 +125,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         rev_id = None
         rev_handle = None
         if rev_reads:
-            print('uploading forward reads file ' + fwd_reads)
+            print('uploading reverse reads file ' + rev_reads)
             rev_id, rev_handle, rev_md5, rev_size = \
                 cls.upload_file_to_shock_and_get_handle(rev_reads, token)
 
@@ -190,20 +190,43 @@ class gaprice_SPAdesTest(unittest.TestCase):
         print('CPUs detected ' + str(psutil.cpu_count()))
         print('Available memory ' + str(psutil.virtual_memory().available))
         print('staging data')
-        cls.upload_assembly('basic', 'basic', {}, 'data/small.forward.fq',
+        cls.upload_assembly('frbasic', 'frbasic', {}, 'data/small.forward.fq',
                             'fasta', 'data/small.reverse.fq', 'fasta', token)
+        cls.upload_assembly('intbasic', 'intbasic', {},
+                            'data/small.interleaved.fq', None, None, 'fasta',
+                            token)
         print('Data staged.')
 
     # TODO test KBaseAssy vs. KBFile
     # TODO test single cell vs. normal
     # TODO test separate vs. interlaced
+    # TODO test gzip
+    # TODO std vs meta vs single cell
+    # TODO reads types
 
-    def test_basic_ops(self):
-        print('running test_basic_ops')
+    def test_fr_pair(self):
         ret = self.getImpl().run_SPAdes(
             self.getContext(),
             {'workspace_name': self.getWsName(),
-             'read_library_name': self.staged['basic']['obj_info'][1],
-             'output_contigset_name': 'basic_out'
-             })
+             'read_library_name': self.staged['frbasic']['obj_info'][1],
+             'output_contigset_name': 'frbasic_out'
+             })[0]
         print(ret)
+        report = self.wsClient.get_objects([{'ref': ret['report_ref']}])
+        print(report)
+
+    def test_interlaced(self):
+        ret = self.getImpl().run_SPAdes(
+            self.getContext(),
+            {'workspace_name': self.getWsName(),
+             'read_library_name': self.staged['intbasic']['obj_info'][1],
+             'output_contigset_name': 'intbasic_out'
+             })[0]
+        print(ret)
+        report = self.wsClient.get_objects([{'ref': ret['report_ref']}])[0]
+        print(report)
+        cs_ref = report['data']['objects_created'][0]['ref']
+        cs = self.wsClient.get_objects([{'ref': cs_ref}])[0]
+        print(cs.keys())
+        
+        
