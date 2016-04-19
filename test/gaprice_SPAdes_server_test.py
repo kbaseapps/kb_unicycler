@@ -3,11 +3,9 @@ import unittest
 import os
 import time
 
-import json
 from os import environ
 from ConfigParser import ConfigParser
 import psutil
-from pprint import pprint
 
 import requests
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
@@ -237,7 +235,6 @@ class gaprice_SPAdesTest(unittest.TestCase):
         print(report)
 
     def test_interlaced(self):
-        contigcnt = 2
         key = 'intbasic'
         output_name = 'intbasic_out'
         contigs = [{'description': 'Note MD5 is generated from uppercasing ' +
@@ -259,12 +256,12 @@ class gaprice_SPAdesTest(unittest.TestCase):
         md5 = '09a27dd5107ad23ee2b7695aee8c09d0'
         fasta_md5 = '7f6093a7e56a8dc5cbf1343b166eda67'
 
-        ret = self.getImpl().run_SPAdes(
-            self.getContext(),
-            {'workspace_name': self.getWsName(),
-             'read_library_name': self.staged[key]['obj_info'][1],
-             'output_contigset_name': output_name
-             })[0]
+        params = {'workspace_name': self.getWsName(),
+                  'read_library_name': self.staged[key]['obj_info'][1],
+                  'output_contigset_name': output_name
+                  }
+
+        ret = self.getImpl().run_SPAdes(self.getContext(), params)[0]
         assyref = self.make_ref(self.staged[key]['obj_info'])
 
         report = self.wsClient.get_objects([{'ref': ret['report_ref']}])[0]
@@ -272,7 +269,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.assertEqual(1, len(report['data']['objects_created']))
         self.assertEqual('Assembled contigs',
                          report['data']['objects_created'][0]['description'])
-        self.assertIn('Assembled into ' + str(contigcnt) + ' contigs',
+        self.assertIn('Assembled into ' + str(len(contigs)) + ' contigs',
                       report['data']['text_message'])
         self.assertEqual(1, len(report['provenance']))
         self.assertEqual(1, len(report['provenance'][0]['input_ws_objects']))
@@ -302,4 +299,15 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.assertEqual(fasta_md5,
                          fasta_node['data']['file']['checksum']['md5'])
 
-        print(cs['data'].keys())
+        self.assertEqual(output_name, cs['data']['id'])
+        self.assertEqual(output_name, cs['data']['name'])
+        self.assertEqual(md5, cs['data']['md5'])
+        self.assertEqual(source, cs['data']['source'])
+        self.assertEqual(source_id, cs['data']['source_id'])
+
+        for i, (exp, got) in enumerate(zip(contigs, cs['data']['contigs'])):
+            print('Checking contig ' + str(i) + ': ' + exp['name'])
+            exp['s_len'] = exp['length']
+            got['s_len'] = len(got['sequence'])
+            del got['sequence']
+            self.assertDictEqual(exp, got)
