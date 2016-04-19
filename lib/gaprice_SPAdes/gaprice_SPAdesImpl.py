@@ -97,6 +97,8 @@ Does not currently support assembling metagenomics reads.
         node_fn = node['data']['file']['name']
 
         if file_type:
+            if not file_type.startswith('.'):
+                file_type = '.' + file_type
             file_name += file_type
         elif 'file_name' in handle:
             file_name += '_' + handle['file_name']
