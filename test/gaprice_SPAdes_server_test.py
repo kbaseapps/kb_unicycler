@@ -3,6 +3,7 @@ import unittest
 import os
 import time
 
+import json
 from os import environ
 from ConfigParser import ConfigParser
 import psutil
@@ -239,6 +240,24 @@ class gaprice_SPAdesTest(unittest.TestCase):
         contigcnt = 2
         key = 'intbasic'
         output_name = 'intbasic_out'
+        contigs = [{'description': 'Note MD5 is generated from uppercasing ' +
+                                   'the sequence',
+                    'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
+                    'length': 64822,
+                    'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
+                    'md5': '8a67351c7d6416039c6f613c31b10764'
+                    },
+                   {'description': 'Note MD5 is generated from uppercasing ' +
+                                   'the sequence',
+                    'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
+                    'length': 62607,
+                    'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
+                    'md5': 'e99fade8814bdb861532f493e5deddbd'
+                    }]
+        source = 'unknown'
+        source_id = 'scaffolds.fasta'
+        md5 = '09a27dd5107ad23ee2b7695aee8c09d0'
+        fasta_md5 = '7f6093a7e56a8dc5cbf1343b166eda67'
 
         ret = self.getImpl().run_SPAdes(
             self.getContext(),
@@ -276,5 +295,11 @@ class gaprice_SPAdesTest(unittest.TestCase):
             assyref, cs['provenance'][0]['resolved_ws_objects'][0])
         self.assertEqual(output_name, cs['info'][1])
 
-        pprint(cs['info'])
+        cs_fasta_node = cs['data']['fasta_ref']
+        header = {"Authorization": "Oauth {0}".format(self.token)}
+        fasta_node = requests.get(self.shockURL + '/node/' + cs_fasta_node,
+                                  headers=header, allow_redirects=True).json()
+        self.assertEqual(fasta_md5,
+                         fasta_node['data']['file']['checksum']['md5'])
+
         print(cs['data'].keys())
