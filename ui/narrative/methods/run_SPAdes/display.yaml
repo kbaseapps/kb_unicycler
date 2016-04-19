@@ -29,7 +29,7 @@ suggestions:
 parameters :
     read_libraries :
         ui-name : |
-            Read libraries
+            Read library
         short-hint : |
             The libraries of Illumina reads to be assembled
     output_contigset_name :

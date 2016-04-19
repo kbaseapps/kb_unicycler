@@ -47,8 +47,8 @@
                  "display": "standard"
                 },
                 {
-                  "value": "single cell",
-                  "display": "single_cell"
+                  "value": "single_cell",
+                  "display": "single cell"
                 },
                 {
                   "value": "metagenomic",
