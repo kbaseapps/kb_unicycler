@@ -33,9 +33,6 @@ Maximum memory use is set to available memory - 1G.
 Autodetection is used for the PHRED quality offset and k-mer sizes.
 A coverage cutoff is not specified.
 Does not currently support assembling metagenomics reads.
-
-The resulting contigset is stored in the workspace and therefore is limited to
-1GB.
     '''
 
     ######## WARNING FOR GEVENT USERS #######

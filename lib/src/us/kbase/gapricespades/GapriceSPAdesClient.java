@@ -25,8 +25,6 @@ import us.kbase.common.service.UnauthorizedException;
  * Autodetection is used for the PHRED quality offset and k-mer sizes.
  * A coverage cutoff is not specified.
  * Does not currently support assembling metagenomics reads.
- * The resulting contigset is stored in the workspace and therefore is limited to
- * 1GB.
  * </pre>
  */
 public class GapriceSPAdesClient {
