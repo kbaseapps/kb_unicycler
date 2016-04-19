@@ -32,17 +32,17 @@ parameters :
             Read library
         short-hint : |
             The libraries of Illumina reads to be assembled
+    dna_source :
+        ui-name : |
+            DNA source
+        short-hint : |
+            The source of the sequenced DNA - either standard, single cell / 
+            MDA, or metagenomic.
     output_contigset_name :
         ui-name : |
             Output ContigSet
         short-hint : |
             The name under which the resulting ContigSet will be saved in the Narrative
-    dna_source :
-        ui-name : |
-            DNA source
-        short-hint : |
-            The source of the sequenced DNA - either standard, single cell /
-            MDA, or metagenomic.
 description : |
     <p>
     Runs the <a href="http://bioinf.spbau.ru/spades" target="_blank">SPAdes assembler</a>

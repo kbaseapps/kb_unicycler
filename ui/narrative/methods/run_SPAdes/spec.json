@@ -22,18 +22,6 @@
             }
         },
         {
-            "id": "output_contigset_name",
-            "optional": false,
-            "advanced": false,
-            "allow_multiple": false,
-            "default_values": ["SPAdes.contigs"],
-            "field_type": "text",
-            "text_options": {
-                "valid_ws_types" : [ "KBaseGenomes.ContigSet" ],
-                "is_output_name":true
-            }
-        },
-        {
             "id": "dna_source",
             "optional": false,
             "advanced": false,
@@ -55,6 +43,18 @@
                   "display": "metagenomic"
                 }
               ]
+            }
+        },
+        {
+            "id": "output_contigset_name",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": ["SPAdes.contigs"],
+            "field_type": "text",
+            "text_options": {
+                "valid_ws_types" : [ "KBaseGenomes.ContigSet" ],
+                "is_output_name":true
             }
         }
     ],
