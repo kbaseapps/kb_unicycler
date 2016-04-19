@@ -6,6 +6,7 @@ import time
 from os import environ
 from ConfigParser import ConfigParser
 import psutil
+from pprint import pprint
 
 import requests
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
@@ -211,13 +212,18 @@ class gaprice_SPAdesTest(unittest.TestCase):
                             'data/small.interleaved.fq', None, None, 'fasta')
         print('Data staged.')
 
+    def make_ref(self, object_info):
+        return str(object_info[6]) + '/' + str(object_info[0]) + \
+            '/' + str(object_info[4])
+
     # TODO test KBaseAssy vs. KBFile
     # TODO test single cell vs. normal
     # TODO test separate vs. interlaced
     # TODO test gzip
     # TODO std vs meta vs single cell
-    # TODO reads types
+    # TODO multiple illumina reads
 
+    @unittest.skip('temp')
     def test_fr_pair(self):
         ret = self.getImpl().run_SPAdes(
             self.getContext(),
@@ -231,17 +237,44 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
     def test_interlaced(self):
         contigcnt = 2
+        key = 'intbasic'
+        output_name = 'intbasic_out'
+
         ret = self.getImpl().run_SPAdes(
             self.getContext(),
             {'workspace_name': self.getWsName(),
-             'read_library_name': self.staged['intbasic']['obj_info'][1],
-             'output_contigset_name': 'intbasic_out'
+             'read_library_name': self.staged[key]['obj_info'][1],
+             'output_contigset_name': output_name
              })[0]
-        print(ret)
+        assyref = self.make_ref(self.staged[key]['obj_info'])
+
         report = self.wsClient.get_objects([{'ref': ret['report_ref']}])[0]
-        print(report)
+        self.assertEqual('KBaseReport.Report', report['info'][2].split('-')[0])
+        self.assertEqual(1, len(report['data']['objects_created']))
+        self.assertEqual('Assembled contigs',
+                         report['data']['objects_created'][0]['description'])
         self.assertIn('Assembled into ' + str(contigcnt) + ' contigs',
                       report['data']['text_message'])
+        self.assertEqual(1, len(report['provenance']))
+        self.assertEqual(1, len(report['provenance'][0]['input_ws_objects']))
+        self.assertEqual(
+            assyref, report['provenance'][0]['input_ws_objects'][0])
+        self.assertEqual(
+            1, len(report['provenance'][0]['resolved_ws_objects']))
+        self.assertEqual(
+            assyref, report['provenance'][0]['resolved_ws_objects'][0])
+
         cs_ref = report['data']['objects_created'][0]['ref']
         cs = self.wsClient.get_objects([{'ref': cs_ref}])[0]
-        print(cs.keys())
+        self.assertEqual('KBaseGenomes.ContigSet', cs['info'][2].split('-')[0])
+        self.assertEqual(1, len(cs['provenance']))
+        self.assertEqual(1, len(cs['provenance'][0]['input_ws_objects']))
+        self.assertEqual(
+            assyref, cs['provenance'][0]['input_ws_objects'][0])
+        self.assertEqual(1, len(cs['provenance'][0]['resolved_ws_objects']))
+        self.assertEqual(
+            assyref, cs['provenance'][0]['resolved_ws_objects'][0])
+        self.assertEqual(output_name, cs['info'][1])
+
+        pprint(cs['info'])
+        print(cs['data'].keys())
