@@ -17,8 +17,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        token = environ.get('KB_AUTH_TOKEN', None)
-        cls.ctx = {'token': token,
+        cls.token = environ.get('KB_AUTH_TOKEN', None)
+        cls.ctx = {'token': cls.token,
                    'provenance': [
                         {'service': 'gaprice_SPAdes',
                          'method': 'please_never_use_it_in_production',
@@ -33,17 +33,25 @@ class gaprice_SPAdesTest(unittest.TestCase):
             cls.cfg[nameval[0]] = nameval[1]
         cls.wsURL = cls.cfg['workspace-url']
         cls.shockURL = cls.cfg['shock-url']
-        cls.hs = HandleService(url=cls.cfg['handle-service-url'], token=token)
-        cls.wsClient = workspaceService(cls.wsURL, token=token)
+        cls.hs = HandleService(url=cls.cfg['handle-service-url'],
+                               token=cls.token)
+        cls.wsClient = workspaceService(cls.wsURL, token=cls.token)
         cls.serviceImpl = gaprice_SPAdes(cls.cfg)
         cls.staged = {}
-        cls.setupTestData(token)
+        cls.nodes_to_delete = []
+        cls.handles_to_delete = []
+        cls.setupTestData()
 
     @classmethod
     def tearDownClass(cls):
         if hasattr(cls, 'wsName'):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
             print('Test workspace was deleted')
+        for node in cls.nodes_to_delete:
+            cls.delete_shock_node(node)
+
+        cls.hs.delete_handles(cls.hs.ids_to_handles(cls.handles_to_delete))
+        print('Deleted handles ' + str(cls.handles_to_delete))
 
     @classmethod
     def getWsName(cls):
@@ -63,18 +71,22 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def getContext(self):
         return self.__class__.ctx
 
+    @classmethod
+    def delete_shock_node(cls, node_id):
+        header = {'Authorization': 'Oauth {0}'.format(cls.token)}
+        requests.delete(cls.shockURL + '/node/' + node_id, headers=header,
+                        allow_redirects=True)
+        print('Deleted shock node ' + node_id)
+
     # Helper script borrowed from the transform service, logger removed
     @classmethod
-    def upload_file_to_shock(cls, filePath, token):
+    def upload_file_to_shock(cls, filePath):
         """
         Use HTTP multi-part POST to save a file to a SHOCK instance.
         """
 
-        if token is None:
-            raise Exception("Authentication token required!")
-
         header = dict()
-        header["Authorization"] = "Oauth {0}".format(token)
+        header["Authorization"] = "Oauth {0}".format(cls.token)
 
         if filePath is None:
             raise Exception("No file given for upload to SHOCK!")
@@ -96,19 +108,22 @@ class gaprice_SPAdesTest(unittest.TestCase):
             return result["data"]
 
     @classmethod
-    def upload_file_to_shock_and_get_handle(cls, test_file, token):
+    def upload_file_to_shock_and_get_handle(cls, test_file):
         '''
         Uploads the file in test_file to shock and returns the node and a
         handle to the node.
         '''
         print('loading file to shock: ' + test_file)
-        node = cls.upload_file_to_shock(test_file, token)
+        node = cls.upload_file_to_shock(test_file)
+        cls.nodes_to_delete.append(node['id'])
 
         print('creating handle for shock id ' + node['id'])
         handle_id = cls.hs.persist_handle({'id': node['id'],
                                            'type': 'shock',
                                            'url': cls.shockURL
                                            })
+        cls.handles_to_delete.append(handle_id)
+
         md5 = node['file']['checksum']['md5']
         return node['id'], handle_id, md5, node['file']['size']
 
@@ -116,18 +131,18 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def upload_assembly(cls, key, wsobjname, object_body,
                         fwd_reads, fwd_reads_type,
                         rev_reads, rev_reads_type,
-                        token, kbase_assy=False):
+                        kbase_assy=False):
         print('staging data for key ' + key)
         print('uploading forward reads file ' + fwd_reads)
         fwd_id, fwd_handle, fwd_md5, fwd_size = \
-            cls.upload_file_to_shock_and_get_handle(fwd_reads, token)
+            cls.upload_file_to_shock_and_get_handle(fwd_reads)
 
         rev_id = None
         rev_handle = None
         if rev_reads:
             print('uploading reverse reads file ' + rev_reads)
             rev_id, rev_handle, rev_md5, rev_size = \
-                cls.upload_file_to_shock_and_get_handle(rev_reads, token)
+                cls.upload_file_to_shock_and_get_handle(rev_reads)
 
         ob = dict(object_body)  # copy
         ob['sequencing_tech'] = 'fake data'
@@ -183,7 +198,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                            'ref': ref}
 
     @classmethod
-    def setupTestData(cls, token):
+    def setupTestData(cls):
         print('Shock url ' + cls.shockURL)
         print('WS url ' + cls.wsClient.url)
         print('Handle service url ' + cls.hs.url)
@@ -191,10 +206,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
         print('Available memory ' + str(psutil.virtual_memory().available))
         print('staging data')
         cls.upload_assembly('frbasic', 'frbasic', {}, 'data/small.forward.fq',
-                            'fasta', 'data/small.reverse.fq', 'fasta', token)
+                            'fasta', 'data/small.reverse.fq', 'fasta')
         cls.upload_assembly('intbasic', 'intbasic', {},
-                            'data/small.interleaved.fq', None, None, 'fasta',
-                            token)
+                            'data/small.interleaved.fq', None, None, 'fasta')
         print('Data staged.')
 
     # TODO test KBaseAssy vs. KBFile
@@ -216,6 +230,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         print(report)
 
     def test_interlaced(self):
+        contigcnt = 2
         ret = self.getImpl().run_SPAdes(
             self.getContext(),
             {'workspace_name': self.getWsName(),
@@ -225,8 +240,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
         print(ret)
         report = self.wsClient.get_objects([{'ref': ret['report_ref']}])[0]
         print(report)
+        self.assertIn('Assembled into ' + str(contigcnt) + ' contigs',
+                      report['data']['text_message'])
         cs_ref = report['data']['objects_created'][0]['ref']
         cs = self.wsClient.get_objects([{'ref': cs_ref}])[0]
         print(cs.keys())
-        
-        
