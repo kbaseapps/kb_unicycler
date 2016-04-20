@@ -228,10 +228,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             '/' + str(object_info[4])
 
     # TODO test single cell vs. normal
-    # TODO test separate vs. interlaced
-    # TODO test gzip
     # TODO test std vs meta vs single cell
-    # TODO test multiple illumina reads
     # TODO run through code & check paths (look at xform service tests)
 
     def test_fr_pair_kbfile(self):
@@ -325,6 +322,28 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'md5': 'affbb138ad3887c7d12e8ec28a9a8d52',
              'fasta_md5': 'b3012dec12e4b6042affc9a933b60f7a'
              }, contig_count=1449)
+
+    def test_multiple(self):
+        self.run_success(
+            ['intbasic_kbassy', 'frbasic'], 'multiple_out',
+            {'contigs':
+             [{'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_1_length_64822_cov_8.54567_ID_29',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.54567_ID_29',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
+               },
+              {'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_2_length_62607_cov_8.06011_ID_15',
+               'length': 62607,
+               'id': 'NODE_2_length_62607_cov_8.06011_ID_15',
+               'md5': 'e99fade8814bdb861532f493e5deddbd'
+               }],
+             'md5': 'a1bfe0a6d53afb2f0a8c186d4265703a',
+             'fasta_md5': '5b7d11cf6a1b01cb2857883a5dc74357'
+             }, contig_count=6)
 
     def run_success(self, stagekeys, output_name, expected, contig_count=None,
                     dna_source=None):
