@@ -81,7 +81,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
     # Helper script borrowed from the transform service, logger removed
     @classmethod
-    def upload_file_to_shock(cls, filePath):
+    def upload_file_to_shock(cls, file_path):
         """
         Use HTTP multi-part POST to save a file to a SHOCK instance.
         """
@@ -89,13 +89,15 @@ class gaprice_SPAdesTest(unittest.TestCase):
         header = dict()
         header["Authorization"] = "Oauth {0}".format(cls.token)
 
-        if filePath is None:
+        if file_path is None:
             raise Exception("No file given for upload to SHOCK!")
 
-        with open(os.path.abspath(filePath), 'rb') as dataFile:
+        with open(os.path.abspath(file_path), 'rb') as dataFile:
+            files = {'upload': dataFile}
             print('POSTing data')
-            response = requests.post(cls.shockURL + '/node', headers=header,
-                                     data=dataFile, allow_redirects=True)
+            response = requests.post(
+                cls.shockURL + '/node', headers=header, files=files,
+                stream=True, allow_redirects=True)
             print('got response')
 
         if not response.ok:
@@ -131,16 +133,14 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
     @classmethod
     def upload_assembly(cls, key, wsobjname, object_body,
-                        fwd_reads, fwd_reads_type,
-                        rev_reads, rev_reads_type,
-                        kbase_assy=False):
+                        fwd_reads, rev_reads=None, kbase_assy=False):
         print('staging data for key ' + key)
-        print('uploading forward reads file ' + fwd_reads)
+        print('uploading forward reads file ' + fwd_reads['file'])
         fwd_id, fwd_handle_id, fwd_md5, fwd_size = \
-            cls.upload_file_to_shock_and_get_handle(fwd_reads)
+            cls.upload_file_to_shock_and_get_handle(fwd_reads['file'])
         fwd_handle = {
                       'hid': fwd_handle_id,
-                      'file_name': os.path.split(fwd_reads)[1],
+                      'file_name': fwd_reads['name'],
                       'id': fwd_id,
                       'url': cls.shockURL,
                       'type': 'shock',
@@ -157,17 +157,17 @@ class gaprice_SPAdesTest(unittest.TestCase):
             ob['lib1'] = \
                 {'file': fwd_handle,
                  'encoding': 'UTF8',
-                 'type': fwd_reads_type,
+                 'type': fwd_reads['type'],
                  'size': fwd_size
                  }
 
         if rev_reads:
-            print('uploading reverse reads file ' + rev_reads)
+            print('uploading reverse reads file ' + rev_reads['file'])
             rev_id, rev_handle_id, rev_md5, rev_size = \
-                cls.upload_file_to_shock_and_get_handle(rev_reads)
+                cls.upload_file_to_shock_and_get_handle(rev_reads['file'])
             rev_handle = {
                           'hid': rev_handle_id,
-                          'file_name': os.path.split(rev_reads)[1],
+                          'file_name': rev_reads['name'],
                           'id': rev_id,
                           'url': cls.shockURL,
                           'type': 'shock',
@@ -179,7 +179,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                 ob['lib2'] = \
                     {'file': rev_handle,
                      'encoding': 'UTF8',
-                     'type': rev_reads_type,
+                     'type': rev_reads['type'],
                      'size': rev_size
                      }
 
@@ -205,17 +205,22 @@ class gaprice_SPAdesTest(unittest.TestCase):
         print('CPUs detected ' + str(psutil.cpu_count()))
         print('Available memory ' + str(psutil.virtual_memory().available))
         print('staging data')
-        cls.upload_assembly('frbasic', 'frbasic', {}, 'data/small.forward.fq',
-                            'fastq', 'data/small.reverse.fq', 'fastq')
-        cls.upload_assembly('intbasic', 'intbasic', {},
-                            'data/small.interleaved.fq', '.FQ', None, None)
+        fwd_reads = {'file': 'data/small.forward.fq',
+                     'name': 'test_fwd.fq',
+                     'type': 'fastq'}
+        rev_reads = {'file': 'data/small.reverse.fq',
+                     'name': 'test_rev.fq',
+                     'type': 'fastq'}
+        int_reads = {'file': 'data/small.interleaved.fq',
+                     'name': 'test_int.fq',
+                     'type': '.FQ'}
+        cls.upload_assembly('frbasic', 'frbasic', {}, fwd_reads,
+                            rev_reads=rev_reads)
+        cls.upload_assembly('intbasic', 'intbasic', {}, int_reads)
         cls.upload_assembly('frbasic_kbassy', 'frbasic_kbassy', {},
-                            'data/small.forward.fq', 'fastq',
-                            'data/small.reverse.fq', 'fastq',
-                            kbase_assy=True)
+                            fwd_reads, rev_reads=rev_reads, kbase_assy=True)
         cls.upload_assembly('intbasic_kbassy', 'intbasic_kbassy', {},
-                            'data/small.interleaved.fq', '.FQ', None, None,
-                            kbase_assy=True)
+                            int_reads, kbase_assy=True)
         print('Data staged.')
 
     def make_ref(self, object_info):

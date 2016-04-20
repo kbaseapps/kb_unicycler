@@ -148,9 +148,11 @@ Does not currently support assembling metagenomics reads.
         if filePath is None:
             raise Exception("No file given for upload to SHOCK!")
 
-        with open(os.path.abspath(filePath), 'rb') as dataFile:
-            response = requests.post(self.shockURL + '/node', headers=header,
-                                     data=dataFile, allow_redirects=True)
+        with open(os.path.abspath(filePath), 'rb') as data_file:
+            files = {'upload': data_file}
+            response = requests.post(
+                self.shockURL + '/node', headers=header, files=files,
+                stream=True, allow_redirects=True)
 
         if not response.ok:
             response.raise_for_status()
