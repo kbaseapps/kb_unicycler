@@ -11,6 +11,7 @@ import requests
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from gaprice_SPAdes.gaprice_SPAdesImpl import gaprice_SPAdes
+from pprint import pprint
 
 
 class gaprice_SPAdesTest(unittest.TestCase):
@@ -80,7 +81,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
     # Helper script borrowed from the transform service, logger removed
     @classmethod
-    def upload_file_to_shock(cls, filePath):
+    def upload_file_to_shock(cls, file_path):
         """
         Use HTTP multi-part POST to save a file to a SHOCK instance.
         """
@@ -88,13 +89,15 @@ class gaprice_SPAdesTest(unittest.TestCase):
         header = dict()
         header["Authorization"] = "Oauth {0}".format(cls.token)
 
-        if filePath is None:
+        if file_path is None:
             raise Exception("No file given for upload to SHOCK!")
 
-        with open(os.path.abspath(filePath), 'rb') as dataFile:
+        with open(os.path.abspath(file_path), 'rb') as dataFile:
+            files = {'upload': dataFile}
             print('POSTing data')
-            response = requests.post(cls.shockURL + '/node', headers=header,
-                                     data=dataFile, allow_redirects=True)
+            response = requests.post(
+                cls.shockURL + '/node', headers=header, files=files,
+                stream=True, allow_redirects=True)
             print('got response')
 
         if not response.ok:
@@ -115,6 +118,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         '''
         print('loading file to shock: ' + test_file)
         node = cls.upload_file_to_shock(test_file)
+        pprint(node)
         cls.nodes_to_delete.append(node['id'])
 
         print('creating handle for shock id ' + node['id'])
@@ -129,55 +133,55 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
     @classmethod
     def upload_assembly(cls, key, wsobjname, object_body,
-                        fwd_reads, fwd_reads_type,
-                        rev_reads, rev_reads_type,
-                        kbase_assy=False):
+                        fwd_reads, rev_reads=None, kbase_assy=False):
         print('staging data for key ' + key)
-        print('uploading forward reads file ' + fwd_reads)
-        fwd_id, fwd_handle, fwd_md5, fwd_size = \
-            cls.upload_file_to_shock_and_get_handle(fwd_reads)
-
-        rev_id = None
-        rev_handle = None
-        if rev_reads:
-            print('uploading reverse reads file ' + rev_reads)
-            rev_id, rev_handle, rev_md5, rev_size = \
-                cls.upload_file_to_shock_and_get_handle(rev_reads)
+        print('uploading forward reads file ' + fwd_reads['file'])
+        fwd_id, fwd_handle_id, fwd_md5, fwd_size = \
+            cls.upload_file_to_shock_and_get_handle(fwd_reads['file'])
+        fwd_handle = {
+                      'hid': fwd_handle_id,
+                      'file_name': fwd_reads['name'],
+                      'id': fwd_id,
+                      'url': cls.shockURL,
+                      'type': 'shock',
+                      'remote_md5': fwd_md5
+                      }
 
         ob = dict(object_body)  # copy
         ob['sequencing_tech'] = 'fake data'
-        if not kbase_assy:
+        if kbase_assy:
+            wstype = 'KBaseAssembly.PairedEndLibrary'
+            ob['handle_1'] = fwd_handle
+        else:
             wstype = 'KBaseFile.PairedEndLibrary'
             ob['lib1'] = \
-                {'file': {
-                          'hid': fwd_handle,
-                          'file_name': os.path.split(fwd_reads)[1],
-                          'id': fwd_id,
-                          'url': cls.shockURL,
-                          'type': 'shock',
-                          'remote_md5': fwd_md5
-                          },
+                {'file': fwd_handle,
                  'encoding': 'UTF8',
-                 'type': fwd_reads_type,
+                 'type': fwd_reads['type'],
                  'size': fwd_size
                  }
-            if rev_reads:
+
+        if rev_reads:
+            print('uploading reverse reads file ' + rev_reads['file'])
+            rev_id, rev_handle_id, rev_md5, rev_size = \
+                cls.upload_file_to_shock_and_get_handle(rev_reads['file'])
+            rev_handle = {
+                          'hid': rev_handle_id,
+                          'file_name': rev_reads['name'],
+                          'id': rev_id,
+                          'url': cls.shockURL,
+                          'type': 'shock',
+                          'remote_md5': rev_md5
+                          }
+            if kbase_assy:
+                ob['handle_2'] = rev_handle
+            else:
                 ob['lib2'] = \
-                    {'file': {
-                              'hid': rev_handle,
-                              'file_name': os.path.split(rev_reads)[1],
-                              'id': rev_id,
-                              'url': cls.shockURL,
-                              'type': 'shock',
-                              'remote_md5': rev_md5
-                              },
+                    {'file': rev_handle,
                      'encoding': 'UTF8',
-                     'type': rev_reads_type,
+                     'type': rev_reads['type'],
                      'size': rev_size
                      }
-        else:
-            wstype = 'KBaseAssembly.PairedEndLibrary'
-            pass  # TODO KBaseAssembly
 
         print('Saving object data')
         objdata = cls.wsClient.save_objects({
@@ -191,11 +195,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             })[0]
         print('Saved object: ')
         print(objdata)
-        ref = str(objdata[6]) + '/' + str(objdata[0]) + '/' + str(objdata[4])
-        cls.staged[key] = {'obj_info': objdata,
-                           'fwd_node': fwd_id,
-                           'rev_node': rev_id,
-                           'ref': ref}
+        cls.staged[key] = objdata
 
     @classmethod
     def setupTestData(cls):
@@ -205,106 +205,186 @@ class gaprice_SPAdesTest(unittest.TestCase):
         print('CPUs detected ' + str(psutil.cpu_count()))
         print('Available memory ' + str(psutil.virtual_memory().available))
         print('staging data')
-        cls.upload_assembly('frbasic', 'frbasic', {}, 'data/small.forward.fq',
-                            'fasta', 'data/small.reverse.fq', 'fasta')
-        cls.upload_assembly('intbasic', 'intbasic', {},
-                            'data/small.interleaved.fq', None, None, 'fasta')
+        fwd_reads = {'file': 'data/small.forward.fq',
+                     'name': 'test_fwd.fq',
+                     'type': 'fastq'}
+        rev_reads = {'file': 'data/small.reverse.fq',
+                     'name': 'test_rev.fq',
+                     'type': 'fastq'}
+        int_reads = {'file': 'data/small.interleaved.fq',
+                     'name': 'test_int.fq',
+                     'type': '.FQ'}
+        cls.upload_assembly('frbasic', 'frbasic', {}, fwd_reads,
+                            rev_reads=rev_reads)
+        cls.upload_assembly('intbasic', 'intbasic', {}, int_reads)
+        cls.upload_assembly('frbasic_kbassy', 'frbasic_kbassy', {},
+                            fwd_reads, rev_reads=rev_reads, kbase_assy=True)
+        cls.upload_assembly('intbasic_kbassy', 'intbasic_kbassy', {},
+                            int_reads, kbase_assy=True)
         print('Data staged.')
 
     def make_ref(self, object_info):
         return str(object_info[6]) + '/' + str(object_info[0]) + \
             '/' + str(object_info[4])
 
-    # TODO test KBaseAssy vs. KBFile
     # TODO test single cell vs. normal
     # TODO test separate vs. interlaced
     # TODO test gzip
-    # TODO std vs meta vs single cell
-    # TODO multiple illumina reads
+    # TODO test std vs meta vs single cell
+    # TODO test multiple illumina reads
+    # TODO run through code & check paths (look at xform service tests)
 
-#     def test_fr_pair(self):
-#         ret = self.getImpl().run_SPAdes(
-#             self.getContext(),
-#             {'workspace_name': self.getWsName(),
-#              'read_library_name': self.staged['frbasic']['obj_info'][1],
-#              'output_contigset_name': 'frbasic_out'
-#              })[0]
-#         print(ret)
-#         report = self.wsClient.get_objects([{'ref': ret['report_ref']}])
-#         print(report)
+    def test_fr_pair_kbfile(self):
 
-    def test_interlaced(self):
-        key = 'intbasic'
-        output_name = 'intbasic_out'
-        contigs = [{'description': 'Note MD5 is generated from uppercasing ' +
-                                   'the sequence',
-                    'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
-                    'length': 64822,
-                    'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
-                    'md5': '8a67351c7d6416039c6f613c31b10764'
-                    },
-                   {'description': 'Note MD5 is generated from uppercasing ' +
-                                   'the sequence',
-                    'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
-                    'length': 62607,
-                    'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
-                    'md5': 'e99fade8814bdb861532f493e5deddbd'
-                    }]
-        source = 'unknown'
-        source_id = 'scaffolds.fasta'
-        md5 = '09a27dd5107ad23ee2b7695aee8c09d0'
-        fasta_md5 = '7f6093a7e56a8dc5cbf1343b166eda67'
+        self.run_success(
+            ['frbasic'], 'frbasic_out',
+            {'contigs':
+             [{'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
+               },
+              {'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'length': 62607,
+               'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'md5': 'e99fade8814bdb861532f493e5deddbd'
+               }],
+             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
+             'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
+             })
+
+    def test_fr_pair_kbassy(self):
+
+        self.run_success(
+            ['frbasic_kbassy'], 'frbasic_kbassy_out',
+            {'contigs':
+             [{'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
+               },
+              {'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'length': 62607,
+               'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'md5': 'e99fade8814bdb861532f493e5deddbd'
+               }],
+             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
+             'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
+             })
+
+    def test_interlaced_kbfile(self):
+
+        self.run_success(
+            ['intbasic'], 'intbasic_out',
+            {'contigs':
+             [{'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
+               },
+              {'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'length': 62607,
+               'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'md5': 'e99fade8814bdb861532f493e5deddbd'
+               }],
+             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
+             'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
+             })
+
+    def test_interlaced_kbassy(self):
+
+        self.run_success(
+            ['intbasic_kbassy'], 'intbasic_kbassy_out',
+            {'contigs':
+             [{'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
+               },
+              {'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'length': 62607,
+               'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'md5': 'e99fade8814bdb861532f493e5deddbd'
+               }],
+             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
+             'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
+             })
+
+    def run_success(self, stagekeys, output_name, expected,
+                    dna_source=None):
+
+        libs = [self.staged[key][1] for key in stagekeys]
+        assyrefs = sorted(
+            [self.make_ref(self.staged[key]) for key in stagekeys])
 
         params = {'workspace_name': self.getWsName(),
-                  'read_libraries': [self.staged[key]['obj_info'][1]],
+                  'read_libraries': libs,
                   'output_contigset_name': output_name
                   }
 
+        if not (dna_source is None):
+            if dna_source == 'None':
+                params['dna_source'] = None
+            else:
+                params['dna_source'] = dna_source
+
         ret = self.getImpl().run_SPAdes(self.getContext(), params)[0]
-        assyref = self.make_ref(self.staged[key]['obj_info'])
 
         report = self.wsClient.get_objects([{'ref': ret['report_ref']}])[0]
         self.assertEqual('KBaseReport.Report', report['info'][2].split('-')[0])
         self.assertEqual(1, len(report['data']['objects_created']))
         self.assertEqual('Assembled contigs',
                          report['data']['objects_created'][0]['description'])
-        self.assertIn('Assembled into ' + str(len(contigs)) + ' contigs',
-                      report['data']['text_message'])
+        self.assertIn('Assembled into ' + str(len(expected['contigs'])) +
+                      ' contigs', report['data']['text_message'])
         self.assertEqual(1, len(report['provenance']))
-        self.assertEqual(1, len(report['provenance'][0]['input_ws_objects']))
         self.assertEqual(
-            assyref, report['provenance'][0]['input_ws_objects'][0])
+            assyrefs, sorted(report['provenance'][0]['input_ws_objects']))
         self.assertEqual(
-            1, len(report['provenance'][0]['resolved_ws_objects']))
-        self.assertEqual(
-            assyref, report['provenance'][0]['resolved_ws_objects'][0])
+            assyrefs,
+            sorted(report['provenance'][0]['resolved_ws_objects']))
 
         cs_ref = report['data']['objects_created'][0]['ref']
         cs = self.wsClient.get_objects([{'ref': cs_ref}])[0]
         self.assertEqual('KBaseGenomes.ContigSet', cs['info'][2].split('-')[0])
         self.assertEqual(1, len(cs['provenance']))
-        self.assertEqual(1, len(cs['provenance'][0]['input_ws_objects']))
         self.assertEqual(
-            assyref, cs['provenance'][0]['input_ws_objects'][0])
-        self.assertEqual(1, len(cs['provenance'][0]['resolved_ws_objects']))
+            assyrefs, sorted(cs['provenance'][0]['input_ws_objects']))
         self.assertEqual(
-            assyref, cs['provenance'][0]['resolved_ws_objects'][0])
+            assyrefs, sorted(cs['provenance'][0]['resolved_ws_objects']))
         self.assertEqual(output_name, cs['info'][1])
 
         cs_fasta_node = cs['data']['fasta_ref']
         header = {"Authorization": "Oauth {0}".format(self.token)}
         fasta_node = requests.get(self.shockURL + '/node/' + cs_fasta_node,
                                   headers=header, allow_redirects=True).json()
-        self.assertEqual(fasta_md5,
+        self.assertEqual(expected['fasta_md5'],
                          fasta_node['data']['file']['checksum']['md5'])
 
         self.assertEqual(output_name, cs['data']['id'])
         self.assertEqual(output_name, cs['data']['name'])
-        self.assertEqual(md5, cs['data']['md5'])
-        self.assertEqual(source, cs['data']['source'])
-        self.assertEqual(source_id, cs['data']['source_id'])
+        self.assertEqual(expected['md5'], cs['data']['md5'])
+        self.assertEqual('See provenance', cs['data']['source'])
+        self.assertEqual('See provenance', cs['data']['source_id'])
 
-        for i, (exp, got) in enumerate(zip(contigs, cs['data']['contigs'])):
+        for i, (exp, got) in enumerate(zip(expected['contigs'],
+                                           cs['data']['contigs'])):
             print('Checking contig ' + str(i) + ': ' + exp['name'])
             exp['s_len'] = exp['length']
             got['s_len'] = len(got['sequence'])

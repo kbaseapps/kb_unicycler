@@ -4,7 +4,7 @@ from __future__ import print_function
 import os
 import re
 import uuid
-from pprint import pformat, pprint
+from pprint import pformat
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 import requests
 import json
@@ -67,13 +67,13 @@ Does not currently support assembling metagenomics reads.
     SUPPORTED_FILES = ['.fq',
                        '.fastq',
                        # '.bam',
-                       '.fa',
-                       '.fasta',
+                       # '.fa',
+                       # '.fasta',
                        '.fq.gz',
                        '.fastq.gz',
                        # '.bam.gz',
-                       '.fa.gz',
-                       '.fasta.gz'
+                       # '.fa.gz',
+                       # '.fasta.gz'
                        ]
 
     def log(self, message):
@@ -81,7 +81,7 @@ Does not currently support assembling metagenomics reads.
 
     def file_extension_ok(self, filename):
         for ext in self.SUPPORTED_FILES:
-            if filename.endswith(ext):
+            if filename.lower().endswith(ext):
                 return True
         return False
 
@@ -106,11 +106,12 @@ Does not currently support assembling metagenomics reads.
             file_name += '_' + node_fn
 
         if not self.file_extension_ok(file_name):
-            errstr = ('Reads object {} ({}) contains a reads file stored in ' +
-                      'Shock node {} for which a valid filename could not ' +
-                      'be determined.')
-            raise ValueError(errstr.format(source_obj_ref, source_obj_name,
-                                           handle['id']))
+            raise ValueError(
+                ('Reads object {} ({}) contains a reads file stored in ' +
+                 'Shock node {} for which a valid filename could not ' +
+                 'be determined. Acceptable extensions: {}').format(
+                    source_obj_ref, source_obj_name, handle['id'],
+                    ' '.join(self.SUPPORTED_FILES)))
 
         file_path = os.path.join(self.scratch, file_name)
         with open(file_path, 'w', 0) as fhandle:
@@ -147,9 +148,11 @@ Does not currently support assembling metagenomics reads.
         if filePath is None:
             raise Exception("No file given for upload to SHOCK!")
 
-        with open(os.path.abspath(filePath), 'rb') as dataFile:
-            response = requests.post(self.shockURL + '/node', headers=header,
-                                     data=dataFile, allow_redirects=True)
+        with open(os.path.abspath(filePath), 'rb') as data_file:
+            files = {'upload': data_file}
+            response = requests.post(
+                self.shockURL + '/node', headers=header, files=files,
+                stream=True, allow_redirects=True)
 
         if not response.ok:
             response.raise_for_status()
@@ -162,20 +165,20 @@ Does not currently support assembling metagenomics reads.
             return result["data"]
 
     def generate_spades_yaml(self, reads_data):
-        right = []
-        left = []
+        left = []  # fwd in fr orientation
+        right = []  # rev
         interlaced = []
         for read in reads_data:
             if 'rev_file' in read and read['rev_file']:
-                right.append(read['fwd_file'])
-                left.append(read['rev_file'])
+                left.append(read['fwd_file'])
+                right.append(read['rev_file'])
             else:
                 interlaced.append(read['fwd_file'])
         yml = [{'type': 'paired-end',
                 'orientation': 'fr'}]
-        if right:
-            yml[0]['right reads'] = right
+        if left:
             yml[0]['left reads'] = left
+            yml[0]['right reads'] = right
         if interlaced:
             yml[0]['interlaced reads'] = interlaced
         yml_path = os.path.join(self.scratch, 'run.yaml')
@@ -184,7 +187,6 @@ Does not currently support assembling metagenomics reads.
         return yml_path
 
     def exec_spades(self, dna_source, reads_data):
-        # construct the SPAdes command
         threads = psutil.cpu_count() * self.THREADS_PER_CORE
         mem = (psutil.virtual_memory().available / self.GB -
                self.MEMORY_OFFSET_GB)
@@ -195,12 +197,14 @@ Does not currently support assembling metagenomics reads.
                 ' not run without at least ' +
                 str(self.MIN_MEMORY_GB + self.MEMORY_OFFSET_GB) +
                 ' bytes available')
+
         outdir = os.path.join(self.scratch, 'spades_output_dir')
         if not os.path.exists(outdir):
             os.makedirs(outdir)
         tmpdir = os.path.join(self.scratch, 'spades_tmp_dir')
         if not os.path.exists(tmpdir):
             os.makedirs(tmpdir)
+
         cmd = ['spades.py', '--careful', '--threads', str(threads),
                '--memory', str(mem), '-o', outdir, '--tmp-dir', tmpdir]
         if dna_source == self.PARAM_IN_SINGLE_CELL:
@@ -210,46 +214,23 @@ Does not currently support assembling metagenomics reads.
         cmd += ['--dataset', self.generate_spades_yaml(reads_data)]
         self.log('Running SPAdes command line:')
         self.log(cmd)
-#         stdout_file = os.path.join(self.scratch, 'spades_stdout')
-#         stderr_file = os.path.join(self.scratch, 'spades_stderr')
-
-#         with open(stdout_file, 'w') as spdout, open(stderr_file, 'w') as spderr: @IgnorePep8
         p = subprocess.Popen(
             cmd,
             cwd=self.scratch,
-            # stdout = spdout,
-            # stderr = spderr,
             shell=False)
         retcode = p.wait()
 
-#         self.log('Standard out:')
-#         if self.REPRESS_SPADES_OUTPUT:
-#             print('SPAdes output repressed but saved locally.')
-#         else:
-#             with open(stdout_file) as spdout:
-#                 for line in spdout:
-#                     self.log(line)
-
-#         self.log('Standard error:')
-#         with open(stderr_file) as spderr:
-#             for line in spderr:
-#                 self.log(line)
-
         self.log('Return code: ' + str(retcode))
         if p.returncode != 0:
-            # errsize = os.stat(stderr_file).st_size
-            # if errsize > 50000:
-            #     errmsg = 'Standard error too large to return'
-            # else:
-            #     with open(stderr_file) as spderr:
-            #         errmsg = 'Standard error:\n' + spderr.read()
             raise ValueError('Error running SPAdes, return code: ' +
-                             str(retcode) + '\n')  # + errmsg)
+                             str(retcode) + '\n')
 
         return outdir
 
     # adapted from
     # https://github.com/kbase/transform/blob/master/plugins/scripts/convert/trns_transform_KBaseFile_AssemblyFile_to_KBaseGenomes_ContigSet.py
+    # which was adapted from an early version of
+    # https://github.com/kbase/transform/blob/master/plugins/scripts/upload/trns_transform_FASTA_DNA_Assembly_to_KBaseGenomes_ContigSet.py
     def convert_to_contigs(self, input_file_name, source, contigset_id,
                            shock_id):
         """
@@ -386,6 +367,7 @@ Does not currently support assembling metagenomics reads.
             fasta_dict[fasta_header] = contig_dict
 
         contig_set_dict = dict()
+        # joining by commas is goofy, but keep consistency with the uploader
         contig_set_dict['md5'] = hashlib.md5(','.join(sorted(
             contig_set_md5_list))).hexdigest()
         contig_set_dict['id'] = contigset_id
@@ -451,7 +433,41 @@ Does not currently support assembling metagenomics reads.
         return str(object_info[6]) + '/' + str(object_info[0]) + \
             '/' + str(object_info[4])
 
-    def process_reads(self, reads, token):
+    def check_reads(self, params, reads):
+        data = reads['data']
+        info = reads['info']
+        obj_ref = self.make_ref(info)
+        obj_name = info[1]
+
+        # Might need to do version checking here.
+        module_name, type_name = info[2].split('-')[0].split('.')
+        if (module_name not in self.MODULE_NAMES or
+                type_name != self.PAIRED_END_TYPE):
+            raise ValueError(
+                'Only the types ' +
+                self.MODULE_NAMES[0] + '.' + self.PAIRED_END_TYPE + ' and ' +
+                self.MODULE_NAMES[1] + '.' + self.PAIRED_END_TYPE +
+                ' are supported')
+
+        if ('read_orientation_outward' in data and
+                data['read_orientation_outward']):
+            raise ValueError(
+                ('Reads object {} ({}) is marked as having outward oriented ' +
+                 'reads, which SPAdes does not ' +
+                 'support.').format(obj_name, obj_ref))
+
+        # ideally types would be firm enough that we could rely on the
+        # metagenomic boolean. However KBaseAssembly doesn't have the field
+        # and it's optional anyway. Ideally fix those issues and then set
+        # the --meta command line flag automatically based on the type
+        if ('single_genome' in data and not data['single_genome'] and
+                params[self.PARAM_IN_DNA_SOURCE] != self.PARAM_IN_METAGENOME):
+            raise ValueError(
+                ('Reads object {} ({}) is marked as containing metagenomic ' +
+                 'data but the assembly method was not specified as ' +
+                 'metagenomic').format(obj_name, obj_ref))
+
+    def process_reads(self, reads, params, token):
         data = reads['data']
         info = reads['info']
         # Object Info Contents
@@ -468,20 +484,11 @@ Does not currently support assembling metagenomics reads.
         # 10 - usermeta meta
 
         ret = {}
-        # Might need to do version checking here.
-        module_name, type_name = info[2].split('-')[0].split('.')
         obj_ref = self.make_ref(info)
         ret['in_lib_ref'] = obj_ref
+        obj_name = info[1]
 
-        if (module_name not in self.MODULE_NAMES or
-                type_name != self.PAIRED_END_TYPE):
-            raise ValueError(
-                'Only the types ' +
-                self.MODULE_NAMES[0] + '.' + self.PAIRED_END_TYPE + ' and ' +
-                self.MODULE_NAMES[1] + '.' + self.PAIRED_END_TYPE +
-                ' are supported')
-
-        # TODO make this a method and and more checking
+        self.check_reads(params, reads)
         # lib1 = KBaseFile, handle_1 = KBaseAssembly
         fwd_type = None
         rev_type = None
@@ -499,12 +506,31 @@ Does not currently support assembling metagenomics reads.
             reverse_reads = False
 
         ret['fwd_file'] = self.shock_download(
-            obj_ref, info[1], token, forward_reads, fwd_type)
+            obj_ref, obj_name, token, forward_reads, fwd_type)
         ret['rev_file'] = None
         if (reverse_reads):
             ret['rev_file'] = self.shock_download(
-                obj_ref, info[1], token, reverse_reads, rev_type)
+                obj_ref, obj_name, token, reverse_reads, rev_type)
         return ret
+
+    def process_params(self, params):
+        if (self.PARAM_IN_WS not in params or
+                not params[self.PARAM_IN_WS]):
+            raise ValueError(self.PARAM_IN_WS + ' parameter is required')
+        if self.PARAM_IN_LIB not in params:
+            raise ValueError(self.PARAM_IN_LIB + ' parameter is required')
+        if not params[self.PARAM_IN_LIB]:
+            raise ValueError('At least one reads library must be provided')
+        if (self.PARAM_IN_CS_NAME not in params or
+                not params[self.PARAM_IN_CS_NAME]):
+            raise ValueError(self.PARAM_IN_CS_NAME + ' parameter is required')
+        if self.PARAM_IN_DNA_SOURCE in params:
+            s = params[self.PARAM_IN_DNA_SOURCE]
+            if s not in [self.PARAM_IN_SINGLE_CELL, self.PARAM_IN_METAGENOME]:
+                params[self.PARAM_IN_DNA_SOURCE] = None
+        else:
+            params[self.PARAM_IN_DNA_SOURCE] = None
+
     #END_CLASS_HEADER
 
     # config contains contents of config file in a hash or None if it couldn't
@@ -531,24 +557,8 @@ Does not currently support assembling metagenomics reads.
 
         token = ctx['token']
 
-        # TODO check contents of types - e.g. metagenomics, outside reads,
-        # check gzip etc.
+        self.process_params(params)
 
-        # do some basic checks
-        if self.PARAM_IN_WS not in params:
-            raise ValueError(self.PARAM_IN_WS + ' parameter is required')
-        if self.PARAM_IN_LIB not in params:
-            raise ValueError(self.PARAM_IN_LIB + ' parameter is required')
-        if not params[self.PARAM_IN_LIB]:
-            raise ValueError('At least one reads library must be provided')
-        if self.PARAM_IN_CS_NAME not in params:
-            raise ValueError(self.PARAM_IN_CS_NAME + ' parameter is required')
-        if self.PARAM_IN_DNA_SOURCE in params:
-            s = params[self.PARAM_IN_DNA_SOURCE]
-            if s not in [self.PARAM_IN_SINGLE_CELL, self.PARAM_IN_METAGENOME]:
-                params[self.PARAM_IN_DNA_SOURCE] = None
-        else:
-            params[self.PARAM_IN_DNA_SOURCE] = None
         # Get the read library
         ws = workspaceService(self.workspaceURL, token=token)
         ws_reads_ids = []
@@ -556,13 +566,11 @@ Does not currently support assembling metagenomics reads.
             ws_reads_ids.append({'ref': params[self.PARAM_IN_WS] + '/' +
                                  read_name})
         reads = ws.get_objects(ws_reads_ids)
+
         ws_id = reads[0]['info'][6]
-        source = None
-        if 'source' in reads[0]['data']:
-            source = reads[0]['data']['source']
         reads_data = []
         for read in reads:
-            reads_data.append(self.process_reads(read, token))
+            reads_data.append(self.process_reads(read, params, token))
         del reads
 
         spades_out = self.exec_spades(params[self.PARAM_IN_DNA_SOURCE],
@@ -570,6 +578,8 @@ Does not currently support assembling metagenomics reads.
         self.log('SPAdes output dir: ' + spades_out)
 
         # parse the output and save back to KBase
+        source = {'source': 'See provenance',
+                  'source_id': 'See provenance'}
         output_contigs = os.path.join(spades_out, 'scaffolds.fasta')
 
         shockid = self.upload_file_to_shock(output_contigs, token)['id']
