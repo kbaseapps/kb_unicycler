@@ -11,6 +11,7 @@ import requests
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from gaprice_SPAdes.gaprice_SPAdesImpl import gaprice_SPAdes
+from pprint import pprint
 
 
 class gaprice_SPAdesTest(unittest.TestCase):
@@ -115,6 +116,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         '''
         print('loading file to shock: ' + test_file)
         node = cls.upload_file_to_shock(test_file)
+        pprint(node)
         cls.nodes_to_delete.append(node['id'])
 
         print('creating handle for shock id ' + node['id'])
@@ -207,21 +209,27 @@ class gaprice_SPAdesTest(unittest.TestCase):
                             'fastq', 'data/small.reverse.fq', 'fastq')
         cls.upload_assembly('intbasic', 'intbasic', {},
                             'data/small.interleaved.fq', '.FQ', None, None)
+        cls.upload_assembly('frbasic_kbassy', 'frbasic_kbassy', {},
+                            'data/small.forward.fq', 'fastq',
+                            'data/small.reverse.fq', 'fastq',
+                            kbase_assy=True)
+        cls.upload_assembly('intbasic_kbassy', 'intbasic_kbassy', {},
+                            'data/small.interleaved.fq', '.FQ', None, None,
+                            kbase_assy=True)
         print('Data staged.')
 
     def make_ref(self, object_info):
         return str(object_info[6]) + '/' + str(object_info[0]) + \
             '/' + str(object_info[4])
 
-    # TODO test KBaseAssy vs. KBFile
     # TODO test single cell vs. normal
     # TODO test separate vs. interlaced
     # TODO test gzip
     # TODO test std vs meta vs single cell
     # TODO test multiple illumina reads
-    # TODO run through code & check paths (look at xform service tests
+    # TODO run through code & check paths (look at xform service tests)
 
-    def test_fr_pair(self):
+    def test_fr_pair_kbfile(self):
 
         self.run_success(
             ['frbasic'], 'frbasic_out',
@@ -244,10 +252,56 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
              })
 
-    def test_interlaced(self):
+    def test_fr_pair_kbassy(self):
+
+        self.run_success(
+            ['frbasic_kbassy'], 'frbasic_kbassy_out',
+            {'contigs':
+             [{'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
+               },
+              {'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'length': 62607,
+               'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'md5': 'e99fade8814bdb861532f493e5deddbd'
+               }],
+             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
+             'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
+             })
+
+    def test_interlaced_kbfile(self):
 
         self.run_success(
             ['intbasic'], 'intbasic_out',
+            {'contigs':
+             [{'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
+               },
+              {'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'length': 62607,
+               'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'md5': 'e99fade8814bdb861532f493e5deddbd'
+               }],
+             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
+             'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
+             })
+
+    def test_interlaced_kbassy(self):
+
+        self.run_success(
+            ['intbasic_kbassy'], 'intbasic_kbassy_out',
             {'contigs':
              [{'description': 'Note MD5 is generated from uppercasing ' +
                               'the sequence',
