@@ -47,7 +47,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def tearDownClass(cls):
         if hasattr(cls, 'wsName'):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
-            print('Test workspace was deleted')
+            print('Test workspace was deleted: ' + cls.wsName)
         for node in cls.nodes_to_delete:
             cls.delete_shock_node(node)
 
@@ -211,7 +211,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         rev_reads = {'file': 'data/small.reverse.fq',
                      'name': 'test_rev.fq',
                      'type': 'fastq'}
-        int_reads = {'file': 'data/small.interleaved.fq',
+        int_reads = {'file': 'data/interleaved.fq',
                      'name': 'test_int.fq',
                      'type': '.FQ'}
         cls.upload_assembly('frbasic', 'frbasic', {}, fwd_reads,
@@ -287,21 +287,21 @@ class gaprice_SPAdesTest(unittest.TestCase):
             {'contigs':
              [{'description': 'Note MD5 is generated from uppercasing ' +
                               'the sequence',
-               'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
-               'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
-               'md5': '8a67351c7d6416039c6f613c31b10764'
+               'name': 'NODE_1000_length_274_cov_1.11168_ID_9587',
+               'length': 274,
+               'id': 'NODE_1000_length_274_cov_1.11168_ID_9587',
+               'md5': '1b00037a0f39ff0fcb577c4e7ff72cf1'
                },
               {'description': 'Note MD5 is generated from uppercasing ' +
                               'the sequence',
-               'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
-               'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
-               'md5': 'e99fade8814bdb861532f493e5deddbd'
+               'name': 'NODE_1001_length_274_cov_1.1066_ID_9589',
+               'length': 274,
+               'id': 'NODE_1001_length_274_cov_1.1066_ID_9589',
+               'md5': 'c1c853543b2bba9211e574238b842869'
                }],
-             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
-             'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
-             })
+             'md5': 'affbb138ad3887c7d12e8ec28a9a8d52',
+             'fasta_md5': 'b3012dec12e4b6042affc9a933b60f7a'
+             }, contig_count=1449)
 
     def test_interlaced_kbassy(self):
 
@@ -310,24 +310,27 @@ class gaprice_SPAdesTest(unittest.TestCase):
             {'contigs':
              [{'description': 'Note MD5 is generated from uppercasing ' +
                               'the sequence',
-               'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
-               'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
-               'md5': '8a67351c7d6416039c6f613c31b10764'
+               'name': 'NODE_1000_length_274_cov_1.11168_ID_9587',
+               'length': 274,
+               'id': 'NODE_1000_length_274_cov_1.11168_ID_9587',
+               'md5': '1b00037a0f39ff0fcb577c4e7ff72cf1'
                },
               {'description': 'Note MD5 is generated from uppercasing ' +
                               'the sequence',
-               'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
-               'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
-               'md5': 'e99fade8814bdb861532f493e5deddbd'
+               'name': 'NODE_1001_length_274_cov_1.1066_ID_9589',
+               'length': 274,
+               'id': 'NODE_1001_length_274_cov_1.1066_ID_9589',
+               'md5': 'c1c853543b2bba9211e574238b842869'
                }],
-             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
-             'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
-             })
+             'md5': 'affbb138ad3887c7d12e8ec28a9a8d52',
+             'fasta_md5': 'b3012dec12e4b6042affc9a933b60f7a'
+             }, contig_count=1449)
 
-    def run_success(self, stagekeys, output_name, expected,
+    def run_success(self, stagekeys, output_name, expected, contig_count=None,
                     dna_source=None):
+
+        if not contig_count:
+            contig_count = len(expected['contigs'])
 
         libs = [self.staged[key][1] for key in stagekeys]
         assyrefs = sorted(
@@ -351,7 +354,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.assertEqual(1, len(report['data']['objects_created']))
         self.assertEqual('Assembled contigs',
                          report['data']['objects_created'][0]['description'])
-        self.assertIn('Assembled into ' + str(len(expected['contigs'])) +
+        self.assertIn('Assembled into ' + str(contig_count) +
                       ' contigs', report['data']['text_message'])
         self.assertEqual(1, len(report['provenance']))
         self.assertEqual(
@@ -377,6 +380,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.assertEqual(expected['fasta_md5'],
                          fasta_node['data']['file']['checksum']['md5'])
 
+        self.assertEqual(contig_count, len(cs['data']['contigs']))
         self.assertEqual(output_name, cs['data']['id'])
         self.assertEqual(output_name, cs['data']['name'])
         self.assertEqual(expected['md5'], cs['data']['md5'])

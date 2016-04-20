@@ -413,7 +413,7 @@ Does not currently support assembling metagenomics reads.
             'text_message': report
         }
 
-        reportName = 'SPAdes_report_'+str(hex(uuid.getnode()))
+        reportName = 'SPAdes_report_' + str(uuid.uuid4())
         report_obj_info = wscli.save_objects({
                 'id': wsid,
                 'objects': [
