@@ -1,42 +1,58 @@
 /*
 A KBase module: gaprice_SPAdes
-This sample module contains one small method - filter_contigs.
+Simple wrapper for the SPAdes assembler.
+http://bioinf.spbau.ru/spades
+
+Currently only supports assembling one PairedEndLibrary at a time.
+Always runs in careful mode.
+Runs 3 threads / CPU.
+Maximum memory use is set to available memory - 1G.
+Autodetection is used for the PHRED quality offset and k-mer sizes.
+A coverage cutoff is not specified.
+Does not currently support assembling metagenomics reads.
+
 */
 
 module gaprice_SPAdes {
-    /*
-        A string representing a ContigSet id.
-    */
-    typedef string contigset_id;
 
-    /*
-        A string representing a workspace name.
+    /* A boolean. 0 = false, anything else = true. */
+    typedef int bool;
+    
+    /* The workspace object name of a PairedEndLibrary file, whether of the
+       KBaseAssembly or KBaseFile type.
     */
-    typedef string workspace_name;
-
+    typedef string paired_end_lib;
+    
+    /* Input parameters for running SPAdes.
+        string workspace_name - the name of the workspace from which to take
+           input and store output.
+        string output_contigset_name - the name of the output contigset
+        list<paired_end_lib> read_libraries - Illumina PairedEndLibrary files
+            to assemble.
+        string dna_source - the source of the DNA used for sequencing
+            'single_cell': DNA amplified from a single cell via MDA
+            'metagenome': Metagenomic data
+            anything else: Standard DNA sample from multiple cells
+        
+    */
     typedef structure {
-        workspace_name workspace;
-        contigset_id contigset_id;
-        int min_length;
-    } FilterContigsParams;
-
-    /* 
-        The workspace ID for a ContigSet data object.
-        @id ws KBaseGenomes.ContigSet
+        string workspace_name;
+        string output_contigset_name;
+        list<paired_end_lib> read_libraries;
+        string dna_source;
+    } SPAdesParams;
+    
+    /* Output parameters for SPAdes run.
+        string report_name - the name of the KBaseReport.Report workspace
+            object.
+        string report_ref - the workspace reference of the report.
     */
-    typedef string ws_contigset_id;
-
     typedef structure {
         string report_name;
         string report_ref;
-        ws_contigset_id new_contigset_ref;
-        int n_initial_contigs;
-        int n_contigs_removed;
-        int n_contigs_remaining;
-    } FilterContigsResults;
-	
-    /*
-        Filter contigs in a ContigSet by DNA length
-    */
-    funcdef filter_contigs(FilterContigsParams params) returns (FilterContigsResults) authentication required;
+    } SPAdesOutput;
+    
+    /* Run SPAdes on paired end libraries */
+    funcdef run_SPAdes(SPAdesParams params) returns(SPAdesOutput output)
+        authentication required;
 };
