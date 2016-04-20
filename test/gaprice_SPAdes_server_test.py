@@ -250,8 +250,6 @@ class gaprice_SPAdesTest(unittest.TestCase):
                     'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
                     'md5': 'e99fade8814bdb861532f493e5deddbd'
                     }]
-        source = 'unknown'
-        source_id = 'scaffolds.fasta'
         md5 = '09a27dd5107ad23ee2b7695aee8c09d0'
         fasta_md5 = '7f6093a7e56a8dc5cbf1343b166eda67'
 
@@ -301,8 +299,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.assertEqual(output_name, cs['data']['id'])
         self.assertEqual(output_name, cs['data']['name'])
         self.assertEqual(md5, cs['data']['md5'])
-        self.assertEqual(source, cs['data']['source'])
-        self.assertEqual(source_id, cs['data']['source_id'])
+        self.assertEqual('See provenance', cs['data']['source'])
+        self.assertEqual('See provenance', cs['data']['source_id'])
 
         for i, (exp, got) in enumerate(zip(contigs, cs['data']['contigs'])):
             print('Checking contig ' + str(i) + ': ' + exp['name'])

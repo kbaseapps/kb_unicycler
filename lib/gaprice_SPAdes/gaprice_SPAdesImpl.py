@@ -4,7 +4,7 @@ from __future__ import print_function
 import os
 import re
 import uuid
-from pprint import pformat, pprint
+from pprint import pformat
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 import requests
 import json
@@ -106,11 +106,11 @@ Does not currently support assembling metagenomics reads.
             file_name += '_' + node_fn
 
         if not self.file_extension_ok(file_name):
-            errstr = ('Reads object {} ({}) contains a reads file stored in ' +
-                      'Shock node {} for which a valid filename could not ' +
-                      'be determined.')
-            raise ValueError(errstr.format(source_obj_ref, source_obj_name,
-                                           handle['id']))
+            raise ValueError(
+                ('Reads object {} ({}) contains a reads file stored in ' +
+                 'Shock node {} for which a valid filename could not ' +
+                 'be determined.').format(source_obj_ref, source_obj_name,
+                                          handle['id']))
 
         file_path = os.path.join(self.scratch, file_name)
         with open(file_path, 'w', 0) as fhandle:
@@ -364,6 +364,7 @@ Does not currently support assembling metagenomics reads.
             fasta_dict[fasta_header] = contig_dict
 
         contig_set_dict = dict()
+        # joining by commas is goofy, but keep consistency with the uploader
         contig_set_dict['md5'] = hashlib.md5(','.join(sorted(
             contig_set_md5_list))).hexdigest()
         contig_set_dict['id'] = contigset_id
@@ -429,6 +430,40 @@ Does not currently support assembling metagenomics reads.
         return str(object_info[6]) + '/' + str(object_info[0]) + \
             '/' + str(object_info[4])
 
+    def check_reads(self, params, reads):
+        data = reads['data']
+        info = reads['info']
+        obj_ref = self.make_ref(info)
+        obj_name = info[1]
+
+        # Might need to do version checking here.
+        module_name, type_name = info[2].split('-')[0].split('.')
+        if (module_name not in self.MODULE_NAMES or
+                type_name != self.PAIRED_END_TYPE):
+            raise ValueError(
+                'Only the types ' +
+                self.MODULE_NAMES[0] + '.' + self.PAIRED_END_TYPE + ' and ' +
+                self.MODULE_NAMES[1] + '.' + self.PAIRED_END_TYPE +
+                ' are supported')
+
+        if ('read_orientation_outward' in data and
+                data['read_orientation_outward']):
+            raise ValueError(
+                ('Reads object {} ({}) is marked as having outward oriented ' +
+                 'reads, which SPAdes does not ' +
+                 'support.').format(obj_name, obj_ref))
+
+        # ideally types would be firm enough that we could rely on the
+        # metagenomic boolean. However KBaseAssembly doesn't have the field
+        # and it's optional anyway. Ideally fix those issues and then set
+        # the --meta command line flag automatically based on the type
+        if ('single_genome' in data and not data['single_genome'] and
+                params[self.PARAM_IN_DNA_SOURCE] != self.PARAM_IN_METAGENOME):
+            raise ValueError(
+                ('Reads object {} ({}) is marked as containing metagenomic ' +
+                 'data but the assembly method was not specified as ' +
+                 'metagenomic').format(obj_name, obj_ref))
+
     def process_reads(self, reads, params, token):
         data = reads['data']
         info = reads['info']
@@ -445,22 +480,12 @@ Does not currently support assembling metagenomics reads.
         # 9 - int size
         # 10 - usermeta meta
 
-        # TODO check contents of types - e.g. metagenomics, outside reads
-
         ret = {}
-        # Might need to do version checking here.
-        module_name, type_name = info[2].split('-')[0].split('.')
         obj_ref = self.make_ref(info)
         ret['in_lib_ref'] = obj_ref
+        obj_name = info[1]
 
-        if (module_name not in self.MODULE_NAMES or
-                type_name != self.PAIRED_END_TYPE):
-            raise ValueError(
-                'Only the types ' +
-                self.MODULE_NAMES[0] + '.' + self.PAIRED_END_TYPE + ' and ' +
-                self.MODULE_NAMES[1] + '.' + self.PAIRED_END_TYPE +
-                ' are supported')
-
+        self.check_reads(params, reads)
         # lib1 = KBaseFile, handle_1 = KBaseAssembly
         fwd_type = None
         rev_type = None
@@ -478,11 +503,11 @@ Does not currently support assembling metagenomics reads.
             reverse_reads = False
 
         ret['fwd_file'] = self.shock_download(
-            obj_ref, info[1], token, forward_reads, fwd_type)
+            obj_ref, obj_name, token, forward_reads, fwd_type)
         ret['rev_file'] = None
         if (reverse_reads):
             ret['rev_file'] = self.shock_download(
-                obj_ref, info[1], token, reverse_reads, rev_type)
+                obj_ref, obj_name, token, reverse_reads, rev_type)
         return ret
 
     def process_params(self, params):
@@ -538,11 +563,8 @@ Does not currently support assembling metagenomics reads.
             ws_reads_ids.append({'ref': params[self.PARAM_IN_WS] + '/' +
                                  read_name})
         reads = ws.get_objects(ws_reads_ids)
+
         ws_id = reads[0]['info'][6]
-        # TODO what the hell should source be - check if all the same?
-        source = None
-        if 'source' in reads[0]['data']:
-            source = reads[0]['data']['source']
         reads_data = []
         for read in reads:
             reads_data.append(self.process_reads(read, params, token))
@@ -553,6 +575,8 @@ Does not currently support assembling metagenomics reads.
         self.log('SPAdes output dir: ' + spades_out)
 
         # parse the output and save back to KBase
+        source = {'source': 'See provenance',
+                  'source_id': 'See provenance'}
         output_contigs = os.path.join(spades_out, 'scaffolds.fasta')
 
         shockid = self.upload_file_to_shock(output_contigs, token)['id']
