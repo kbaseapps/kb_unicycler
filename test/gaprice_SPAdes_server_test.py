@@ -134,50 +134,52 @@ class gaprice_SPAdesTest(unittest.TestCase):
                         kbase_assy=False):
         print('staging data for key ' + key)
         print('uploading forward reads file ' + fwd_reads)
-        fwd_id, fwd_handle, fwd_md5, fwd_size = \
+        fwd_id, fwd_handle_id, fwd_md5, fwd_size = \
             cls.upload_file_to_shock_and_get_handle(fwd_reads)
-
-        rev_id = None
-        rev_handle = None
-        if rev_reads:
-            print('uploading reverse reads file ' + rev_reads)
-            rev_id, rev_handle, rev_md5, rev_size = \
-                cls.upload_file_to_shock_and_get_handle(rev_reads)
+        fwd_handle = {
+                      'hid': fwd_handle_id,
+                      'file_name': os.path.split(fwd_reads)[1],
+                      'id': fwd_id,
+                      'url': cls.shockURL,
+                      'type': 'shock',
+                      'remote_md5': fwd_md5
+                      }
 
         ob = dict(object_body)  # copy
         ob['sequencing_tech'] = 'fake data'
-        if not kbase_assy:
+        if kbase_assy:
+            wstype = 'KBaseAssembly.PairedEndLibrary'
+            ob['handle_1'] = fwd_handle
+        else:
             wstype = 'KBaseFile.PairedEndLibrary'
             ob['lib1'] = \
-                {'file': {
-                          'hid': fwd_handle,
-                          'file_name': os.path.split(fwd_reads)[1],
-                          'id': fwd_id,
-                          'url': cls.shockURL,
-                          'type': 'shock',
-                          'remote_md5': fwd_md5
-                          },
+                {'file': fwd_handle,
                  'encoding': 'UTF8',
                  'type': fwd_reads_type,
                  'size': fwd_size
                  }
-            if rev_reads:
+
+        if rev_reads:
+            print('uploading reverse reads file ' + rev_reads)
+            rev_id, rev_handle_id, rev_md5, rev_size = \
+                cls.upload_file_to_shock_and_get_handle(rev_reads)
+            rev_handle = {
+                          'hid': rev_handle_id,
+                          'file_name': os.path.split(rev_reads)[1],
+                          'id': rev_id,
+                          'url': cls.shockURL,
+                          'type': 'shock',
+                          'remote_md5': rev_md5
+                          }
+            if kbase_assy:
+                ob['handle_2'] = rev_handle
+            else:
                 ob['lib2'] = \
-                    {'file': {
-                              'hid': rev_handle,
-                              'file_name': os.path.split(rev_reads)[1],
-                              'id': rev_id,
-                              'url': cls.shockURL,
-                              'type': 'shock',
-                              'remote_md5': rev_md5
-                              },
+                    {'file': rev_handle,
                      'encoding': 'UTF8',
                      'type': rev_reads_type,
                      'size': rev_size
                      }
-        else:
-            wstype = 'KBaseAssembly.PairedEndLibrary'
-            pass  # TODO KBaseAssembly
 
         print('Saving object data')
         objdata = cls.wsClient.save_objects({
@@ -191,11 +193,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             })[0]
         print('Saved object: ')
         print(objdata)
-        ref = str(objdata[6]) + '/' + str(objdata[0]) + '/' + str(objdata[4])
-        cls.staged[key] = {'obj_info': objdata,
-                           'fwd_node': fwd_id,
-                           'rev_node': rev_id,
-                           'ref': ref}
+        cls.staged[key] = objdata
 
     @classmethod
     def setupTestData(cls):
@@ -219,8 +217,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
     # TODO test single cell vs. normal
     # TODO test separate vs. interlaced
     # TODO test gzip
-    # TODO std vs meta vs single cell
-    # TODO multiple illumina reads
+    # TODO test std vs meta vs single cell
+    # TODO test multiple illumina reads
     # TODO run through code & check paths (look at xform service tests
 
     def test_fr_pair(self):
@@ -272,9 +270,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def run_success(self, stagekeys, output_name, expected,
                     dna_source=None):
 
-        libs = []
-        for key in stagekeys:
-            libs.append(self.staged[key]['obj_info'][1])
+        libs = [self.staged[key][1] for key in stagekeys]
+        assyrefs = sorted(
+            [self.make_ref(self.staged[key]) for key in stagekeys])
 
         params = {'workspace_name': self.getWsName(),
                   'read_libraries': libs,
@@ -288,10 +286,6 @@ class gaprice_SPAdesTest(unittest.TestCase):
                 params['dna_source'] = dna_source
 
         ret = self.getImpl().run_SPAdes(self.getContext(), params)[0]
-        assyrefs = []
-        for key in stagekeys:
-            assyrefs.append(self.make_ref(self.staged[key]['obj_info']))
-        assyrefs = sorted(assyrefs)
 
         report = self.wsClient.get_objects([{'ref': ret['report_ref']}])[0]
         self.assertEqual('KBaseReport.Report', report['info'][2].split('-')[0])
