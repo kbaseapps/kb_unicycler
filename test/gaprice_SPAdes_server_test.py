@@ -206,9 +206,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
         print('Available memory ' + str(psutil.virtual_memory().available))
         print('staging data')
         cls.upload_assembly('frbasic', 'frbasic', {}, 'data/small.forward.fq',
-                            'fasta', 'data/small.reverse.fq', 'fasta')
+                            'fastq', 'data/small.reverse.fq', 'fastq')
         cls.upload_assembly('intbasic', 'intbasic', {},
-                            'data/small.interleaved.fq', None, None, 'fasta')
+                            'data/small.interleaved.fq', '.FQ', None, None)
         print('Data staged.')
 
     def make_ref(self, object_info):
@@ -221,88 +221,117 @@ class gaprice_SPAdesTest(unittest.TestCase):
     # TODO test gzip
     # TODO std vs meta vs single cell
     # TODO multiple illumina reads
+    # TODO run through code & check paths (look at xform service tests
 
-#     def test_fr_pair(self):
-#         ret = self.getImpl().run_SPAdes(
-#             self.getContext(),
-#             {'workspace_name': self.getWsName(),
-#              'read_library_name': self.staged['frbasic']['obj_info'][1],
-#              'output_contigset_name': 'frbasic_out'
-#              })[0]
-#         print(ret)
-#         report = self.wsClient.get_objects([{'ref': ret['report_ref']}])
-#         print(report)
+    def test_fr_pair(self):
+
+        self.run_success(
+            ['frbasic'], 'frbasic_out',
+            {'contigs':
+             [{'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
+               },
+              {'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'length': 62607,
+               'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'md5': 'e99fade8814bdb861532f493e5deddbd'
+               }],
+             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
+             'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
+             })
 
     def test_interlaced(self):
-        key = 'intbasic'
-        output_name = 'intbasic_out'
-        contigs = [{'description': 'Note MD5 is generated from uppercasing ' +
-                                   'the sequence',
-                    'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
-                    'length': 64822,
-                    'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
-                    'md5': '8a67351c7d6416039c6f613c31b10764'
-                    },
-                   {'description': 'Note MD5 is generated from uppercasing ' +
-                                   'the sequence',
-                    'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
-                    'length': 62607,
-                    'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
-                    'md5': 'e99fade8814bdb861532f493e5deddbd'
-                    }]
-        md5 = '09a27dd5107ad23ee2b7695aee8c09d0'
-        fasta_md5 = '7f6093a7e56a8dc5cbf1343b166eda67'
+
+        self.run_success(
+            ['intbasic'], 'intbasic_out',
+            {'contigs':
+             [{'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
+               },
+              {'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'length': 62607,
+               'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'md5': 'e99fade8814bdb861532f493e5deddbd'
+               }],
+             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
+             'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
+             })
+
+    def run_success(self, stagekeys, output_name, expected,
+                    dna_source=None):
+
+        libs = []
+        for key in stagekeys:
+            libs.append(self.staged[key]['obj_info'][1])
 
         params = {'workspace_name': self.getWsName(),
-                  'read_libraries': [self.staged[key]['obj_info'][1]],
+                  'read_libraries': libs,
                   'output_contigset_name': output_name
                   }
 
+        if not (dna_source is None):
+            if dna_source == 'None':
+                params['dna_source'] = None
+            else:
+                params['dna_source'] = dna_source
+
         ret = self.getImpl().run_SPAdes(self.getContext(), params)[0]
-        assyref = self.make_ref(self.staged[key]['obj_info'])
+        assyrefs = []
+        for key in stagekeys:
+            assyrefs.append(self.make_ref(self.staged[key]['obj_info']))
+        assyrefs = sorted(assyrefs)
 
         report = self.wsClient.get_objects([{'ref': ret['report_ref']}])[0]
         self.assertEqual('KBaseReport.Report', report['info'][2].split('-')[0])
         self.assertEqual(1, len(report['data']['objects_created']))
         self.assertEqual('Assembled contigs',
                          report['data']['objects_created'][0]['description'])
-        self.assertIn('Assembled into ' + str(len(contigs)) + ' contigs',
-                      report['data']['text_message'])
+        self.assertIn('Assembled into ' + str(len(expected['contigs'])) +
+                      ' contigs', report['data']['text_message'])
         self.assertEqual(1, len(report['provenance']))
-        self.assertEqual(1, len(report['provenance'][0]['input_ws_objects']))
         self.assertEqual(
-            assyref, report['provenance'][0]['input_ws_objects'][0])
+            assyrefs, sorted(report['provenance'][0]['input_ws_objects']))
         self.assertEqual(
-            1, len(report['provenance'][0]['resolved_ws_objects']))
-        self.assertEqual(
-            assyref, report['provenance'][0]['resolved_ws_objects'][0])
+            assyrefs,
+            sorted(report['provenance'][0]['resolved_ws_objects']))
 
         cs_ref = report['data']['objects_created'][0]['ref']
         cs = self.wsClient.get_objects([{'ref': cs_ref}])[0]
         self.assertEqual('KBaseGenomes.ContigSet', cs['info'][2].split('-')[0])
         self.assertEqual(1, len(cs['provenance']))
-        self.assertEqual(1, len(cs['provenance'][0]['input_ws_objects']))
         self.assertEqual(
-            assyref, cs['provenance'][0]['input_ws_objects'][0])
-        self.assertEqual(1, len(cs['provenance'][0]['resolved_ws_objects']))
+            assyrefs, sorted(cs['provenance'][0]['input_ws_objects']))
         self.assertEqual(
-            assyref, cs['provenance'][0]['resolved_ws_objects'][0])
+            assyrefs, sorted(cs['provenance'][0]['resolved_ws_objects']))
         self.assertEqual(output_name, cs['info'][1])
 
         cs_fasta_node = cs['data']['fasta_ref']
         header = {"Authorization": "Oauth {0}".format(self.token)}
         fasta_node = requests.get(self.shockURL + '/node/' + cs_fasta_node,
                                   headers=header, allow_redirects=True).json()
-        self.assertEqual(fasta_md5,
+        self.assertEqual(expected['fasta_md5'],
                          fasta_node['data']['file']['checksum']['md5'])
 
         self.assertEqual(output_name, cs['data']['id'])
         self.assertEqual(output_name, cs['data']['name'])
-        self.assertEqual(md5, cs['data']['md5'])
+        self.assertEqual(expected['md5'], cs['data']['md5'])
         self.assertEqual('See provenance', cs['data']['source'])
         self.assertEqual('See provenance', cs['data']['source_id'])
 
-        for i, (exp, got) in enumerate(zip(contigs, cs['data']['contigs'])):
+        for i, (exp, got) in enumerate(zip(expected['contigs'],
+                                           cs['data']['contigs'])):
             print('Checking contig ' + str(i) + ': ' + exp['name'])
             exp['s_len'] = exp['length']
             got['s_len'] = len(got['sequence'])

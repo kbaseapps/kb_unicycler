@@ -67,13 +67,13 @@ Does not currently support assembling metagenomics reads.
     SUPPORTED_FILES = ['.fq',
                        '.fastq',
                        # '.bam',
-                       '.fa',
-                       '.fasta',
+                       # '.fa',
+                       # '.fasta',
                        '.fq.gz',
                        '.fastq.gz',
                        # '.bam.gz',
-                       '.fa.gz',
-                       '.fasta.gz'
+                       # '.fa.gz',
+                       # '.fasta.gz'
                        ]
 
     def log(self, message):
@@ -81,7 +81,7 @@ Does not currently support assembling metagenomics reads.
 
     def file_extension_ok(self, filename):
         for ext in self.SUPPORTED_FILES:
-            if filename.endswith(ext):
+            if filename.lower().endswith(ext):
                 return True
         return False
 
@@ -109,8 +109,9 @@ Does not currently support assembling metagenomics reads.
             raise ValueError(
                 ('Reads object {} ({}) contains a reads file stored in ' +
                  'Shock node {} for which a valid filename could not ' +
-                 'be determined.').format(source_obj_ref, source_obj_name,
-                                          handle['id']))
+                 'be determined. Acceptable extensions: {}').format(
+                    source_obj_ref, source_obj_name, handle['id'],
+                    ' '.join(self.SUPPORTED_FILES)))
 
         file_path = os.path.join(self.scratch, file_name)
         with open(file_path, 'w', 0) as fhandle:
