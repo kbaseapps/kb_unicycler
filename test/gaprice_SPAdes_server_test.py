@@ -56,24 +56,22 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         print('\n\n=============== Cleaning up ==================')
 
-        if hasattr(cls, 'wsName'):
-            cls.wsClient.delete_workspace({'workspace': cls.wsName})
-            print('Test workspace was deleted: ' + cls.wsName)
-        for node in cls.nodes_to_delete:
-            cls.delete_shock_node(node)
-
-        cls.hs.delete_handles(cls.hs.ids_to_handles(cls.handles_to_delete))
-        print('Deleted handles ' + str(cls.handles_to_delete))
+        if hasattr(cls, 'wsinfo'):
+            cls.wsClient.delete_workspace({'workspace': cls.getWsName()})
+            print('Test workspace was deleted: ' + cls.getWsName())
+        if hasattr(cls, 'nodes_to_delete'):
+            for node in cls.nodes_to_delete:
+                cls.delete_shock_node(node)
+        if hasattr(cls, 'handles_to_delete'):
+            cls.hs.delete_handles(cls.hs.ids_to_handles(cls.handles_to_delete))
+            print('Deleted handles ' + str(cls.handles_to_delete))
 
     @classmethod
     def getWsName(cls):
         return cls.wsinfo[1]
 
     def getImpl(self):
-        return self.__class__.serviceImpl
-
-    def getContext(self):
-        return self.__class__.ctx
+        return self.serviceImpl
 
     @classmethod
     def delete_shock_node(cls, node_id):
@@ -278,8 +276,6 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def make_ref(self, object_info):
         return str(object_info[6]) + '/' + str(object_info[0]) + \
             '/' + str(object_info[4])
-
-    # TODO run through code & check paths (look at xform service tests)
 
     def test_fr_pair_kbfile(self):
 
@@ -616,7 +612,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             params['dna_source'] = dna_source
 
         with self.assertRaises(exception) as context:
-            self.getImpl().run_SPAdes(self.getContext(), params)
+            self.getImpl().run_SPAdes(self.ctx, params)
         self.assertEqual(error, str(context.exception.message))
 
     def run_success(self, readnames, output_name, expected, contig_count=None,
@@ -644,7 +640,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             else:
                 params['dna_source'] = dna_source
 
-        ret = self.getImpl().run_SPAdes(self.getContext(), params)[0]
+        ret = self.getImpl().run_SPAdes(self.ctx, params)[0]
 
         report = self.wsClient.get_objects([{'ref': ret['report_ref']}])[0]
         self.assertEqual('KBaseReport.Report', report['info'][2].split('-')[0])
