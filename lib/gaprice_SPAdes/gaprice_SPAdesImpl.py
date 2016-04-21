@@ -521,6 +521,8 @@ Does not currently support assembling metagenomics reads.
             raise ValueError(self.PARAM_IN_WS + ' parameter is required')
         if self.PARAM_IN_LIB not in params:
             raise ValueError(self.PARAM_IN_LIB + ' parameter is required')
+        if type(params[self.PARAM_IN_LIB]) != list:
+            raise ValueError(self.PARAM_IN_LIB + ' must be a list')
         if not params[self.PARAM_IN_LIB]:
             raise ValueError('At least one reads library must be provided')
         if (self.PARAM_IN_CS_NAME not in params or

@@ -389,6 +389,64 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'fasta_md5': 'fe801b181101b2be1e64885e167cdfcb'
              }, dna_source='metagenome')
 
+    def test_no_workspace_param(self):
+
+        self.run_error(['foo'], 'out',
+                       'workspace_name parameter is required', wsname=None)
+
+    def test_no_workspace_name(self):
+
+        self.run_error(['foo'], 'out',
+                       'workspace_name parameter is required', wsname='None')
+
+    def test_no_libs_param(self):
+
+        self.run_error(None, 'out', 'read_libraries parameter is required')
+
+    def test_no_libs_list(self):
+
+        self.run_error('foo', 'out', 'read_libraries must be a list')
+
+    def test_no_libs(self):
+
+        self.run_error([], 'out',
+                       'At least one reads library must be provided')
+
+    def test_no_output_param(self):
+
+        self.run_error(['foo'], None,
+                       'output_contigset_name parameter is required')
+
+    def test_no_output_name(self):
+
+        self.run_error(['foo'], '',
+                       'output_contigset_name parameter is required')
+
+    def run_error(self, libs, output_name, error, wsname=('fake'),
+                  dna_source=None):
+        if wsname == ('fake'):
+            wsname = self.getWsName()
+
+        params = {}
+        if (wsname is not None):
+            if wsname == 'None':
+                params['workspace_name'] = None
+            else:
+                params['workspace_name'] = wsname
+
+        if (libs is not None):
+            params['read_libraries'] = libs
+
+        if (output_name is not None):
+            params['output_contigset_name'] = output_name
+
+        if not (dna_source is None):
+            params['dna_source'] = dna_source
+
+        with self.assertRaises(ValueError) as context:
+            self.getImpl().run_SPAdes(self.getContext(), params)
+        self.assertIn(error, str(context.exception))
+
     def run_success(self, stagekeys, output_name, expected, contig_count=None,
                     dna_source=None):
 
