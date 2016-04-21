@@ -205,12 +205,14 @@ Does not currently support assembling metagenomics reads.
         if not os.path.exists(tmpdir):
             os.makedirs(tmpdir)
 
-        cmd = ['spades.py', '--careful', '--threads', str(threads),
+        cmd = ['spades.py', '--threads', str(threads),
                '--memory', str(mem), '-o', outdir, '--tmp-dir', tmpdir]
         if dna_source == self.PARAM_IN_SINGLE_CELL:
             cmd += ['--sc']
         if dna_source == self.PARAM_IN_METAGENOME:
             cmd += ['--meta']
+        else:
+            cmd += ['--careful']
         cmd += ['--dataset', self.generate_spades_yaml(reads_data)]
         self.log('Running SPAdes command line:')
         self.log(cmd)

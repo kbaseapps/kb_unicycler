@@ -227,8 +227,6 @@ class gaprice_SPAdesTest(unittest.TestCase):
         return str(object_info[6]) + '/' + str(object_info[0]) + \
             '/' + str(object_info[4])
 
-    # TODO test single cell vs. normal
-    # TODO test std vs meta vs single cell
     # TODO run through code & check paths (look at xform service tests)
 
     def test_fr_pair_kbfile(self):
@@ -321,7 +319,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                }],
              'md5': 'affbb138ad3887c7d12e8ec28a9a8d52',
              'fasta_md5': 'b3012dec12e4b6042affc9a933b60f7a'
-             }, contig_count=1449)
+             }, contig_count=1449, dna_source='')
 
     def test_multiple(self):
         self.run_success(
@@ -343,7 +341,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                }],
              'md5': 'a1bfe0a6d53afb2f0a8c186d4265703a',
              'fasta_md5': '5b7d11cf6a1b01cb2857883a5dc74357'
-             }, contig_count=6)
+             }, contig_count=6, dna_source='None')
 
     def test_single_cell(self):
 
@@ -367,6 +365,29 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
              'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
              }, dna_source='single_cell')
+
+    def test_metagenome(self):
+
+        self.run_success(
+            ['frbasic'], 'metagenome_out',
+            {'contigs':
+             [{'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_1_length_64819_cov_8.54977_ID_184',
+               'length': 64819,
+               'id': 'NODE_1_length_64819_cov_8.54977_ID_184',
+               'md5': '319f720b2de1af6dc7f32a98c1d3048e'
+               },
+              {'description': 'Note MD5 is generated from uppercasing ' +
+                              'the sequence',
+               'name': 'NODE_2_length_62607_cov_8.06601_ID_257',
+               'length': 62607,
+               'id': 'NODE_2_length_62607_cov_8.06601_ID_257',
+               'md5': '878ed3dfad7ccecd5bdfc8f5c2db00c4'
+               }],
+             'md5': '5951328d2b25b8d9f6248a9b0aa3c49a',
+             'fasta_md5': 'fe801b181101b2be1e64885e167cdfcb'
+             }, dna_source='metagenome')
 
     def run_success(self, stagekeys, output_name, expected, contig_count=None,
                     dna_source=None):
