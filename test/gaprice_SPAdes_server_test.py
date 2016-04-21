@@ -12,6 +12,7 @@ from biokbase.workspace.client import Workspace as workspaceService  # @Unresolv
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from gaprice_SPAdes.gaprice_SPAdesImpl import gaprice_SPAdes
 from pprint import pprint
+from biokbase.workspace.client import ServerError  # @UnresolvedImport
 
 
 class gaprice_SPAdesTest(unittest.TestCase):
@@ -399,6 +400,20 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_error(['foo'], 'out',
                        'workspace_name parameter is required', wsname='None')
 
+    def test_bad_workspace_name(self):
+
+        self.run_error(
+            ['foo'], 'out',
+            'Error on ObjectIdentity #1: Illegal character in workspace ' +
+            'name bad*name: *', wsname='bad*name', exception=ServerError)
+
+    def test_bad_lib_name(self):
+
+        self.run_error(
+            ['bad*name'], 'out',
+            'Error on ObjectIdentity #1: Illegal character in object name ' +
+            'bad*name: *', exception=ServerError)
+
     def test_no_libs_param(self):
 
         self.run_error(None, 'out', 'read_libraries parameter is required')
@@ -423,7 +438,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                        'output_contigset_name parameter is required')
 
     def run_error(self, libs, output_name, error, wsname=('fake'),
-                  dna_source=None):
+                  dna_source=None, exception=ValueError):
         if wsname == ('fake'):
             wsname = self.getWsName()
 
@@ -443,9 +458,11 @@ class gaprice_SPAdesTest(unittest.TestCase):
         if not (dna_source is None):
             params['dna_source'] = dna_source
 
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(exception) as context:
             self.getImpl().run_SPAdes(self.getContext(), params)
-        self.assertIn(error, str(context.exception))
+        print(context.exception)
+        print(context.exception.message)
+        self.assertIn(error, str(context.exception.message))
 
     def run_success(self, stagekeys, output_name, expected, contig_count=None,
                     dna_source=None):
@@ -495,6 +512,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.assertEqual(output_name, cs['info'][1])
 
         cs_fasta_node = cs['data']['fasta_ref']
+        self.nodes_to_delete.append(cs_fasta_node)
         header = {"Authorization": "Oauth {0}".format(self.token)}
         fasta_node = requests.get(self.shockURL + '/node/' + cs_fasta_node,
                                   headers=header, allow_redirects=True).json()

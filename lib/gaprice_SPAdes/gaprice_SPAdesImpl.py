@@ -13,6 +13,11 @@ import subprocess
 import hashlib
 import numpy as np
 import yaml
+
+
+class ShockException(Exception):
+    pass
+
 #END_HEADER
 
 
@@ -114,7 +119,7 @@ Does not currently support assembling metagenomics reads.
                     ' '.join(self.SUPPORTED_FILES)))
 
         file_path = os.path.join(self.scratch, file_name)
-        with open(file_path, 'w', 0) as fhandle:
+        with open(file_path, 'w') as fhandle:
             self.log('downloading reads file: ' + str(file_path))
             r = requests.get(node_url + '?download', stream=True,
                              headers=headers)
@@ -125,7 +130,7 @@ Does not currently support assembling metagenomics reads.
                     self.log("Couldn't parse response error content: " +
                              r.content)
                     r.raise_for_status()
-                raise Exception(str(err))
+                raise ShockException(str(err))
             for chunk in r.iter_content(1024):
                 if not chunk:
                     break
@@ -142,8 +147,7 @@ Does not currently support assembling metagenomics reads.
         if token is None:
             raise Exception("Authentication token required!")
 
-        header = dict()
-        header["Authorization"] = "Oauth {0}".format(token)
+        header = {'Authorization': "Oauth {0}".format(token)}
 
         if filePath is None:
             raise Exception("No file given for upload to SHOCK!")
@@ -153,16 +157,15 @@ Does not currently support assembling metagenomics reads.
             response = requests.post(
                 self.shockURL + '/node', headers=header, files=files,
                 stream=True, allow_redirects=True)
-
         if not response.ok:
-            response.raise_for_status()
-
-        result = response.json()
-
-        if result['error']:
-            raise Exception(result['error'][0])
-        else:
-            return result["data"]
+            try:
+                err = json.loads(response.content)['error'][0]
+            except:
+                self.log("Couldn't parse response error content: " +
+                         response.content)
+                response.raise_for_status()
+            raise ShockException(str(err))
+        return response.json()['data']
 
     def generate_spades_yaml(self, reads_data):
         left = []  # fwd in fr orientation
