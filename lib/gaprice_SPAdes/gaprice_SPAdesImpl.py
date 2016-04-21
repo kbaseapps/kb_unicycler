@@ -62,6 +62,9 @@ Does not currently support assembling metagenomics reads.
     PARAM_IN_METAGENOME = 'metagenome'
     VERSION = '0.0.1'
 
+    INVALID_WS_OBJ_NAME_RE = re.compile('[^\\w\\|._-]')
+    INVALID_WS_NAME_RE = re.compile('[^\\w:._-]')
+
     THREADS_PER_CORE = 3
     MEMORY_OFFSET_GB = 1  # 1GB
     MIN_MEMORY_GB = 5
@@ -92,6 +95,17 @@ Does not currently support assembling metagenomics reads.
                 return True
         return False
 
+    def check_shock_response(self, response, errtxt):
+        if not response.ok:
+            try:
+                err = json.loads(response.content)['error'][0]
+            except:
+                # this means shock is down or not responding.
+                self.log("Couldn't parse response error content from Shock: " +
+                         response.content)
+                response.raise_for_status()
+            raise ShockException(errtxt + str(err))
+
     def shock_download(self, source_obj_ref, source_obj_name, token, handle,
                        file_type):
         self.log('Downloading from shock via handle:')
@@ -100,8 +114,13 @@ Does not currently support assembling metagenomics reads.
 
         headers = {'Authorization': 'OAuth ' + token}
         node_url = handle['url'] + '/node/' + handle['id']
-        node = requests.get(node_url, headers=headers).json()
-        node_fn = node['data']['file']['name']
+        r = requests.get(node_url, headers=headers)
+        errtxt = ('Error downloading reads for object {} ({}) from shock ' +
+                  'node {}: ').format(source_obj_ref, source_obj_name,
+                                      handle['id'])
+        self.check_shock_response(r, errtxt)
+
+        node_fn = r.json()['data']['file']['name']
 
         handle_fn = handle['file_name'] if 'file_name' in handle else None
 
@@ -138,14 +157,7 @@ Does not currently support assembling metagenomics reads.
             self.log('downloading reads file: ' + str(file_path))
             r = requests.get(node_url + '?download', stream=True,
                              headers=headers)
-            if not r.ok:
-                try:
-                    err = json.loads(r.content)['error'][0]
-                except:
-                    self.log("Couldn't parse response error content: " +
-                             r.content)
-                    r.raise_for_status()
-                raise ShockException(str(err))
+            self.check_shock_response(r, errtxt)
             for chunk in r.iter_content(1024):
                 if not chunk:
                     break
@@ -154,7 +166,7 @@ Does not currently support assembling metagenomics reads.
         return file_path
 
     # Helper script borrowed from the transform service, logger removed
-    def upload_file_to_shock(self, filePath, token):
+    def upload_file_to_shock(self, file_path, token):
         """
         Use HTTP multi-part POST to save a file to a SHOCK instance.
         """
@@ -164,22 +176,17 @@ Does not currently support assembling metagenomics reads.
 
         header = {'Authorization': "Oauth {0}".format(token)}
 
-        if filePath is None:
+        if file_path is None:
             raise Exception("No file given for upload to SHOCK!")
 
-        with open(os.path.abspath(filePath), 'rb') as data_file:
+        with open(os.path.abspath(file_path), 'rb') as data_file:
             files = {'upload': data_file}
             response = requests.post(
                 self.shockURL + '/node', headers=header, files=files,
                 stream=True, allow_redirects=True)
-        if not response.ok:
-            try:
-                err = json.loads(response.content)['error'][0]
-            except:
-                self.log("Couldn't parse response error content: " +
-                         response.content)
-                response.raise_for_status()
-            raise ShockException(str(err))
+        self.check_shock_response(
+            response, ('Error trying to upload contig FASTA file {} to Shock: '
+                       ).format(file_path))
         return response.json()['data']
 
     def generate_spades_yaml(self, reads_data):
@@ -548,15 +555,24 @@ Does not currently support assembling metagenomics reads.
         if (self.PARAM_IN_WS not in params or
                 not params[self.PARAM_IN_WS]):
             raise ValueError(self.PARAM_IN_WS + ' parameter is required')
+        if self.INVALID_WS_NAME_RE.search(params[self.PARAM_IN_WS]):
+            raise ValueError('Invalid workspace name ' +
+                             params[self.PARAM_IN_WS])
         if self.PARAM_IN_LIB not in params:
             raise ValueError(self.PARAM_IN_LIB + ' parameter is required')
         if type(params[self.PARAM_IN_LIB]) != list:
             raise ValueError(self.PARAM_IN_LIB + ' must be a list')
         if not params[self.PARAM_IN_LIB]:
             raise ValueError('At least one reads library must be provided')
+        for l in params[self.PARAM_IN_LIB]:
+            if self.INVALID_WS_OBJ_NAME_RE.search(l):
+                raise ValueError('Invalid workspace object name ' + l)
         if (self.PARAM_IN_CS_NAME not in params or
                 not params[self.PARAM_IN_CS_NAME]):
             raise ValueError(self.PARAM_IN_CS_NAME + ' parameter is required')
+        if self.INVALID_WS_OBJ_NAME_RE.search(params[self.PARAM_IN_CS_NAME]):
+            raise ValueError('Invalid workspace object name ' +
+                             params[self.PARAM_IN_CS_NAME])
         if self.PARAM_IN_DNA_SOURCE in params:
             s = params[self.PARAM_IN_DNA_SOURCE]
             if s not in [self.PARAM_IN_SINGLE_CELL, self.PARAM_IN_METAGENOME]:

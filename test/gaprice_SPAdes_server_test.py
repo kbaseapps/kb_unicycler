@@ -10,9 +10,9 @@ import psutil
 import requests
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
-from gaprice_SPAdes.gaprice_SPAdesImpl import gaprice_SPAdes
+from gaprice_SPAdes.gaprice_SPAdesImpl import gaprice_SPAdes, ShockException
+from biokbase.workspace.client import ServerError as WorkspaceError  # @UnresolvedImport @IgnorePep8
 from pprint import pprint
-from biokbase.workspace.client import ServerError  # @UnresolvedImport
 import shutil
 import inspect
 
@@ -40,6 +40,10 @@ class gaprice_SPAdesTest(unittest.TestCase):
         cls.hs = HandleService(url=cls.cfg['handle-service-url'],
                                token=cls.token)
         cls.wsClient = workspaceService(cls.wsURL, token=cls.token)
+        wssuffix = int(time.time() * 1000)
+        wsName = "test_gaprice_SPAdes_" + str(wssuffix)
+        cls.wsinfo = cls.wsClient.create_workspace({'workspace': wsName})
+        print('created workspace ' + cls.getWsName())
         cls.serviceImpl = gaprice_SPAdes(cls.cfg)
         cls.staged = {}
         cls.nodes_to_delete = []
@@ -63,15 +67,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
     @classmethod
     def getWsName(cls):
-        if hasattr(cls, 'wsName'):
-            print('returning existing workspace name ' + cls.wsName)
-            return cls.wsName
-        suffix = int(time.time() * 1000)
-        wsName = "test_gaprice_SPAdes_" + str(suffix)
-        cls.wsClient.create_workspace({'workspace': wsName})
-        cls.wsName = wsName
-        print('created workspace ' + wsName)
-        return wsName
+        return cls.wsinfo[1]
 
     def getImpl(self):
         return self.__class__.serviceImpl
@@ -273,6 +269,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
         bad_fn_reads['name'] = 'small.forward.fastq'
         bad_fn_reads['type'] = 'xls'
         cls.upload_assembly('bad_file_type', {}, bad_fn_reads)
+        cls.upload_assembly('bad_node', {}, fwd_reads)
+        cls.delete_shock_node(cls.nodes_to_delete.pop())
         cls.upload_empty_data()
         print('Data staged.')
 
@@ -455,17 +453,20 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
     def test_bad_workspace_name(self):
 
+        self.run_error(['foo'], 'Invalid workspace name bad|name',
+                       wsname='bad|name')
+
+    def test_non_extant_workspace(self):
+
         self.run_error(
-            ['foo'],
-            'Error on ObjectIdentity #1: Illegal character in workspace ' +
-            'name bad*name: *', wsname='bad*name', exception=ServerError)
+            ['foo'], 'Object foo cannot be accessed: No workspace with name ' +
+            'Ireallyhopethisworkspacedoesntexistorthistestwillfail exists',
+            wsname='Ireallyhopethisworkspacedoesntexistorthistestwillfail',
+            exception=WorkspaceError)
 
     def test_bad_lib_name(self):
 
-        self.run_error(
-            ['bad*name'],
-            'Error on ObjectIdentity #1: Illegal character in object name ' +
-            'bad*name: *', exception=ServerError)
+        self.run_error(['bad&name'], 'Invalid workspace object name bad&name')
 
     def test_no_libs_param(self):
 
@@ -474,6 +475,12 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def test_no_libs_list(self):
 
         self.run_error('foo', 'read_libraries must be a list')
+
+    def test_non_extant_lib(self):
+
+        self.run_error(
+            ['foo'], 'No object with name foo exists in workspace ' +
+            str(self.wsinfo[0]), exception=WorkspaceError)
 
     def test_no_libs(self):
 
@@ -490,6 +497,12 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_error(
             ['foo'], 'output_contigset_name parameter is required',
             output_name='')
+
+    def test_bad_output_name(self):
+
+        self.run_error(
+            ['frbasic'], 'Invalid workspace object name bad*name',
+            output_name='bad*name')
 
     def test_inconsistent_metagenomics_1(self):
 
@@ -566,6 +579,15 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'Acceptable extensions: .fq .fastq .fq.gz ' +
              '.fastq.gz').format(self.staged['bad_file_type']['ref'],
                                  self.staged['bad_file_type']['fwd_node_id']))
+
+    def test_bad_shock_node(self):
+
+        self.run_error(['bad_node'],
+                       ('Error downloading reads for object {} (bad_node) ' +
+                        'from shock node {}: Node not found').format(
+                            self.staged['bad_node']['ref'],
+                            self.staged['bad_node']['fwd_node_id']),
+                       exception=ShockException)
 
     def run_error(self, readnames, error, wsname=('fake'), output_name='out',
                   dna_source=None, exception=ValueError):
