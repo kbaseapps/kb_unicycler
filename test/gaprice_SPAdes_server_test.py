@@ -139,12 +139,12 @@ class gaprice_SPAdesTest(unittest.TestCase):
         return node['id'], handle_id, md5, node['file']['size']
 
     @classmethod
-    def upload_assembly(cls, key, wsobjname, object_body, fwd_reads,
+    def upload_assembly(cls, wsobjname, object_body, fwd_reads,
                         rev_reads=None, kbase_assy=False, single_end=False):
         if single_end and rev_reads:
             raise ValueError('u r supr dum')
 
-        print('\n===============staging data for key ' + key +
+        print('\n===============staging data for object ' + wsobjname +
               '================')
         print('uploading forward reads file ' + fwd_reads['file'])
         fwd_id, fwd_handle_id, fwd_md5, fwd_size = \
@@ -217,11 +217,11 @@ class gaprice_SPAdesTest(unittest.TestCase):
         print('Saved object: ')
         pprint(objdata)
         pprint(ob)
-        cls.staged[key] = {'info': objdata,
-                           'ref': cls.make_ref(objdata),
-                           'fwd_node_id': fwd_id,
-                           'rev_node_id': rev_id
-                           }
+        cls.staged[wsobjname] = {'info': objdata,
+                                 'ref': cls.make_ref(objdata),
+                                 'fwd_node_id': fwd_id,
+                                 'rev_node_id': rev_id
+                                 }
 
     @classmethod
     def upload_empty_data(cls):
@@ -253,31 +253,26 @@ class gaprice_SPAdesTest(unittest.TestCase):
         int_reads = {'file': 'data/interleaved.fq',
                      'name': '',
                      'type': ''}
-        cls.upload_assembly('frbasic', 'frbasic', {}, fwd_reads,
-                            rev_reads=rev_reads)
-        cls.upload_assembly('intbasic', 'intbasic', {'single_genome': 1},
+        cls.upload_assembly('frbasic', {}, fwd_reads, rev_reads=rev_reads)
+        cls.upload_assembly('intbasic', {'single_genome': 1}, int_reads)
+        cls.upload_assembly('meta', {'single_genome': 0}, int_reads)
+        cls.upload_assembly('reads_out', {'read_orientation_outward': 1},
                             int_reads)
-        cls.upload_assembly('meta', 'meta', {'single_genome': 0},
-                            int_reads)
-        cls.upload_assembly('reads_out', 'reads_out',
-                            {'read_orientation_outward': 1}, int_reads)
-        cls.upload_assembly('frbasic_kbassy', 'frbasic_kbassy', {},
-                            fwd_reads, rev_reads=rev_reads, kbase_assy=True)
-        cls.upload_assembly('intbasic_kbassy', 'intbasic_kbassy', {},
-                            int_reads, kbase_assy=True)
-        cls.upload_assembly('single_end', 'single_end', {}, fwd_reads,
-                            single_end=True)
+        cls.upload_assembly('frbasic_kbassy', {}, fwd_reads,
+                            rev_reads=rev_reads, kbase_assy=True)
+        cls.upload_assembly('intbasic_kbassy', {}, int_reads, kbase_assy=True)
+        cls.upload_assembly('single_end', {}, fwd_reads, single_end=True)
         shutil.copy2('data/small.forward.fq', 'data/small.forward.bad')
         bad_fn_reads = {'file': 'data/small.forward.bad',
                         'name': '',
                         'type': ''}
-        cls.upload_assembly('bad_shk_name', 'bad_shk_name', {}, bad_fn_reads)
+        cls.upload_assembly('bad_shk_name', {}, bad_fn_reads)
         bad_fn_reads['file'] = 'data/small.forward.fq'
         bad_fn_reads['name'] = 'file.terrible'
-        cls.upload_assembly('bad_file_name', 'bad_file_name', {}, bad_fn_reads)
+        cls.upload_assembly('bad_file_name', {}, bad_fn_reads)
         bad_fn_reads['name'] = 'small.forward.fastq'
         bad_fn_reads['type'] = 'xls'
-        cls.upload_assembly('bad_file_type', 'bad_file_type', {}, bad_fn_reads)
+        cls.upload_assembly('bad_file_type', {}, bad_fn_reads)
         cls.upload_empty_data()
         print('Data staged.')
 
@@ -572,12 +567,12 @@ class gaprice_SPAdesTest(unittest.TestCase):
              '.fastq.gz').format(self.staged['bad_file_type']['ref'],
                                  self.staged['bad_file_type']['fwd_node_id']))
 
-    def run_error(self, libs, error, wsname=('fake'), output_name='out',
+    def run_error(self, readnames, error, wsname=('fake'), output_name='out',
                   dna_source=None, exception=ValueError):
 
         test_name = inspect.stack()[1][3]
         print('\n===== starting expected fail test: ' + test_name + ' =====')
-        print('    libs: ' + str(libs))
+        print('    libs: ' + str(readnames))
 
         if wsname == ('fake'):
             wsname = self.getWsName()
@@ -589,8 +584,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
             else:
                 params['workspace_name'] = wsname
 
-        if (libs is not None):
-            params['read_libraries'] = libs
+        if (readnames is not None):
+            params['read_libraries'] = readnames
 
         if (output_name is not None):
             params['output_contigset_name'] = output_name
@@ -602,19 +597,19 @@ class gaprice_SPAdesTest(unittest.TestCase):
             self.getImpl().run_SPAdes(self.getContext(), params)
         self.assertEqual(error, str(context.exception.message))
 
-    def run_success(self, stagekeys, output_name, expected, contig_count=None,
+    def run_success(self, readnames, output_name, expected, contig_count=None,
                     dna_source=None):
 
         test_name = inspect.stack()[1][3]
         print('\n==== starting expected success test: ' + test_name + ' =====')
-        print('   libs: ' + str(stagekeys))
+        print('   libs: ' + str(readnames))
 
         if not contig_count:
             contig_count = len(expected['contigs'])
 
-        libs = [self.staged[key]['info'][1] for key in stagekeys]
+        libs = [self.staged[n]['info'][1] for n in readnames]
         assyrefs = sorted(
-            [self.make_ref(self.staged[key]['info']) for key in stagekeys])
+            [self.make_ref(self.staged[n]['info']) for n in readnames])
 
         params = {'workspace_name': self.getWsName(),
                   'read_libraries': libs,
