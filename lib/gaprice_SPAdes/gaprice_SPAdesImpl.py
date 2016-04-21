@@ -465,12 +465,20 @@ Does not currently support assembling metagenomics reads.
         # metagenomic boolean. However KBaseAssembly doesn't have the field
         # and it's optional anyway. Ideally fix those issues and then set
         # the --meta command line flag automatically based on the type
-        if ('single_genome' in data and not data['single_genome'] and
-                params[self.PARAM_IN_DNA_SOURCE] != self.PARAM_IN_METAGENOME):
-            raise ValueError(
-                ('Reads object {} ({}) is marked as containing metagenomic ' +
-                 'data but the assembly method was not specified as ' +
-                 'metagenomic').format(obj_name, obj_ref))
+        if ('single_genome' in data):
+            if (data['single_genome'] and params[self.PARAM_IN_DNA_SOURCE] ==
+                    self.PARAM_IN_METAGENOME):
+                raise ValueError(
+                    ('Reads object {} ({}) is marked as containing dna from ' +
+                     'a single genome but the assembly method was specified ' +
+                     'as metagenomic').format(obj_name, obj_ref))
+            if (not data['single_genome'] and
+                    params[self.PARAM_IN_DNA_SOURCE] !=
+                    self.PARAM_IN_METAGENOME):
+                raise ValueError(
+                    ('Reads object {} ({}) is marked as containing ' +
+                     'metagenomic data but the assembly method was not ' +
+                     'specified as metagenomic').format(obj_name, obj_ref))
 
     def process_reads(self, reads, params, token):
         data = reads['data']

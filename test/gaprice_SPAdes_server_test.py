@@ -217,7 +217,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
                      'type': '.FQ'}
         cls.upload_assembly('frbasic', 'frbasic', {}, fwd_reads,
                             rev_reads=rev_reads)
-        cls.upload_assembly('intbasic', 'intbasic', {}, int_reads)
+        cls.upload_assembly('intbasic', 'intbasic', {'single_genome': 1},
+                            int_reads)
         cls.upload_assembly('frbasic_kbassy', 'frbasic_kbassy', {},
                             fwd_reads, rev_reads=rev_reads, kbase_assy=True)
         cls.upload_assembly('intbasic_kbassy', 'intbasic_kbassy', {},
@@ -437,11 +438,22 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_error(['foo'], '',
                        'output_contigset_name parameter is required')
 
+    def test_inconsistent_metagenomics(self):
+
+        self.run_error(
+            ['intbasic'], 'out',
+            ['Reads object intbasic (',
+             ') is marked as containing dna from a single genome but the ' +
+             'assembly method was specified as metagenomic'],
+            dna_source='metagenome')
+
     def run_error(self, libs, output_name, error, wsname=('fake'),
                   dna_source=None, exception=ValueError):
         if wsname == ('fake'):
             wsname = self.getWsName()
 
+        if type(error) != list:
+            error = [error]
         params = {}
         if (wsname is not None):
             if wsname == 'None':
@@ -460,9 +472,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         with self.assertRaises(exception) as context:
             self.getImpl().run_SPAdes(self.getContext(), params)
-        print(context.exception)
-        print(context.exception.message)
-        self.assertIn(error, str(context.exception.message))
+        for err in error:
+            self.assertIn(err, str(context.exception.message))
 
     def run_success(self, stagekeys, output_name, expected, contig_count=None,
                     dna_source=None):
