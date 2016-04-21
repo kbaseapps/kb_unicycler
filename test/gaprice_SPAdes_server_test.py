@@ -219,6 +219,10 @@ class gaprice_SPAdesTest(unittest.TestCase):
                             rev_reads=rev_reads)
         cls.upload_assembly('intbasic', 'intbasic', {'single_genome': 1},
                             int_reads)
+        cls.upload_assembly('meta', 'meta', {'single_genome': 0},
+                            int_reads)
+        cls.upload_assembly('reads_out', 'reads_out',
+                            {'read_orientation_outward': 1}, int_reads)
         cls.upload_assembly('frbasic_kbassy', 'frbasic_kbassy', {},
                             fwd_reads, rev_reads=rev_reads, kbase_assy=True)
         cls.upload_assembly('intbasic_kbassy', 'intbasic_kbassy', {},
@@ -438,7 +442,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_error(['foo'], '',
                        'output_contigset_name parameter is required')
 
-    def test_inconsistent_metagenomics(self):
+    def test_inconsistent_metagenomics_1(self):
 
         self.run_error(
             ['intbasic'], 'out',
@@ -446,6 +450,22 @@ class gaprice_SPAdesTest(unittest.TestCase):
              ') is marked as containing dna from a single genome but the ' +
              'assembly method was specified as metagenomic'],
             dna_source='metagenome')
+
+    def test_inconsistent_metagenomics_2(self):
+
+        self.run_error(
+            ['meta'], 'out',
+            ['Reads object meta (',
+             ') is marked as containing metagenomic data but the assembly ' +
+             'method was not specified as metagenomic'])
+
+    def test_outward_reads(self):
+
+        self.run_error(
+            ['reads_out'], 'out',
+            ['Reads object reads_out (',
+             ') is marked as having outward oriented reads, which SPAdes ' +
+             'does not support.'])
 
     def run_error(self, libs, output_name, error, wsname=('fake'),
                   dna_source=None, exception=ValueError):
