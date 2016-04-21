@@ -48,6 +48,7 @@ Does not currently support assembling metagenomics reads.
     #########################################
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
+    DISABLE_SPADES_OUTPUT = False  # should be False in production
 
     PAIRED_END_TYPE = 'PairedEndLibrary'
     # one of these should be deprecated
@@ -85,6 +86,7 @@ Does not currently support assembling metagenomics reads.
         print(message)
 
     def file_extension_ok(self, filename):
+        # print('Checking extension for file name ' + filename)
         for ext in self.SUPPORTED_FILES:
             if filename.lower().endswith(ext):
                 return True
@@ -101,22 +103,35 @@ Does not currently support assembling metagenomics reads.
         node = requests.get(node_url, headers=headers).json()
         node_fn = node['data']['file']['name']
 
+        handle_fn = handle['file_name'] if 'file_name' in handle else None
+
+        print('File type: ' + str(file_type))
+        print('Handle fn: ' + str(handle_fn))
+        print('Shock fn: ' + str(node_fn))
+
         if file_type:
             if not file_type.startswith('.'):
                 file_type = '.' + file_type
             file_name += file_type
-        elif 'file_name' in handle:
-            file_name += '_' + handle['file_name']
+            print('using file name via type: ' + file_name)
+        elif handle_fn:
+            file_name += '_' + handle_fn
+            print('using file name from handle: ' + file_name)
         else:
             file_name += '_' + node_fn
+            print('using file name from node: ' + file_name)
 
         if not self.file_extension_ok(file_name):
             raise ValueError(
                 ('Reads object {} ({}) contains a reads file stored in ' +
                  'Shock node {} for which a valid filename could not ' +
-                 'be determined. Acceptable extensions: {}').format(
-                    source_obj_ref, source_obj_name, handle['id'],
-                    ' '.join(self.SUPPORTED_FILES)))
+                 'be determined. In order of precedence:\n' +
+                 'File type is: {}\n' +
+                 'Handle file name is: {}\n' +
+                 'Shock file name is: {}\n' +
+                 'Acceptable extensions: {}').format(
+                    source_obj_ref, source_obj_name, handle['id'], file_type,
+                    handle_fn, node_fn, ' '.join(self.SUPPORTED_FILES)))
 
         file_path = os.path.join(self.scratch, file_name)
         with open(file_path, 'w') as fhandle:
@@ -219,10 +234,13 @@ Does not currently support assembling metagenomics reads.
         cmd += ['--dataset', self.generate_spades_yaml(reads_data)]
         self.log('Running SPAdes command line:')
         self.log(cmd)
-        p = subprocess.Popen(
-            cmd,
-            cwd=self.scratch,
-            shell=False)
+
+        if self.DISABLE_SPADES_OUTPUT:
+            with open(os.devnull, 'w') as null:
+                p = subprocess.Popen(cmd, cwd=self.scratch, shell=False,
+                                     stdout=null)
+        else:
+            p = subprocess.Popen(cmd, cwd=self.scratch, shell=False)
         retcode = p.wait()
 
         self.log('Return code: ' + str(retcode))

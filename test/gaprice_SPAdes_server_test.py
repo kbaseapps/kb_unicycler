@@ -13,6 +13,8 @@ from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @U
 from gaprice_SPAdes.gaprice_SPAdesImpl import gaprice_SPAdes
 from pprint import pprint
 from biokbase.workspace.client import ServerError  # @UnresolvedImport
+import shutil
+import inspect
 
 
 class gaprice_SPAdesTest(unittest.TestCase):
@@ -43,9 +45,13 @@ class gaprice_SPAdesTest(unittest.TestCase):
         cls.nodes_to_delete = []
         cls.handles_to_delete = []
         cls.setupTestData()
+        print('\n\n=============== Starting tests ==================')
 
     @classmethod
     def tearDownClass(cls):
+
+        print('\n\n=============== Cleaning up ==================')
+
         if hasattr(cls, 'wsName'):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
             print('Test workspace was deleted: ' + cls.wsName)
@@ -175,6 +181,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                  'size': fwd_size
                  }
 
+        rev_id = None
         if rev_reads:
             print('uploading reverse reads file ' + rev_reads['file'])
             rev_id, rev_handle_id, rev_md5, rev_size = \
@@ -208,8 +215,13 @@ class gaprice_SPAdesTest(unittest.TestCase):
                          }]
             })[0]
         print('Saved object: ')
-        print(objdata)
-        cls.staged[key] = objdata
+        pprint(objdata)
+        pprint(ob)
+        cls.staged[key] = {'info': objdata,
+                           'ref': cls.make_ref(objdata),
+                           'fwd_node_id': fwd_id,
+                           'rev_node_id': rev_id
+                           }
 
     @classmethod
     def upload_empty_data(cls):
@@ -229,15 +241,18 @@ class gaprice_SPAdesTest(unittest.TestCase):
         print('CPUs detected ' + str(psutil.cpu_count()))
         print('Available memory ' + str(psutil.virtual_memory().available))
         print('staging data')
+        # get file type from type
         fwd_reads = {'file': 'data/small.forward.fq',
-                     'name': 'test_fwd.fq',
+                     'name': 'test_fwd.fastq',
                      'type': 'fastq'}
+        # get file type from handle file name
         rev_reads = {'file': 'data/small.reverse.fq',
-                     'name': 'test_rev.fq',
-                     'type': 'fastq'}
+                     'name': 'test_rev.FQ',
+                     'type': ''}
+        # get file type from shock node file name
         int_reads = {'file': 'data/interleaved.fq',
-                     'name': 'test_int.fq',
-                     'type': '.FQ'}
+                     'name': '',
+                     'type': ''}
         cls.upload_assembly('frbasic', 'frbasic', {}, fwd_reads,
                             rev_reads=rev_reads)
         cls.upload_assembly('intbasic', 'intbasic', {'single_genome': 1},
@@ -252,9 +267,21 @@ class gaprice_SPAdesTest(unittest.TestCase):
                             int_reads, kbase_assy=True)
         cls.upload_assembly('single_end', 'single_end', {}, fwd_reads,
                             single_end=True)
+        shutil.copy2('data/small.forward.fq', 'data/small.forward.bad')
+        bad_fn_reads = {'file': 'data/small.forward.bad',
+                        'name': '',
+                        'type': ''}
+        cls.upload_assembly('bad_shk_name', 'bad_shk_name', {}, bad_fn_reads)
+        bad_fn_reads['file'] = 'data/small.forward.fq'
+        bad_fn_reads['name'] = 'file.terrible'
+        cls.upload_assembly('bad_file_name', 'bad_file_name', {}, bad_fn_reads)
+        bad_fn_reads['name'] = 'small.forward.fastq'
+        bad_fn_reads['type'] = 'xls'
+        cls.upload_assembly('bad_file_type', 'bad_file_type', {}, bad_fn_reads)
         cls.upload_empty_data()
         print('Data staged.')
 
+    @classmethod
     def make_ref(self, object_info):
         return str(object_info[6]) + '/' + str(object_info[0]) + \
             '/' + str(object_info[4])
@@ -473,26 +500,26 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['intbasic'],
-            ['Reads object intbasic (',
-             ') is marked as containing dna from a single genome but the ' +
-             'assembly method was specified as metagenomic'],
+            'Reads object intbasic (' + self.staged['intbasic']['ref'] +
+            ') is marked as containing dna from a single genome but the ' +
+            'assembly method was specified as metagenomic',
             dna_source='metagenome')
 
     def test_inconsistent_metagenomics_2(self):
 
         self.run_error(
             ['meta'],
-            ['Reads object meta (',
-             ') is marked as containing metagenomic data but the assembly ' +
-             'method was not specified as metagenomic'])
+            'Reads object meta (' + self.staged['meta']['ref'] +
+            ') is marked as containing metagenomic data but the assembly ' +
+            'method was not specified as metagenomic')
 
     def test_outward_reads(self):
 
         self.run_error(
             ['reads_out'],
-            ['Reads object reads_out (',
-             ') is marked as having outward oriented reads, which SPAdes ' +
-             'does not support.'])
+            'Reads object reads_out (' + self.staged['reads_out']['ref'] +
+            ') is marked as having outward oriented reads, which SPAdes ' +
+            'does not support.')
 
     def test_bad_module(self):
 
@@ -506,13 +533,55 @@ class gaprice_SPAdesTest(unittest.TestCase):
                        'Only the types KBaseAssembly.PairedEndLibrary and ' +
                        'KBaseFile.PairedEndLibrary are supported')
 
-    def run_error(self, libs, error, wsname=('fake'),
-                  output_name='out', dna_source=None, exception=ValueError):
+    def test_bad_shock_filename(self):
+
+        self.run_error(
+            ['bad_shk_name'],
+            ('Reads object {} (bad_shk_name) contains a reads file stored ' +
+             'in Shock node {} for which a valid filename could not be ' +
+             'determined. In order of precedence:\n' +
+             'File type is: \nHandle file name is: \n' +
+             'Shock file name is: small.forward.bad\n' +
+             'Acceptable extensions: .fq .fastq .fq.gz ' +
+             '.fastq.gz').format(self.staged['bad_shk_name']['ref'],
+                                 self.staged['bad_shk_name']['fwd_node_id']))
+
+    def test_bad_handle_filename(self):
+
+        self.run_error(
+            ['bad_file_name'],
+            ('Reads object {} (bad_file_name) contains a reads file stored ' +
+             'in Shock node {} for which a valid filename could not be ' +
+             'determined. In order of precedence:\n' +
+             'File type is: \nHandle file name is: file.terrible\n' +
+             'Shock file name is: small.forward.fq\n' +
+             'Acceptable extensions: .fq .fastq .fq.gz ' +
+             '.fastq.gz').format(self.staged['bad_file_name']['ref'],
+                                 self.staged['bad_file_name']['fwd_node_id']))
+
+    def test_bad_file_type(self):
+
+        self.run_error(
+            ['bad_file_type'],
+            ('Reads object {} (bad_file_type) contains a reads file stored ' +
+             'in Shock node {} for which a valid filename could not be ' +
+             'determined. In order of precedence:\n' +
+             'File type is: .xls\nHandle file name is: small.forward.fastq\n' +
+             'Shock file name is: small.forward.fq\n' +
+             'Acceptable extensions: .fq .fastq .fq.gz ' +
+             '.fastq.gz').format(self.staged['bad_file_type']['ref'],
+                                 self.staged['bad_file_type']['fwd_node_id']))
+
+    def run_error(self, libs, error, wsname=('fake'), output_name='out',
+                  dna_source=None, exception=ValueError):
+
+        test_name = inspect.stack()[1][3]
+        print('\n===== starting expected fail test: ' + test_name + ' =====')
+        print('    libs: ' + str(libs))
+
         if wsname == ('fake'):
             wsname = self.getWsName()
 
-        if type(error) != list:
-            error = [error]
         params = {}
         if (wsname is not None):
             if wsname == 'None':
@@ -531,18 +600,21 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         with self.assertRaises(exception) as context:
             self.getImpl().run_SPAdes(self.getContext(), params)
-        for err in error:
-            self.assertIn(err, str(context.exception.message))
+        self.assertEqual(error, str(context.exception.message))
 
     def run_success(self, stagekeys, output_name, expected, contig_count=None,
                     dna_source=None):
 
+        test_name = inspect.stack()[1][3]
+        print('\n==== starting expected success test: ' + test_name + ' =====')
+        print('   libs: ' + str(stagekeys))
+
         if not contig_count:
             contig_count = len(expected['contigs'])
 
-        libs = [self.staged[key][1] for key in stagekeys]
+        libs = [self.staged[key]['info'][1] for key in stagekeys]
         assyrefs = sorted(
-            [self.make_ref(self.staged[key]) for key in stagekeys])
+            [self.make_ref(self.staged[key]['info']) for key in stagekeys])
 
         params = {'workspace_name': self.getWsName(),
                   'read_libraries': libs,
