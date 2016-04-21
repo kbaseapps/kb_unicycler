@@ -133,9 +133,13 @@ class gaprice_SPAdesTest(unittest.TestCase):
         return node['id'], handle_id, md5, node['file']['size']
 
     @classmethod
-    def upload_assembly(cls, key, wsobjname, object_body,
-                        fwd_reads, rev_reads=None, kbase_assy=False):
-        print('staging data for key ' + key)
+    def upload_assembly(cls, key, wsobjname, object_body, fwd_reads,
+                        rev_reads=None, kbase_assy=False, single_end=False):
+        if single_end and rev_reads:
+            raise ValueError('u r supr dum')
+
+        print('\n===============staging data for key ' + key +
+              '================')
         print('uploading forward reads file ' + fwd_reads['file'])
         fwd_id, fwd_handle_id, fwd_md5, fwd_size = \
             cls.upload_file_to_shock_and_get_handle(fwd_reads['file'])
@@ -151,11 +155,20 @@ class gaprice_SPAdesTest(unittest.TestCase):
         ob = dict(object_body)  # copy
         ob['sequencing_tech'] = 'fake data'
         if kbase_assy:
-            wstype = 'KBaseAssembly.PairedEndLibrary'
-            ob['handle_1'] = fwd_handle
+            if single_end:
+                wstype = 'KBaseAssembly.SingleEndLibrary'
+                ob['handle'] = fwd_handle
+            else:
+                wstype = 'KBaseAssembly.PairedEndLibrary'
+                ob['handle_1'] = fwd_handle
         else:
-            wstype = 'KBaseFile.PairedEndLibrary'
-            ob['lib1'] = \
+            if single_end:
+                wstype = 'KBaseFile.SingleEndLibrary'
+                obkey = 'lib'
+            else:
+                wstype = 'KBaseFile.PairedEndLibrary'
+                obkey = 'lib1'
+            ob[obkey] = \
                 {'file': fwd_handle,
                  'encoding': 'UTF8',
                  'type': fwd_reads['type'],
@@ -199,6 +212,16 @@ class gaprice_SPAdesTest(unittest.TestCase):
         cls.staged[key] = objdata
 
     @classmethod
+    def upload_empty_data(cls):
+        cls.wsClient.save_objects({
+            'workspace': cls.getWsName(),
+            'objects': [{'type': 'Empty.AType',
+                         'data': {},
+                         'name': 'empty'
+                         }]
+            })
+
+    @classmethod
     def setupTestData(cls):
         print('Shock url ' + cls.shockURL)
         print('WS url ' + cls.wsClient.url)
@@ -227,6 +250,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
                             fwd_reads, rev_reads=rev_reads, kbase_assy=True)
         cls.upload_assembly('intbasic_kbassy', 'intbasic_kbassy', {},
                             int_reads, kbase_assy=True)
+        cls.upload_assembly('single_end', 'single_end', {}, fwd_reads,
+                            single_end=True)
+        cls.upload_empty_data()
         print('Data staged.')
 
     def make_ref(self, object_info):
@@ -397,55 +423,56 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
     def test_no_workspace_param(self):
 
-        self.run_error(['foo'], 'out',
-                       'workspace_name parameter is required', wsname=None)
+        self.run_error(
+            ['foo'], 'workspace_name parameter is required', wsname=None)
 
     def test_no_workspace_name(self):
 
-        self.run_error(['foo'], 'out',
-                       'workspace_name parameter is required', wsname='None')
+        self.run_error(
+            ['foo'], 'workspace_name parameter is required', wsname='None')
 
     def test_bad_workspace_name(self):
 
         self.run_error(
-            ['foo'], 'out',
+            ['foo'],
             'Error on ObjectIdentity #1: Illegal character in workspace ' +
             'name bad*name: *', wsname='bad*name', exception=ServerError)
 
     def test_bad_lib_name(self):
 
         self.run_error(
-            ['bad*name'], 'out',
+            ['bad*name'],
             'Error on ObjectIdentity #1: Illegal character in object name ' +
             'bad*name: *', exception=ServerError)
 
     def test_no_libs_param(self):
 
-        self.run_error(None, 'out', 'read_libraries parameter is required')
+        self.run_error(None, 'read_libraries parameter is required')
 
     def test_no_libs_list(self):
 
-        self.run_error('foo', 'out', 'read_libraries must be a list')
+        self.run_error('foo', 'read_libraries must be a list')
 
     def test_no_libs(self):
 
-        self.run_error([], 'out',
-                       'At least one reads library must be provided')
+        self.run_error([], 'At least one reads library must be provided')
 
     def test_no_output_param(self):
 
-        self.run_error(['foo'], None,
-                       'output_contigset_name parameter is required')
+        self.run_error(
+            ['foo'], 'output_contigset_name parameter is required',
+            output_name=None)
 
     def test_no_output_name(self):
 
-        self.run_error(['foo'], '',
-                       'output_contigset_name parameter is required')
+        self.run_error(
+            ['foo'], 'output_contigset_name parameter is required',
+            output_name='')
 
     def test_inconsistent_metagenomics_1(self):
 
         self.run_error(
-            ['intbasic'], 'out',
+            ['intbasic'],
             ['Reads object intbasic (',
              ') is marked as containing dna from a single genome but the ' +
              'assembly method was specified as metagenomic'],
@@ -454,7 +481,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def test_inconsistent_metagenomics_2(self):
 
         self.run_error(
-            ['meta'], 'out',
+            ['meta'],
             ['Reads object meta (',
              ') is marked as containing metagenomic data but the assembly ' +
              'method was not specified as metagenomic'])
@@ -462,13 +489,25 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def test_outward_reads(self):
 
         self.run_error(
-            ['reads_out'], 'out',
+            ['reads_out'],
             ['Reads object reads_out (',
              ') is marked as having outward oriented reads, which SPAdes ' +
              'does not support.'])
 
-    def run_error(self, libs, output_name, error, wsname=('fake'),
-                  dna_source=None, exception=ValueError):
+    def test_bad_module(self):
+
+        self.run_error(['empty'],
+                       'Only the types KBaseAssembly.PairedEndLibrary and ' +
+                       'KBaseFile.PairedEndLibrary are supported')
+
+    def test_bad_type(self):
+
+        self.run_error(['single_end'],
+                       'Only the types KBaseAssembly.PairedEndLibrary and ' +
+                       'KBaseFile.PairedEndLibrary are supported')
+
+    def run_error(self, libs, error, wsname=('fake'),
+                  output_name='out', dna_source=None, exception=ValueError):
         if wsname == ('fake'):
             wsname = self.getWsName()
 
