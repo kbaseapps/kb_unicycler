@@ -58,8 +58,8 @@ description : |
     <p>
     Operational notes:
     <ul>
-        <li> Currently the wrapper only supports Illumina reads in FASTQ
-             format, either uncompressed or gzipped.</li>
+        <li> Currently the wrapper only supports Illumina paired-end reads
+             in FASTQ format, either uncompressed or gzipped.</li>
         <li> The --careful flag is always used, except for metagenomic
              assemblies where it is not allowed.</li>
         <li> The k-mer parameter is autodetected by SPAdes.</li>
@@ -68,6 +68,7 @@ description : |
     If you need support for command line options not exposed in the wrapper
     please contact KBAse Help.
     </p>
+    <p>SPAdes version: 3.7.1</p>
     
 publications :
     -
