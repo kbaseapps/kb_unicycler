@@ -66,7 +66,7 @@ description : |
         <li> The PHRED parameter is autodetected by SPAdes.</li>
     </ul>
     If you need support for command line options not exposed in the wrapper
-    please contact KBAse Help.
+    please contact KBase Help.
     </p>
     <p>SPAdes version: 3.7.1</p>
     
