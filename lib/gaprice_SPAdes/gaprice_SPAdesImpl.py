@@ -1,5 +1,5 @@
 #BEGIN_HEADER
-# The header block is where all import statments should live
+# The header block is where all import statements should live
 from __future__ import print_function
 import os
 import re
@@ -31,13 +31,11 @@ class gaprice_SPAdes:
 Simple wrapper for the SPAdes assembler.
 http://bioinf.spbau.ru/spades
 
-Currently only supports assembling one PairedEndLibrary at a time.
 Always runs in careful mode.
 Runs 3 threads / CPU.
 Maximum memory use is set to available memory - 1G.
 Autodetection is used for the PHRED quality offset and k-mer sizes.
 A coverage cutoff is not specified.
-Does not currently support assembling metagenomics reads.
     '''
 
     ######## WARNING FOR GEVENT USERS #######
@@ -608,7 +606,7 @@ Does not currently support assembling metagenomics reads.
 
         self.process_params(params)
 
-        # Get the read library
+        # Get the reads library
         ws = workspaceService(self.workspaceURL, token=token)
         ws_reads_ids = []
         for read_name in params[self.PARAM_IN_LIB]:

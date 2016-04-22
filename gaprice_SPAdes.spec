@@ -3,13 +3,11 @@ A KBase module: gaprice_SPAdes
 Simple wrapper for the SPAdes assembler.
 http://bioinf.spbau.ru/spades
 
-Currently only supports assembling one PairedEndLibrary at a time.
 Always runs in careful mode.
 Runs 3 threads / CPU.
 Maximum memory use is set to available memory - 1G.
 Autodetection is used for the PHRED quality offset and k-mer sizes.
 A coverage cutoff is not specified.
-Does not currently support assembling metagenomics reads.
 
 */
 

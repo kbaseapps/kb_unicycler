@@ -1,12 +1,12 @@
 #
 # define display information
 #
-name: SPAdes
+name: Assemble with SPAdes
 tooltip: |
-    Runs the SPAdes assembler on reads.
+    Assemble metagenomic reads using the SPAdes assembler.
 screenshots: []
 
-icon: icon.png
+icon: spades.png
 
 #
 # define a set of similar methods that might be useful to the user
@@ -45,12 +45,33 @@ parameters :
             The name under which the resulting ContigSet will be saved in the Narrative
 description : |
     <p>
-    Runs the <a href="http://bioinf.spbau.ru/spades" target="_blank">SPAdes assembler</a>
-    on Illumina FASTQ reads libraries.</br>
+    This is a KBase wrapper for the 
+    <a href="http://bioinf.spbau.ru/spades" target="_blank">SPAdes</a> 
+    genomic reads assembler.
+    </p>
+    
+    <p>
+    SPAdes is designed for assembling bacterial reads and is not intended
+    for larger genomes.
+    </p>
+
+    <p>
+    Operational notes:
+    <ul>
+        <li> Currently the wrapper only supports Illumina reads in FASTQ
+             format, either uncompressed or gzipped.</li>
+        <li> The --careful flag is always used, except for metagenomic
+             assemblies where it is not allowed.</li>
+        <li> The k-mer parameter is autodetected by SPAdes.</li>
+        <li> The PHRED parameter is autodetected by SPAdes.</li>
+    </ul>
+    If you need support for command line options not exposed in the wrapper
+    please contact KBAse Help.
     </p>
     
 publications :
     -
         display-text: |
             S. Nurk, A. Bankevich, D. Antipov, A. A. Gurevich, A. Korobeynikov, A. Lapidus, A. D. Prjibelsky, A. Pyshkin, A. Sirotkin, Y. Sirotkin, R. Stepanauskas, J. S. McLean, R. Lasken, S. R. Clingenpeel, T. Woyke, G. Tesler, M. A. Alekseyev, and P. A. Pevzner. Assembling Single-Cell Genomes and Mini-Metagenomes From Chimeric MDA Products. Journal of Computational Biology 20(10) (2013), 714-737. doi:10.1089/cmb.2013.0084
-        link: http://bioinf.spbau.ru/spades
+        link: http://www.ncbi.nlm.nih.gov/pubmed/24093227
+        pmid: 24093227
