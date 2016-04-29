@@ -13,6 +13,7 @@ import subprocess
 import hashlib
 import numpy as np
 import yaml
+from gaprice_SPAdes.GenericClient import GenericClient
 
 
 class ShockException(Exception):
@@ -588,6 +589,8 @@ A coverage cutoff is not specified.
     # be found
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
+        self.generic_clientURL = os.environ['SDK_CALLBACK_URL']
+        self.log('Callback URL: ' + self.generic_clientURL)
         self.workspaceURL = config[self.URL_WS]
         self.shockURL = config[self.URL_SHOCK]
         self.scratch = os.path.abspath(config['scratch'])
@@ -612,18 +615,41 @@ A coverage cutoff is not specified.
         self.process_params(params)
 
         # Get the reads library
-        ws = workspaceService(self.workspaceURL, token=token)
-        ws_reads_ids = []
-        for read_name in params[self.PARAM_IN_LIB]:
-            ws_reads_ids.append({'ref': params[self.PARAM_IN_WS] + '/' +
-                                 read_name})
-        reads = ws.get_objects(ws_reads_ids)
+        gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
+                           token=token)
+        params = {self.PARAM_IN_WS: params[self.PARAM_IN_WS],
+                  self.PARAM_IN_LIB: params[self.PARAM_IN_LIB]}
+        reads = gc.sync_call(
+            "kb_read_library_to_file.convert_read_library_to_file", [params],
+            json_rpc_context={"service_ver": "dev"})[0]
+        print(reads)
 
-        ws_id = reads[0]['info'][6]
         reads_data = []
-        for read in reads:
-            reads_data.append(self.process_reads(read, params, token))
-        del reads
+        for r in reads:
+            f = reads[r]['files']
+            if 'sing' in f:
+                raise ValueError(('{} is a single end read library, which ' +
+                                  'is not currently supported.'.format(r)))
+            if 'inter' in f:
+                reads_data.append({'fwd_file': f['inter']})
+            elif 'fwd' in f:
+                reads_data.append({'fwd_file': f['fwd'], 'rev_file': f['rev']})
+            else:
+                raise ValueError('Something is very wrong with read lib' + r)
+
+        ws = workspaceService(self.workspaceURL, token=token)
+        ws_id = ws.get_workspace_info({'name': params[self.PARAM_IN_WS]})[0][0]
+#         ws_reads_ids = []
+#         for read_name in params[self.PARAM_IN_LIB]:
+#             ws_reads_ids.append({'ref': params[self.PARAM_IN_WS] + '/' +
+#                                  read_name})
+#         reads = ws.get_objects(ws_reads_ids)
+# 
+#         ws_id = reads[0]['info'][6]
+#         reads_data = []
+#         for read in reads:
+#             reads_data.append(self.process_reads(read, params, token))
+#         del reads
 
         spades_out = self.exec_spades(params[self.PARAM_IN_DNA_SOURCE],
                                       reads_data)
