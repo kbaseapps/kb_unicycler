@@ -617,11 +617,12 @@ A coverage cutoff is not specified.
         # Get the reads library
         gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
                            token=token)
-        params = {self.PARAM_IN_WS: params[self.PARAM_IN_WS],
-                  self.PARAM_IN_LIB: params[self.PARAM_IN_LIB]}
+        reads_params = {self.PARAM_IN_WS: params[self.PARAM_IN_WS],
+                        self.PARAM_IN_LIB: params[self.PARAM_IN_LIB]}
         reads = gc.sync_call(
-            "kb_read_library_to_file.convert_read_library_to_file", [params],
-            json_rpc_context={"service_ver": "dev"})[0]['files']
+            "kb_read_library_to_file.convert_read_library_to_file",
+            [reads_params], json_rpc_context={"service_ver": "dev"}
+            )[0]['files']
         print(reads)
 
         reads_data = []
@@ -629,7 +630,7 @@ A coverage cutoff is not specified.
             f = reads[r]['files']
             if 'sing' in f:
                 raise ValueError(('{} is a single end read library, which ' +
-                                  'is not currently supported.'.format(r)))
+                                  'is not currently supported.').format(r))
             if 'inter' in f:
                 reads_data.append({'fwd_file': f['inter']})
             elif 'fwd' in f:
@@ -637,8 +638,8 @@ A coverage cutoff is not specified.
             else:
                 raise ValueError('Something is very wrong with read lib' + r)
 
+        ws_id = reads[r]['ref'].split('/')[0]
         ws = workspaceService(self.workspaceURL, token=token)
-        ws_id = ws.get_workspace_info({'name': params[self.PARAM_IN_WS]})[0][0]
 #         ws_reads_ids = []
 #         for read_name in params[self.PARAM_IN_LIB]:
 #             ws_reads_ids.append({'ref': params[self.PARAM_IN_WS] + '/' +
@@ -672,7 +673,7 @@ A coverage cutoff is not specified.
         # add additional info to provenance here, in this case the input data
         # object reference
         provenance[0]['input_ws_objects'] = \
-            [x['in_lib_ref'] for x in reads_data]
+            [reads[x]['ref'] for x in reads]
 
         # save the contigset output
         new_obj_info = ws.save_objects({

@@ -589,7 +589,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                   dna_source=None, exception=ValueError):
 
         test_name = inspect.stack()[1][3]
-        print('\n===== starting expected fail test: ' + test_name + ' =====')
+        print('\n***** starting expected fail test: ' + test_name + ' *****')
         print('    libs: ' + str(readnames))
 
         if wsname == ('fake'):
@@ -619,7 +619,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                     dna_source=None):
 
         test_name = inspect.stack()[1][3]
-        print('\n==== starting expected success test: ' + test_name + ' =====')
+        print('\n**** starting expected success test: ' + test_name + ' *****')
         print('   libs: ' + str(readnames))
 
         if not contig_count:
