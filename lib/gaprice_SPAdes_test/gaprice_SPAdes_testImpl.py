@@ -13,7 +13,7 @@ import subprocess
 import hashlib
 import numpy as np
 import yaml
-from gaprice_SPAdes.GenericClient import GenericClient
+from gaprice_SPAdes_test.GenericClient import GenericClient
 
 
 class ShockException(Exception):
@@ -22,10 +22,10 @@ class ShockException(Exception):
 #END_HEADER
 
 
-class gaprice_SPAdes:
+class gaprice_SPAdes_test:
     '''
     Module Name:
-    gaprice_SPAdes
+    gaprice_SPAdes_test
 
     Module Description:
     A KBase module: gaprice_SPAdes
@@ -47,7 +47,7 @@ A coverage cutoff is not specified.
     #########################################
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/mrcreosote/gaprice_SPAdes"
-    GIT_COMMIT_HASH = "1d477086ae302f0055d83bb3bf1da1fe60214548"
+    GIT_COMMIT_HASH = "41086fbc4658be1b14e2e623addbcf8e8ac5fff6"
     
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -621,7 +621,7 @@ A coverage cutoff is not specified.
                   self.PARAM_IN_LIB: params[self.PARAM_IN_LIB]}
         reads = gc.sync_call(
             "kb_read_library_to_file.convert_read_library_to_file", [params],
-            json_rpc_context={"service_ver": "dev"})[0]
+            json_rpc_context={"service_ver": "dev"})[0]['files']
         print(reads)
 
         reads_data = []
