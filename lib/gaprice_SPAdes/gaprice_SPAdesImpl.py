@@ -44,6 +44,10 @@ A coverage cutoff is not specified.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     #########################################
+    VERSION = "0.0.1"
+    GIT_URL = "https://github.com/mrcreosote/gaprice_SPAdes"
+    GIT_COMMIT_HASH = "1d477086ae302f0055d83bb3bf1da1fe60214548"
+    
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
     DISABLE_SPADES_OUTPUT = False  # should be False in production
@@ -591,6 +595,7 @@ A coverage cutoff is not specified.
             os.makedirs(self.scratch)
         #END_CONSTRUCTOR
         pass
+    
 
     def run_SPAdes(self, ctx, params):
         # ctx is the context object
@@ -671,3 +676,10 @@ A coverage cutoff is not specified.
                              'output is not type dict as required.')
         # return the results
         return [output]
+
+    def status(self, ctx):
+        #BEGIN_STATUS
+        returnVal = {'state': "OK", 'message': "", 'version': self.VERSION, 
+                     'git_url': self.GIT_URL, 'git_commit_hash': self.GIT_COMMIT_HASH}
+        #END_STATUS
+        return [returnVal]

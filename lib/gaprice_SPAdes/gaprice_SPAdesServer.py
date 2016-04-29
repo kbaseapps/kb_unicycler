@@ -339,6 +339,9 @@ class Application(object):
                              name='gaprice_SPAdes.run_SPAdes',
                              types=[dict])
         self.method_authentication['gaprice_SPAdes.run_SPAdes'] = 'required'
+        self.rpc_service.add(impl_gaprice_SPAdes.status,
+                             name='gaprice_SPAdes.status',
+                             types=[dict])
         self.auth_client = biokbase.nexus.Client(
             config={'server': 'nexus.api.globusonline.org',
                     'verify_ssl': True,
