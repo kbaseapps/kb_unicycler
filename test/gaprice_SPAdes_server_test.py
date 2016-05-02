@@ -10,8 +10,9 @@ import psutil
 import requests
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
-from gaprice_SPAdes_test.gaprice_SPAdes_testImpl import gaprice_SPAdes_test, ShockException
+from gaprice_SPAdes_test.gaprice_SPAdes_testImpl import gaprice_SPAdes_test, ShockException  # @IgnorePep8
 from biokbase.workspace.client import ServerError as WorkspaceError  # @UnresolvedImport @IgnorePep8
+from gaprice_SPAdes_test.GenericClient import ServerError
 from pprint import pprint
 import shutil
 import inspect
@@ -218,14 +219,17 @@ class gaprice_SPAdesTest(unittest.TestCase):
                                  }
 
     @classmethod
-    def upload_empty_data(cls):
-        cls.wsClient.save_objects({
+    def upload_empty_data(cls, wsobjname):
+        objdata = cls.wsClient.save_objects({
             'workspace': cls.getWsName(),
             'objects': [{'type': 'Empty.AType',
                          'data': {},
                          'name': 'empty'
                          }]
-            })
+            })[0]
+        cls.staged[wsobjname] = {'info': objdata,
+                                 'ref': cls.make_ref(objdata),
+                                 }
 
     @classmethod
     def setupTestData(cls):
@@ -249,7 +253,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
                      'type': ''}
         cls.upload_assembly('frbasic', {}, fwd_reads, rev_reads=rev_reads)
         cls.upload_assembly('intbasic', {'single_genome': 1}, int_reads)
-        cls.upload_assembly('meta', {'single_genome': 0}, int_reads)
+        cls.upload_assembly('meta', {'single_genome': 0}, fwd_reads,
+                            rev_reads=rev_reads)
         cls.upload_assembly('reads_out', {'read_orientation_outward': 1},
                             int_reads)
         cls.upload_assembly('frbasic_kbassy', {}, fwd_reads,
@@ -269,7 +274,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         cls.upload_assembly('bad_file_type', {}, bad_fn_reads)
         cls.upload_assembly('bad_node', {}, fwd_reads)
         cls.delete_shock_node(cls.nodes_to_delete.pop())
-        cls.upload_empty_data()
+        cls.upload_empty_data('empty')
         print('Data staged.')
 
     @classmethod
@@ -417,7 +422,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def test_metagenome(self):
 
         self.run_success(
-            ['frbasic'], 'metagenome_out',
+            ['meta'], 'metagenome_out',
             {'contigs':
              [{'description': 'Note MD5 is generated from uppercasing ' +
                               'the sequence',
@@ -458,7 +463,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             ['foo'], 'Object foo cannot be accessed: No workspace with name ' +
             'Ireallyhopethisworkspacedoesntexistorthistestwillfail exists',
             wsname='Ireallyhopethisworkspacedoesntexistorthistestwillfail',
-            exception=WorkspaceError)
+            exception=ServerError)
 
     def test_bad_lib_name(self):
 
@@ -476,7 +481,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['foo'], 'No object with name foo exists in workspace ' +
-            str(self.wsinfo[0]), exception=WorkspaceError)
+            str(self.wsinfo[0]), exception=ServerError)
 
     def test_no_libs(self):
 
@@ -528,62 +533,67 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def test_bad_module(self):
 
         self.run_error(['empty'],
-                       'Only the types KBaseAssembly.PairedEndLibrary and ' +
+                       'Invalid type for object ' +
+                       self.staged['empty']['ref'] + ' (empty). Only the ' +
+                       'types KBaseAssembly.PairedEndLibrary and ' +
                        'KBaseFile.PairedEndLibrary are supported')
 
     def test_bad_type(self):
 
         self.run_error(['single_end'],
-                       'Only the types KBaseAssembly.PairedEndLibrary and ' +
-                       'KBaseFile.PairedEndLibrary are supported')
+                       'single_end is a single end read library, which is ' +
+                       'not currently supported.')
 
     def test_bad_shock_filename(self):
 
         self.run_error(
             ['bad_shk_name'],
-            ('Reads object {} (bad_shk_name) contains a reads file stored ' +
-             'in Shock node {} for which a valid filename could not be ' +
-             'determined. In order of precedence:\n' +
+            ('Error downloading reads for object {} (bad_shk_name) from ' +
+             'Shock node {}: A valid file extension could not be determined ' +
+             'for the reads file. In order of precedence:\n' +
              'File type is: \nHandle file name is: \n' +
              'Shock file name is: small.forward.bad\n' +
              'Acceptable extensions: .fq .fastq .fq.gz ' +
              '.fastq.gz').format(self.staged['bad_shk_name']['ref'],
-                                 self.staged['bad_shk_name']['fwd_node_id']))
+                                 self.staged['bad_shk_name']['fwd_node_id']),
+            exception=ServerError)
 
     def test_bad_handle_filename(self):
 
         self.run_error(
             ['bad_file_name'],
-            ('Reads object {} (bad_file_name) contains a reads file stored ' +
-             'in Shock node {} for which a valid filename could not be ' +
-             'determined. In order of precedence:\n' +
+            ('Error downloading reads for object {} (bad_file_name) from ' +
+             'Shock node {}: A valid file extension could not be determined ' +
+             'for the reads file. In order of precedence:\n' +
              'File type is: \nHandle file name is: file.terrible\n' +
              'Shock file name is: small.forward.fq\n' +
              'Acceptable extensions: .fq .fastq .fq.gz ' +
              '.fastq.gz').format(self.staged['bad_file_name']['ref'],
-                                 self.staged['bad_file_name']['fwd_node_id']))
+                                 self.staged['bad_file_name']['fwd_node_id']),
+            exception=ServerError)
 
     def test_bad_file_type(self):
 
         self.run_error(
             ['bad_file_type'],
-            ('Reads object {} (bad_file_type) contains a reads file stored ' +
-             'in Shock node {} for which a valid filename could not be ' +
-             'determined. In order of precedence:\n' +
+            ('Error downloading reads for object {} (bad_file_type) from ' +
+             'Shock node {}: A valid file extension could not be determined ' +
+             'for the reads file. In order of precedence:\n' +
              'File type is: .xls\nHandle file name is: small.forward.fastq\n' +
              'Shock file name is: small.forward.fq\n' +
              'Acceptable extensions: .fq .fastq .fq.gz ' +
              '.fastq.gz').format(self.staged['bad_file_type']['ref'],
-                                 self.staged['bad_file_type']['fwd_node_id']))
+                                 self.staged['bad_file_type']['fwd_node_id']),
+            exception=ServerError)
 
     def test_bad_shock_node(self):
 
         self.run_error(['bad_node'],
                        ('Error downloading reads for object {} (bad_node) ' +
-                        'from shock node {}: Node not found').format(
+                        'from Shock node {}: Node not found').format(
                             self.staged['bad_node']['ref'],
                             self.staged['bad_node']['fwd_node_id']),
-                       exception=ShockException)
+                       exception=ServerError)
 
     def run_error(self, readnames, error, wsname=('fake'), output_name='out',
                   dna_source=None, exception=ValueError):
