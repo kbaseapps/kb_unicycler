@@ -10,8 +10,9 @@ import psutil
 import requests
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
-from gaprice_SPAdes_test.gaprice_SPAdes_testImpl import gaprice_SPAdes_test, ShockException
+from gaprice_SPAdes_test.gaprice_SPAdes_testImpl import gaprice_SPAdes_test, ShockException  # @IgnorePep8
 from biokbase.workspace.client import ServerError as WorkspaceError  # @UnresolvedImport @IgnorePep8
+from gaprice_SPAdes_test.GenericClient import ServerError
 from pprint import pprint
 import shutil
 import inspect
@@ -458,7 +459,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             ['foo'], 'Object foo cannot be accessed: No workspace with name ' +
             'Ireallyhopethisworkspacedoesntexistorthistestwillfail exists',
             wsname='Ireallyhopethisworkspacedoesntexistorthistestwillfail',
-            exception=WorkspaceError)
+            exception=ServerError)
 
     def test_bad_lib_name(self):
 
@@ -476,7 +477,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['foo'], 'No object with name foo exists in workspace ' +
-            str(self.wsinfo[0]), exception=WorkspaceError)
+            str(self.wsinfo[0]), exception=ServerError)
 
     def test_no_libs(self):
 
@@ -529,13 +530,14 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(['empty'],
                        'Only the types KBaseAssembly.PairedEndLibrary and ' +
-                       'KBaseFile.PairedEndLibrary are supported')
+                       'KBaseFile.PairedEndLibrary are supported',
+                       exception=ServerError)
 
     def test_bad_type(self):
 
         self.run_error(['single_end'],
-                       'Only the types KBaseAssembly.PairedEndLibrary and ' +
-                       'KBaseFile.PairedEndLibrary are supported')
+                       'single_end is a single end read library, which is ' +
+                       'not currently supported.')
 
     def test_bad_shock_filename(self):
 
@@ -548,7 +550,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'Shock file name is: small.forward.bad\n' +
              'Acceptable extensions: .fq .fastq .fq.gz ' +
              '.fastq.gz').format(self.staged['bad_shk_name']['ref'],
-                                 self.staged['bad_shk_name']['fwd_node_id']))
+                                 self.staged['bad_shk_name']['fwd_node_id']),
+            exception=ServerError)
 
     def test_bad_handle_filename(self):
 
@@ -561,7 +564,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'Shock file name is: small.forward.fq\n' +
              'Acceptable extensions: .fq .fastq .fq.gz ' +
              '.fastq.gz').format(self.staged['bad_file_name']['ref'],
-                                 self.staged['bad_file_name']['fwd_node_id']))
+                                 self.staged['bad_file_name']['fwd_node_id']),
+            exception=ServerError)
 
     def test_bad_file_type(self):
 
@@ -574,7 +578,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'Shock file name is: small.forward.fq\n' +
              'Acceptable extensions: .fq .fastq .fq.gz ' +
              '.fastq.gz').format(self.staged['bad_file_type']['ref'],
-                                 self.staged['bad_file_type']['fwd_node_id']))
+                                 self.staged['bad_file_type']['fwd_node_id']),
+            exception=ServerError)
 
     def test_bad_shock_node(self):
 
@@ -583,7 +588,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                         'from shock node {}: Node not found').format(
                             self.staged['bad_node']['ref'],
                             self.staged['bad_node']['fwd_node_id']),
-                       exception=ShockException)
+                       exception=ServerError)
 
     def run_error(self, readnames, error, wsname=('fake'), output_name='out',
                   dna_source=None, exception=ValueError):
@@ -613,6 +618,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         with self.assertRaises(exception) as context:
             self.getImpl().run_SPAdes(self.ctx, params)
+        print('m: ' + context.exception.message)
+        if (hasattr(context.exception, 'data')):
+            print('d:\n' + context.exception.data)
         self.assertEqual(error, str(context.exception.message))
 
     def run_success(self, readnames, output_name, expected, contig_count=None,
