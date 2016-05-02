@@ -13,7 +13,7 @@ import subprocess
 import hashlib
 import numpy as np
 import yaml
-from gaprice_SPAdes_test.GenericClient import GenericClient
+from gaprice_SPAdes_test.GenericClient import GenericClient, ServerError
 import time
 
 
@@ -76,6 +76,9 @@ A coverage cutoff is not specified.
 
     URL_WS = 'workspace-url'
     URL_SHOCK = 'shock-url'
+
+    TRUE = 'true'
+    FALSE = 'false'
 
     SUPPORTED_FILES = ['.fq',
                        '.fastq',
@@ -469,40 +472,38 @@ A coverage cutoff is not specified.
             '/' + str(object_info[4])
 
     def check_reads(self, params, reads):
-        data = reads['data']
-        info = reads['info']
-        obj_ref = self.make_ref(info)
-        obj_name = info[1]
 
         # Might need to do version checking here.
-        module_name, type_name = info[2].split('-')[0].split('.')
-        if (module_name not in self.MODULE_NAMES or
-                type_name != self.PAIRED_END_TYPE):
-            raise ValueError(
-                'Only the types ' +
-                self.MODULE_NAMES[0] + '.' + self.PAIRED_END_TYPE + ' and ' +
-                self.MODULE_NAMES[1] + '.' + self.PAIRED_END_TYPE +
-                ' are supported')
+#         module_name, type_name = info[2].split('-')[0].split('.')
+#         if (module_name not in self.MODULE_NAMES or
+#                 type_name != self.PAIRED_END_TYPE):
+#             raise ValueError(
+#                 'Only the types ' +
+#                 self.MODULE_NAMES[0] + '.' + self.PAIRED_END_TYPE + ' and ' +
+#                 self.MODULE_NAMES[1] + '.' + self.PAIRED_END_TYPE +
+#                 ' are supported')
 
-        if ('read_orientation_outward' in data and
-                data['read_orientation_outward']):
-            raise ValueError(
-                ('Reads object {} ({}) is marked as having outward oriented ' +
-                 'reads, which SPAdes does not ' +
-                 'support.').format(obj_name, obj_ref))
+        for obj_name in reads:
+            rds = reads[obj_name]
+            obj_ref = rds['ref']
+            if rds['read_orientation_outward'] == self.TRUE:
+                raise ValueError(
+                    ('Reads object {} ({}) is marked as having outward ' +
+                     'oriented reads, which SPAdes does not ' +
+                     'support.').format(obj_name, obj_ref))
 
-        # ideally types would be firm enough that we could rely on the
-        # metagenomic boolean. However KBaseAssembly doesn't have the field
-        # and it's optional anyway. Ideally fix those issues and then set
-        # the --meta command line flag automatically based on the type
-        if ('single_genome' in data):
-            if (data['single_genome'] and params[self.PARAM_IN_DNA_SOURCE] ==
+            # ideally types would be firm enough that we could rely on the
+            # metagenomic boolean. However KBaseAssembly doesn't have the field
+            # and it's optional anyway. Ideally fix those issues and then set
+            # the --meta command line flag automatically based on the type
+            if (rds['single_genome'] == self.TRUE and
+                    params[self.PARAM_IN_DNA_SOURCE] ==
                     self.PARAM_IN_METAGENOME):
                 raise ValueError(
                     ('Reads object {} ({}) is marked as containing dna from ' +
                      'a single genome but the assembly method was specified ' +
                      'as metagenomic').format(obj_name, obj_ref))
-            if (not data['single_genome'] and
+            if (rds['single_genome'] == self.FALSE and
                     params[self.PARAM_IN_DNA_SOURCE] !=
                     self.PARAM_IN_METAGENOME):
                 raise ValueError(
@@ -621,12 +622,32 @@ A coverage cutoff is not specified.
                            token=token)
         reads_params = {self.PARAM_IN_WS: params[self.PARAM_IN_WS],
                         self.PARAM_IN_LIB: params[self.PARAM_IN_LIB]}
-        reads = gc.sync_call(
-            "kb_read_library_to_file.convert_read_library_to_file",
-            [reads_params], json_rpc_context={"service_ver": "dev"}
-            )[0]['files']
+        typeerr = ('Supported types: KBaseFile.SingleEndLibrary ' +
+                   'KBaseFile.PairedEndLibrary ' +
+                   'KBaseAssembly.SingleEndLibrary ' +
+                   'KBaseAssembly.PairedEndLibrary')
+        try:
+            reads = gc.sync_call(
+                "kb_read_library_to_file.convert_read_library_to_file",
+                [reads_params], json_rpc_context={"service_ver": "dev"}
+                )[0]['files']
+        except ServerError as se:
+            self.log(se.message)  # TODO remove
+            self.log('logging stacktrace from Generic Client error')
+            self.log(se.data)
+            if typeerr in se.message:
+                prefix = se.message.split('.')[0]
+                raise ValueError(
+                    prefix + '. Only the types ' +
+                    'KBaseAssembly.PairedEndLibrary ' +
+                    'and KBaseFile.PairedEndLibrary are supported')
+            else:
+                raise
+
         self.log('Got reads data from converter:')
         self.log(pformat(reads))
+
+        self.check_reads(params, reads)
 
         reads_data = []
         for r in reads:
@@ -641,8 +662,7 @@ A coverage cutoff is not specified.
             else:
                 raise ValueError('Something is very wrong with read lib' + r)
 
-        ws_id = reads[r]['ref'].split('/')[0]
-        ws = workspaceService(self.workspaceURL, token=token)
+
 #         ws_reads_ids = []
 #         for read_name in params[self.PARAM_IN_LIB]:
 #             ws_reads_ids.append({'ref': params[self.PARAM_IN_WS] + '/' +
@@ -664,6 +684,7 @@ A coverage cutoff is not specified.
                   'source_id': 'See provenance'}
         output_contigs = os.path.join(spades_out, 'scaffolds.fasta')
 
+        self.log('Uploading FASTA file to Shock')
         shockid = self.upload_file_to_shock(output_contigs, token)['id']
 
         cs = self.convert_to_contigs(output_contigs, source,
@@ -677,6 +698,9 @@ A coverage cutoff is not specified.
         # object reference
         provenance[0]['input_ws_objects'] = \
             [reads[x]['ref'] for x in reads]
+
+        ws_id = reads[r]['ref'].split('/')[0]
+        ws = workspaceService(self.workspaceURL, token=token)
 
         # save the contigset output
         new_obj_info = ws.save_objects({

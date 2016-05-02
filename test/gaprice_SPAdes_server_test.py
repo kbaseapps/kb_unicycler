@@ -219,14 +219,17 @@ class gaprice_SPAdesTest(unittest.TestCase):
                                  }
 
     @classmethod
-    def upload_empty_data(cls):
-        cls.wsClient.save_objects({
+    def upload_empty_data(cls, wsobjname):
+        objdata = cls.wsClient.save_objects({
             'workspace': cls.getWsName(),
             'objects': [{'type': 'Empty.AType',
                          'data': {},
                          'name': 'empty'
                          }]
-            })
+            })[0]
+        cls.staged[wsobjname] = {'info': objdata,
+                                 'ref': cls.make_ref(objdata),
+                                 }
 
     @classmethod
     def setupTestData(cls):
@@ -250,7 +253,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
                      'type': ''}
         cls.upload_assembly('frbasic', {}, fwd_reads, rev_reads=rev_reads)
         cls.upload_assembly('intbasic', {'single_genome': 1}, int_reads)
-        cls.upload_assembly('meta', {'single_genome': 0}, int_reads)
+        cls.upload_assembly('meta', {'single_genome': 0}, fwd_reads,
+                            rev_reads=rev_reads)
         cls.upload_assembly('reads_out', {'read_orientation_outward': 1},
                             int_reads)
         cls.upload_assembly('frbasic_kbassy', {}, fwd_reads,
@@ -270,7 +274,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         cls.upload_assembly('bad_file_type', {}, bad_fn_reads)
         cls.upload_assembly('bad_node', {}, fwd_reads)
         cls.delete_shock_node(cls.nodes_to_delete.pop())
-        cls.upload_empty_data()
+        cls.upload_empty_data('empty')
         print('Data staged.')
 
     @classmethod
@@ -418,7 +422,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def test_metagenome(self):
 
         self.run_success(
-            ['frbasic'], 'metagenome_out',
+            ['meta'], 'metagenome_out',
             {'contigs':
              [{'description': 'Note MD5 is generated from uppercasing ' +
                               'the sequence',
@@ -529,9 +533,10 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def test_bad_module(self):
 
         self.run_error(['empty'],
-                       'Only the types KBaseAssembly.PairedEndLibrary and ' +
-                       'KBaseFile.PairedEndLibrary are supported',
-                       exception=ServerError)
+                       'Invalid type for object ' +
+                       self.staged['empty']['ref'] + ' (empty). Only the ' +
+                       'types KBaseAssembly.PairedEndLibrary and ' +
+                       'KBaseFile.PairedEndLibrary are supported')
 
     def test_bad_type(self):
 
