@@ -54,17 +54,12 @@ A coverage cutoff is not specified.
     # Class variables and functions can be defined in this block
     DISABLE_SPADES_OUTPUT = False  # should be False in production
 
-    PAIRED_END_TYPE = 'PairedEndLibrary'
-    # one of these should be deprecated
-    MODULE_NAMES = ['KBaseAssembly', 'KBaseFile']
-
     PARAM_IN_WS = 'workspace_name'
     PARAM_IN_LIB = 'read_libraries'
     PARAM_IN_CS_NAME = 'output_contigset_name'
     PARAM_IN_DNA_SOURCE = 'dna_source'
     PARAM_IN_SINGLE_CELL = 'single_cell'
     PARAM_IN_METAGENOME = 'metagenome'
-    VERSION = '0.0.1'
 
     INVALID_WS_OBJ_NAME_RE = re.compile('[^\\w\\|._-]')
     INVALID_WS_NAME_RE = re.compile('[^\\w:._-]')
@@ -80,28 +75,9 @@ A coverage cutoff is not specified.
     TRUE = 'true'
     FALSE = 'false'
 
-    SUPPORTED_FILES = ['.fq',
-                       '.fastq',
-                       # '.bam',
-                       # '.fa',
-                       # '.fasta',
-                       '.fq.gz',
-                       '.fastq.gz',
-                       # '.bam.gz',
-                       # '.fa.gz',
-                       # '.fasta.gz'
-                       ]
-
     def log(self, message, prefix_newline=False):
         print(('\n' if prefix_newline else '') +
               str(time.time()) + ': ' + message)
-
-    def file_extension_ok(self, filename):
-        # print('Checking extension for file name ' + filename)
-        for ext in self.SUPPORTED_FILES:
-            if filename.lower().endswith(ext):
-                return True
-        return False
 
     def check_shock_response(self, response, errtxt):
         if not response.ok:
@@ -113,65 +89,6 @@ A coverage cutoff is not specified.
                          response.content)
                 response.raise_for_status()
             raise ShockException(errtxt + str(err))
-
-    def shock_download(self, source_obj_ref, source_obj_name, token, handle,
-                       file_type):
-        self.log('Downloading from shock via handle:')
-        self.log(pformat(handle))
-        file_name = handle['id']
-
-        headers = {'Authorization': 'OAuth ' + token}
-        node_url = handle['url'] + '/node/' + handle['id']
-        r = requests.get(node_url, headers=headers)
-        errtxt = ('Error downloading reads for object {} ({}) from shock ' +
-                  'node {}: ').format(source_obj_ref, source_obj_name,
-                                      handle['id'])
-        self.check_shock_response(r, errtxt)
-
-        node_fn = r.json()['data']['file']['name']
-
-        handle_fn = handle['file_name'] if 'file_name' in handle else None
-
-        print('File type: ' + str(file_type))
-        print('Handle fn: ' + str(handle_fn))
-        print('Shock fn: ' + str(node_fn))
-
-        if file_type:
-            if not file_type.startswith('.'):
-                file_type = '.' + file_type
-            file_name += file_type
-            print('using file name via type: ' + file_name)
-        elif handle_fn:
-            file_name += '_' + handle_fn
-            print('using file name from handle: ' + file_name)
-        else:
-            file_name += '_' + node_fn
-            print('using file name from node: ' + file_name)
-
-        if not self.file_extension_ok(file_name):
-            raise ValueError(
-                ('Reads object {} ({}) contains a reads file stored in ' +
-                 'Shock node {} for which a valid filename could not ' +
-                 'be determined. In order of precedence:\n' +
-                 'File type is: {}\n' +
-                 'Handle file name is: {}\n' +
-                 'Shock file name is: {}\n' +
-                 'Acceptable extensions: {}').format(
-                    source_obj_ref, source_obj_name, handle['id'], file_type,
-                    handle_fn, node_fn, ' '.join(self.SUPPORTED_FILES)))
-
-        file_path = os.path.join(self.scratch, file_name)
-        with open(file_path, 'w') as fhandle:
-            self.log('downloading reads file: ' + str(file_path))
-            r = requests.get(node_url + '?download', stream=True,
-                             headers=headers)
-            self.check_shock_response(r, errtxt)
-            for chunk in r.iter_content(1024):
-                if not chunk:
-                    break
-                fhandle.write(chunk)
-        self.log('done')
-        return file_path
 
     # Helper script borrowed from the transform service, logger removed
     def upload_file_to_shock(self, file_path, token):
@@ -473,16 +390,6 @@ A coverage cutoff is not specified.
 
     def check_reads(self, params, reads):
 
-        # Might need to do version checking here.
-#         module_name, type_name = info[2].split('-')[0].split('.')
-#         if (module_name not in self.MODULE_NAMES or
-#                 type_name != self.PAIRED_END_TYPE):
-#             raise ValueError(
-#                 'Only the types ' +
-#                 self.MODULE_NAMES[0] + '.' + self.PAIRED_END_TYPE + ' and ' +
-#                 self.MODULE_NAMES[1] + '.' + self.PAIRED_END_TYPE +
-#                 ' are supported')
-
         for obj_name in reads:
             rds = reads[obj_name]
             obj_ref = rds['ref']
@@ -510,52 +417,6 @@ A coverage cutoff is not specified.
                     ('Reads object {} ({}) is marked as containing ' +
                      'metagenomic data but the assembly method was not ' +
                      'specified as metagenomic').format(obj_name, obj_ref))
-
-    def process_reads(self, reads, params, token):
-        data = reads['data']
-        info = reads['info']
-        # Object Info Contents
-        # 0 - obj_id objid
-        # 1 - obj_name name
-        # 2 - type_string type
-        # 3 - timestamp save_date
-        # 4 - int version
-        # 5 - username saved_by
-        # 6 - ws_id wsid
-        # 7 - ws_name workspace
-        # 8 - string chsum
-        # 9 - int size
-        # 10 - usermeta meta
-
-        ret = {}
-        obj_ref = self.make_ref(info)
-        ret['in_lib_ref'] = obj_ref
-        obj_name = info[1]
-
-        self.check_reads(params, reads)
-        # lib1 = KBaseFile, handle_1 = KBaseAssembly
-        fwd_type = None
-        rev_type = None
-        if 'lib1' in data:
-            forward_reads = data['lib1']['file']
-            fwd_type = data['lib1']['type']
-        elif 'handle_1' in data:
-            forward_reads = data['handle_1']
-        if 'lib2' in data:
-            reverse_reads = data['lib2']['file']
-            rev_type = data['lib1']['type']
-        elif 'handle_2' in data:
-            reverse_reads = data['handle_2']
-        else:
-            reverse_reads = False
-
-        ret['fwd_file'] = self.shock_download(
-            obj_ref, obj_name, token, forward_reads, fwd_type)
-        ret['rev_file'] = None
-        if (reverse_reads):
-            ret['rev_file'] = self.shock_download(
-                obj_ref, obj_name, token, reverse_reads, rev_type)
-        return ret
 
     def process_params(self, params):
         if (self.PARAM_IN_WS not in params or
@@ -601,7 +462,6 @@ A coverage cutoff is not specified.
             os.makedirs(self.scratch)
         #END_CONSTRUCTOR
         pass
-    
 
     def run_SPAdes(self, ctx, params):
         # ctx is the context object
@@ -622,6 +482,7 @@ A coverage cutoff is not specified.
                            token=token)
         reads_params = {self.PARAM_IN_WS: params[self.PARAM_IN_WS],
                         self.PARAM_IN_LIB: params[self.PARAM_IN_LIB]}
+
         typeerr = ('Supported types: KBaseFile.SingleEndLibrary ' +
                    'KBaseFile.PairedEndLibrary ' +
                    'KBaseAssembly.SingleEndLibrary ' +
@@ -632,7 +493,6 @@ A coverage cutoff is not specified.
                 [reads_params], json_rpc_context={"service_ver": "dev"}
                 )[0]['files']
         except ServerError as se:
-            self.log(se.message)  # TODO remove
             self.log('logging stacktrace from Generic Client error')
             self.log(se.data)
             if typeerr in se.message:
@@ -661,19 +521,6 @@ A coverage cutoff is not specified.
                 reads_data.append({'fwd_file': f['fwd'], 'rev_file': f['rev']})
             else:
                 raise ValueError('Something is very wrong with read lib' + r)
-
-
-#         ws_reads_ids = []
-#         for read_name in params[self.PARAM_IN_LIB]:
-#             ws_reads_ids.append({'ref': params[self.PARAM_IN_WS] + '/' +
-#                                  read_name})
-#         reads = ws.get_objects(ws_reads_ids)
-# 
-#         ws_id = reads[0]['info'][6]
-#         reads_data = []
-#         for read in reads:
-#             reads_data.append(self.process_reads(read, params, token))
-#         del reads
 
         spades_out = self.exec_spades(params[self.PARAM_IN_DNA_SOURCE],
                                       reads_data)
