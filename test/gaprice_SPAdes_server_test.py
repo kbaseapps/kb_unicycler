@@ -618,9 +618,6 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         with self.assertRaises(exception) as context:
             self.getImpl().run_SPAdes(self.ctx, params)
-        print('m: ' + context.exception.message)
-        if (hasattr(context.exception, 'data')):
-            print('d:\n' + context.exception.data)
         self.assertEqual(error, str(context.exception.message))
 
     def run_success(self, readnames, output_name, expected, contig_count=None,
