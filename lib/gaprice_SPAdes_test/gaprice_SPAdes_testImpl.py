@@ -14,6 +14,7 @@ import hashlib
 import numpy as np
 import yaml
 from gaprice_SPAdes_test.GenericClient import GenericClient
+import time
 
 
 class ShockException(Exception):
@@ -88,8 +89,9 @@ A coverage cutoff is not specified.
                        # '.fasta.gz'
                        ]
 
-    def log(self, message):
-        print(message)
+    def log(self, message, prefix_newline=False):
+        print(('\n' if prefix_newline else '') +
+              str(time.time()) + ': ' + message)
 
     def file_extension_ok(self, filename):
         # print('Checking extension for file name ' + filename)
@@ -243,7 +245,7 @@ A coverage cutoff is not specified.
             cmd += ['--careful']
         cmd += ['--dataset', self.generate_spades_yaml(reads_data)]
         self.log('Running SPAdes command line:')
-        self.log(cmd)
+        self.log(str(cmd))
 
         if self.DISABLE_SPADES_OUTPUT:
             with open(os.devnull, 'w') as null:
@@ -623,7 +625,8 @@ A coverage cutoff is not specified.
             "kb_read_library_to_file.convert_read_library_to_file",
             [reads_params], json_rpc_context={"service_ver": "dev"}
             )[0]['files']
-        print(reads)
+        self.log('Got reads data from converter:')
+        self.log(pformat(reads))
 
         reads_data = []
         for r in reads:

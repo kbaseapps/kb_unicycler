@@ -543,9 +543,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['bad_shk_name'],
-            ('Reads object {} (bad_shk_name) contains a reads file stored ' +
-             'in Shock node {} for which a valid filename could not be ' +
-             'determined. In order of precedence:\n' +
+            ('Error downloading reads for object {} (bad_shk_name) from ' +
+             'Shock node {}: A valid file extension could not be determined ' +
+             'for the reads file. In order of precedence:\n' +
              'File type is: \nHandle file name is: \n' +
              'Shock file name is: small.forward.bad\n' +
              'Acceptable extensions: .fq .fastq .fq.gz ' +
@@ -557,9 +557,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['bad_file_name'],
-            ('Reads object {} (bad_file_name) contains a reads file stored ' +
-             'in Shock node {} for which a valid filename could not be ' +
-             'determined. In order of precedence:\n' +
+            ('Error downloading reads for object {} (bad_file_name) from ' +
+             'Shock node {}: A valid file extension could not be determined ' +
+             'for the reads file. In order of precedence:\n' +
              'File type is: \nHandle file name is: file.terrible\n' +
              'Shock file name is: small.forward.fq\n' +
              'Acceptable extensions: .fq .fastq .fq.gz ' +
@@ -571,9 +571,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['bad_file_type'],
-            ('Reads object {} (bad_file_type) contains a reads file stored ' +
-             'in Shock node {} for which a valid filename could not be ' +
-             'determined. In order of precedence:\n' +
+            ('Error downloading reads for object {} (bad_file_type) from ' +
+             'Shock node {}: A valid file extension could not be determined ' +
+             'for the reads file. In order of precedence:\n' +
              'File type is: .xls\nHandle file name is: small.forward.fastq\n' +
              'Shock file name is: small.forward.fq\n' +
              'Acceptable extensions: .fq .fastq .fq.gz ' +
@@ -585,7 +585,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(['bad_node'],
                        ('Error downloading reads for object {} (bad_node) ' +
-                        'from shock node {}: Node not found').format(
+                        'from Shock node {}: Node not found').format(
                             self.staged['bad_node']['ref'],
                             self.staged['bad_node']['fwd_node_id']),
                        exception=ServerError)
