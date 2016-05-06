@@ -24,6 +24,7 @@ ENV PATH $PATH:/opt/SPAdes-3.7.1-Linux/bin
 
 COPY ./ /kb/module
 RUN mkdir -p /kb/module/work
+RUN chmod 777 /kb/module/
 
 WORKDIR /kb/module
 

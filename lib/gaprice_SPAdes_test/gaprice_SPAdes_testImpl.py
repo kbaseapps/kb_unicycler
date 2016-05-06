@@ -13,7 +13,8 @@ import subprocess
 import hashlib
 import numpy as np
 import yaml
-from gaprice_SPAdes_test.GenericClient import GenericClient, ServerError
+# from gaprice_SPAdes_test.GenericClient import GenericClient, ServerError
+from gaprice_SPAdes_test.kbdynclient import KBDynClient, ServerError
 import time
 
 
@@ -71,6 +72,7 @@ A coverage cutoff is not specified.
 
     URL_WS = 'workspace-url'
     URL_SHOCK = 'shock-url'
+    URL_KB_END = 'kbase-endpoint'
 
     TRUE = 'true'
     FALSE = 'false'
@@ -457,6 +459,7 @@ A coverage cutoff is not specified.
         self.log('Callback URL: ' + self.generic_clientURL)
         self.workspaceURL = config[self.URL_WS]
         self.shockURL = config[self.URL_SHOCK]
+        self.catalogURL = config[self.URL_KB_END] + '/catalog'
         self.scratch = os.path.abspath(config['scratch'])
         if not os.path.exists(self.scratch):
             os.makedirs(self.scratch)
@@ -470,16 +473,17 @@ A coverage cutoff is not specified.
 
         # A whole lot of this is adapted or outright copied from
         # https://github.com/msneddon/MEGAHIT
-        self.log('Running run_SPAdes with params:')
-        self.log(pformat(params))
+        self.log('Running run_SPAdes with params:\n' + pformat(params))
 
         token = ctx['token']
 
         self.process_params(params)
 
         # Get the reads library
-        gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
-                           token=token)
+        kbase = KBDynClient(self.catalogURL, ctx)
+        kbase.load_module('kb_read_library_to_file', version='dev')
+#         gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
+#                            token=token)
         reads_params = {self.PARAM_IN_WS: params[self.PARAM_IN_WS],
                         self.PARAM_IN_LIB: params[self.PARAM_IN_LIB]}
 
@@ -488,12 +492,14 @@ A coverage cutoff is not specified.
                    'KBaseAssembly.SingleEndLibrary ' +
                    'KBaseAssembly.PairedEndLibrary')
         try:
-            reads = gc.sync_call(
-                "kb_read_library_to_file.convert_read_library_to_file",
-                [reads_params], json_rpc_context={"service_ver": "dev"}
-                )[0]['files']
+            reads = kbase.mods.kb_read_library_to_file \
+                    .convert_read_library_to_file(reads_params)['files']
+#             reads = gc.sync_call(
+#                 "kb_read_library_to_file.convert_read_library_to_file",
+#                 [reads_params], json_rpc_context={"service_ver": "dev"}
+#                 )[0]['files']
         except ServerError as se:
-            self.log('logging stacktrace from Generic Client error')
+            self.log('logging stacktrace from dynamic client error')
             self.log(se.data)
             if typeerr in se.message:
                 prefix = se.message.split('.')[0]
@@ -504,8 +510,7 @@ A coverage cutoff is not specified.
             else:
                 raise
 
-        self.log('Got reads data from converter:')
-        self.log(pformat(reads))
+        self.log('Got reads data from converter:\n' + pformat(reads))
 
         self.check_reads(params, reads)
 
@@ -580,7 +585,11 @@ A coverage cutoff is not specified.
 
     def status(self, ctx):
         #BEGIN_STATUS
-        returnVal = {'state': "OK", 'message': "", 'version': self.VERSION, 
-                     'git_url': self.GIT_URL, 'git_commit_hash': self.GIT_COMMIT_HASH}
+        returnVal = {'state': "OK",
+                     'message': "",
+                     'version': self.VERSION,
+                     'git_url': self.GIT_URL,
+                     'git_commit_hash': self.GIT_COMMIT_HASH}
+        del ctx  # shut up pep8
         #END_STATUS
         return [returnVal]

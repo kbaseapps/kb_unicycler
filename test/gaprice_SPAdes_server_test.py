@@ -10,9 +10,8 @@ import psutil
 import requests
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
-from gaprice_SPAdes_test.gaprice_SPAdes_testImpl import gaprice_SPAdes_test, ShockException  # @IgnorePep8
-from biokbase.workspace.client import ServerError as WorkspaceError  # @UnresolvedImport @IgnorePep8
-from gaprice_SPAdes_test.GenericClient import ServerError
+from gaprice_SPAdes_test.gaprice_SPAdes_testImpl import gaprice_SPAdes_test
+from gaprice_SPAdes_test.kbdynclient import ServerError
 from pprint import pprint
 import shutil
 import inspect
