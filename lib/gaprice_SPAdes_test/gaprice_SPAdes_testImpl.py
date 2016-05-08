@@ -549,8 +549,12 @@ A coverage cutoff is not specified.
 #             provenance = ctx['provenance']
         # add additional info to provenance here, in this case the input data
         # object reference
-        provenance[0]['input_ws_objects'] = \
-            [reads[x]['ref'] for x in reads]
+        iwso = 'input_ws_objects'
+        if iwso not in provenance[0] or not provenance[0][iwso]:
+            # only mess with the provenance if the auto-provenance doesn't
+            # add wsids yet, also can be used for testing
+            provenance[0][iwso] = \
+                [reads[x]['ref'] for x in reads]
 
         ws_id = reads[r]['ref'].split('/')[0]
         ws = workspaceService(self.workspaceURL, token=token)
