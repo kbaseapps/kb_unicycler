@@ -13,7 +13,7 @@ import subprocess
 import hashlib
 import numpy as np
 import yaml
-# from gaprice_SPAdes_test.GenericClient import GenericClient, ServerError
+from gaprice_SPAdes_test.GenericClient import GenericClient
 from gaprice_SPAdes_test.kbdynclient import KBDynClient, ServerError
 import time
 
@@ -482,8 +482,6 @@ A coverage cutoff is not specified.
         # Get the reads library
         kbase = KBDynClient(self.catalogURL, ctx)
         kbase.load_module('kb_read_library_to_file', version='dev')
-#         gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
-#                            token=token)
         reads_params = {self.PARAM_IN_WS: params[self.PARAM_IN_WS],
                         self.PARAM_IN_LIB: params[self.PARAM_IN_LIB]}
 
@@ -542,10 +540,13 @@ A coverage cutoff is not specified.
         cs = self.convert_to_contigs(output_contigs, source,
                                      params[self.PARAM_IN_CS_NAME], shockid)
 
-        # load the method provenance from the context object
-        provenance = [{}]
-        if 'provenance' in ctx:
-            provenance = ctx['provenance']
+        # load the method provenance
+        gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
+                           token=token)
+        provenance = gc.sync_call("CallbackServer.get_provenance", [])[0]
+#         provenance = [{}]
+#         if 'provenance' in ctx:
+#             provenance = ctx['provenance']
         # add additional info to provenance here, in this case the input data
         # object reference
         provenance[0]['input_ws_objects'] = \
