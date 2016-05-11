@@ -79,7 +79,7 @@ A coverage cutoff is not specified.
 
     def log(self, message, prefix_newline=False):
         print(('\n' if prefix_newline else '') +
-              str(time.time()) + ': ' + message)
+              str(time.time()) + ': ' + str(message))
 
     def check_shock_response(self, response, errtxt):
         if not response.ok:
@@ -167,7 +167,7 @@ A coverage cutoff is not specified.
             cmd += ['--careful']
         cmd += ['--dataset', self.generate_spades_yaml(reads_data)]
         self.log('Running SPAdes command line:')
-        self.log(str(cmd))
+        self.log(cmd)
 
         if self.DISABLE_SPADES_OUTPUT:
             with open(os.devnull, 'w') as null:

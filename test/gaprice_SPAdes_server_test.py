@@ -12,6 +12,7 @@ from biokbase.workspace.client import Workspace as workspaceService  # @Unresolv
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from gaprice_SPAdes_test.gaprice_SPAdes_testImpl import gaprice_SPAdes_test
 from gaprice_SPAdes_test.kbdynclient import ServerError
+from gaprice_SPAdes_test.gaprice_SPAdes_testServer import MethodContext
 from pprint import pprint
 import shutil
 import inspect
@@ -22,13 +23,16 @@ class gaprice_SPAdesTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.token = environ.get('KB_AUTH_TOKEN', None)
-        cls.ctx = {'token': cls.token,
-                   'provenance': [
-                        {'service': 'gaprice_SPAdes_test',
-                         'method': 'please_never_use_it_in_production',
-                         'method_params': []
-                         }],
-                   'authenticated': 1}
+        # WARNING: don't call any logging methods on the context object,
+        # it'll result in a NoneType error
+        cls.ctx = MethodContext(None)
+        cls.ctx.update({'token': cls.token,
+                        'provenance': [
+                            {'service': 'gaprice_SPAdes_test',
+                             'method': 'please_never_use_it_in_production',
+                             'method_params': []
+                             }],
+                        'authenticated': 1})
         config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
         cls.cfg = {}
         config = ConfigParser()
