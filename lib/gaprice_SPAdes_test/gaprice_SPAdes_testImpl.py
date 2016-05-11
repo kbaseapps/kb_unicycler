@@ -541,12 +541,13 @@ A coverage cutoff is not specified.
                                      params[self.PARAM_IN_CS_NAME], shockid)
 
         # load the method provenance
-        gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
-                           token=token)
-        provenance = gc.sync_call("CallbackServer.get_provenance", [])[0]
+#         gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
+#                            token=token)
+#         provenance = gc.sync_call("CallbackServer.get_provenance", [])[0]
 #         provenance = [{}]
 #         if 'provenance' in ctx:
 #             provenance = ctx['provenance']
+        provenance = ctx.provenance()
         # add additional info to provenance here, in this case the input data
         # object reference
         iwso = 'input_ws_objects'

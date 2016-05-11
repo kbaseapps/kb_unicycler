@@ -20,6 +20,15 @@ RUN cd /opt \
     && pip install ipython \
     && apt-get install nano
 
+RUN . /kb/dev_container/user-env.sh \
+    && cd /kb/dev_container/modules \
+    && rm -rf kb_sdk \
+    && git clone https://github.com/mrcreosote/kb_sdk -b dev-ctx_prov \
+    && cd /kb/dev_container/modules/kb_sdk \
+    && make \
+    && make deploy \
+    && echo "3"
+
 ENV PATH $PATH:/opt/SPAdes-3.7.1-Linux/bin
 
 # -----------------------------------------
