@@ -551,7 +551,7 @@ A coverage cutoff is not specified.
         # add additional info to provenance here, in this case the input data
         # object reference
         iwso = 'input_ws_objects'
-        if iwso not in provenance[0] or not provenance[0][iwso]:
+        if not provenance[0].get(iwso):
             # only mess with the provenance if the auto-provenance doesn't
             # add wsids yet, also can be used for testing
             provenance[0][iwso] = \
