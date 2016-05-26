@@ -11,7 +11,8 @@ import requests
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from gaprice_SPAdes_test.gaprice_SPAdes_testImpl import gaprice_SPAdes_test
-from gaprice_SPAdes_test.kbdynclient import ServerError
+# from gaprice_SPAdes_test.kbdynclient import ServerError
+from gaprice_SPAdes_test.GenericClient import ServerError
 from gaprice_SPAdes_test.gaprice_SPAdes_testServer import MethodContext
 from pprint import pprint
 import shutil

@@ -13,8 +13,8 @@ import subprocess
 import hashlib
 import numpy as np
 import yaml
-from gaprice_SPAdes_test.GenericClient import GenericClient
-from gaprice_SPAdes_test.kbdynclient import KBDynClient, ServerError
+from gaprice_SPAdes_test.GenericClient import GenericClient, ServerError
+# from gaprice_SPAdes_test.kbdynclient import KBDynClient, ServerError
 import time
 
 
@@ -480,22 +480,25 @@ A coverage cutoff is not specified.
         self.process_params(params)
 
         # Get the reads library
-        kbase = KBDynClient(self.catalogURL, ctx)
-        kbase.load_module('kb_read_library_to_file', version='dev')
+#         kbase = KBDynClient(self.catalogURL, ctx)
+#         kbase.load_module('kb_read_library_to_file', version='dev')
         reads_params = {self.PARAM_IN_WS: params[self.PARAM_IN_WS],
                         self.PARAM_IN_LIB: params[self.PARAM_IN_LIB]}
+
+        gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
+                           token=token)
 
         typeerr = ('Supported types: KBaseFile.SingleEndLibrary ' +
                    'KBaseFile.PairedEndLibrary ' +
                    'KBaseAssembly.SingleEndLibrary ' +
                    'KBaseAssembly.PairedEndLibrary')
         try:
-            reads = kbase.mods.kb_read_library_to_file \
-                    .convert_read_library_to_file(reads_params)['files']
-#             reads = gc.sync_call(
-#                 "kb_read_library_to_file.convert_read_library_to_file",
-#                 [reads_params], json_rpc_context={"service_ver": "dev"}
-#                 )[0]['files']
+            # reads = kbase.mods.kb_read_library_to_file \
+            #     .convert_read_library_to_file(reads_params)['files']
+            reads = gc.asynchronous_call(
+                "kb_read_library_to_file.convert_read_library_to_file",
+                [reads_params], json_rpc_context={"service_ver": "dev"}
+                )[0]['files']
         except ServerError as se:
             self.log('logging stacktrace from dynamic client error')
             self.log(se.data)
