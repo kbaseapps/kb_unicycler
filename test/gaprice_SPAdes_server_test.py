@@ -9,26 +9,36 @@ import psutil
 
 import requests
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
+from biokbase.workspace.client import ServerError as WorkspaceError # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from gaprice_SPAdes_test.gaprice_SPAdes_testImpl import gaprice_SPAdes_test
-from gaprice_SPAdes_test.kbdynclient import ServerError
+# from gaprice_SPAdes_test.kbdynclient import ServerError
+# from gaprice_SPAdes_test.GenericClient import ServerError
+from kb_read_library_to_file.baseclient import ServerError
+from gaprice_SPAdes_test.gaprice_SPAdes_testServer import MethodContext
 from pprint import pprint
 import shutil
 import inspect
+from gaprice_SPAdes_test.GenericClient import GenericClient
 
 
 class gaprice_SPAdesTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.token = environ.get('KB_AUTH_TOKEN', None)
-        cls.ctx = {'token': cls.token,
-                   'provenance': [
-                        {'service': 'gaprice_SPAdes_test',
-                         'method': 'please_never_use_it_in_production',
-                         'method_params': []
-                         }],
-                   'authenticated': 1}
+        cls.token = environ.get('KB_AUTH_TOKEN')
+        cls.callbackURL = environ.get('SDK_CALLBACK_URL')
+        print('CB URL: ' + cls.callbackURL)
+        # WARNING: don't call any logging methods on the context object,
+        # it'll result in a NoneType error
+        cls.ctx = MethodContext(None)
+        cls.ctx.update({'token': cls.token,
+                        'provenance': [
+                            {'service': 'gaprice_SPAdes_test',
+                             'method': 'please_never_use_it_in_production',
+                             'method_params': []
+                             }],
+                        'authenticated': 1})
         config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
         cls.cfg = {}
         config = ConfigParser()
@@ -462,7 +472,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             ['foo'], 'Object foo cannot be accessed: No workspace with name ' +
             'Ireallyhopethisworkspacedoesntexistorthistestwillfail exists',
             wsname='Ireallyhopethisworkspacedoesntexistorthistestwillfail',
-            exception=ServerError)
+            exception=WorkspaceError)
 
     def test_bad_lib_name(self):
 
@@ -480,7 +490,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['foo'], 'No object with name foo exists in workspace ' +
-            str(self.wsinfo[0]), exception=ServerError)
+            str(self.wsinfo[0]), exception=WorkspaceError)
 
     def test_no_libs(self):
 
@@ -508,7 +518,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['intbasic'],
-            'Reads object intbasic (' + self.staged['intbasic']['ref'] +
+            'Reads object ' + self.getWsName() + '/intbasic (' +
+            self.staged['intbasic']['ref'] +
             ') is marked as containing dna from a single genome but the ' +
             'assembly method was specified as metagenomic',
             dna_source='metagenome')
@@ -517,7 +528,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['meta'],
-            'Reads object meta (' + self.staged['meta']['ref'] +
+            'Reads object ' + self.getWsName() + '/meta (' +
+            self.staged['meta']['ref'] +
             ') is marked as containing metagenomic data but the assembly ' +
             'method was not specified as metagenomic')
 
@@ -525,7 +537,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['reads_out'],
-            'Reads object reads_out (' + self.staged['reads_out']['ref'] +
+            'Reads object ' + self.getWsName() + '/reads_out (' +
+            self.staged['reads_out']['ref'] +
             ') is marked as having outward oriented reads, which SPAdes ' +
             'does not support.')
 
@@ -539,7 +552,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
     def test_bad_type(self):
 
-        self.run_error(['single_end'],
+        self.run_error(['single_end'], self.getWsName() + '/' +
                        'single_end is a single end read library, which is ' +
                        'not currently supported.')
 
@@ -593,6 +606,53 @@ class gaprice_SPAdesTest(unittest.TestCase):
                             self.staged['bad_node']['ref'],
                             self.staged['bad_node']['fwd_node_id']),
                        exception=ServerError)
+
+    def test_provenance(self):
+
+        frbasic = 'frbasic'
+        ref = self.make_ref(self.staged[frbasic]['info'])
+        gc = GenericClient(self.callbackURL, use_url_lookup=False)
+        gc.sync_call('CallbackServer.set_provenance',
+                     [{'service': 'myserv',
+                       'method': 'mymeth',
+                       'service_ver': '0.0.2',
+                       'method_params': ['foo', 'bar', 'baz'],
+                       'input_ws_objects': [ref]
+                       }]
+                     )
+
+        params = {'workspace_name': self.getWsName(),
+                  'read_libraries': [frbasic],
+                  'output_contigset_name': 'foo'
+                  }
+
+        ret = self.getImpl().run_SPAdes(self.ctx, params)[0]
+        report = self.wsClient.get_objects([{'ref': ret['report_ref']}])[0]
+        cs_ref = report['data']['objects_created'][0]['ref']
+        cs = self.wsClient.get_objects([{'ref': cs_ref}])[0]
+
+        rep_prov = report['provenance']
+        cs_prov = cs['provenance']
+        self.assertEqual(len(rep_prov), 1)
+        self.assertEqual(len(cs_prov), 1)
+        rep_prov = rep_prov[0]
+        cs_prov = cs_prov[0]
+        for p in [rep_prov, cs_prov]:
+            self.assertEqual(p['service'], 'myserv')
+            self.assertEqual(p['method'], 'mymeth')
+            self.assertEqual(p['service_ver'], '0.0.2')
+            self.assertEqual(p['method_params'], ['foo', 'bar', 'baz'])
+            self.assertEqual(p['input_ws_objects'], [ref])
+            sa = p['subactions']
+            self.assertEqual(len(sa), 1)
+            sa = sa[0]
+            self.assertEqual(
+                sa['name'],
+                'kb_read_library_to_file.convert_read_library_to_file')
+            self.assertEqual(
+                sa['code_url'],
+                'https://github.com/MrCreosote/kb_read_library_to_file')
+            # don't check ver or commit since they can change from run to run
 
     def run_error(self, readnames, error, wsname=('fake'), output_name='out',
                   dna_source=None, exception=ValueError):

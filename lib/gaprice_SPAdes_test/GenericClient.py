@@ -1,3 +1,4 @@
+import time
 try:
     import json as _json
 except ImportError:
@@ -75,6 +76,7 @@ def _read_inifile(file=_os.environ.get(  # @ReservedAssignment
 class ServerError(Exception):
 
     def __init__(self, name, code, message, data=None, error=None):
+        super(Exception, self).__init__(message)
         self.name = name
         self.code = code
         self.message = '' if message is None else message
@@ -101,7 +103,8 @@ class GenericClient(object):
     def __init__(self, url=None, timeout=30 * 60, user_id=None,
                  password=None, token=None, ignore_authrc=False,
                  trust_all_ssl_certificates=False,
-                 use_url_lookup=True):
+                 use_url_lookup=True,
+                 async_job_check_time_ms=5000):
         if url is None:
             raise ValueError('A url is required')
         scheme, _, _, _, _, _ = _urlparse.urlparse(url)
@@ -112,6 +115,7 @@ class GenericClient(object):
         self._headers = dict()
         self.trust_all_ssl_certificates = trust_all_ssl_certificates
         self.use_url_lookup = use_url_lookup
+        self.async_job_check_time = async_job_check_time_ms / 1000.0
         # token overrides user_id and password
         if token is not None:
             self._headers['AUTHORIZATION'] = token
@@ -133,7 +137,9 @@ class GenericClient(object):
         if self.timeout < 1:
             raise ValueError('Timeout value must be at least 1 second')
 
-    def _call(self, url, method, params, json_rpc_context = None):
+    def _call(self, url, method, params, json_rpc_context=None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method send_data: argument json_rpc_context is not type dict as required.')
         arg_hash = {'method': method,
                     'params': params,
                     'version': '1.1',
@@ -166,14 +172,45 @@ class GenericClient(object):
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
         return resp['result']
 
-    def sync_call(self, service_method, param_list, service_version = None, json_rpc_context = None):
-        if json_rpc_context and type(json_rpc_context) is not dict:
-            raise ValueError('Method send_data: argument json_rpc_context is not type dict as required.')
+    def sync_call(self, service_method, param_list, service_version=None,
+                  json_rpc_context=None):
         url = self.url
         if self.use_url_lookup:
             module_name = service_method.split('.')[0]
-            service_status_ret = self._call(self.url, 'ServiceWizard.get_service_status', 
-                                            [{'module_name' : module_name, 
-                                              'version' : service_version}], None)[0]
+            service_status_ret = self._call(
+                self.url, 'ServiceWizard.get_service_status',
+                [{'module_name': module_name,
+                  'version': service_version}], None)[0]
             url = service_status_ret['url']
+        if service_version:
+            if not json_rpc_context:
+                json_rpc_context = {}
+            json_rpc_context['service_ver'] = service_version
         return self._call(url, service_method, param_list, json_rpc_context)
+
+    def _asynchronous_call_async(self, service_method, params,
+                                 service_version=None, json_rpc_context=None):
+        mod, meth = service_method.split('.')
+        if service_version:
+            if not json_rpc_context:
+                json_rpc_context = {}
+            json_rpc_context['service_ver'] = service_version
+        return self._call(self.url, mod + '._' + meth + '_submit',
+                          params, json_rpc_context)[0]
+
+    def _asynchronous_call_check(self, service_method, job_id):
+        mod, _ = service_method.split('.')
+        resp = self._call(self.url, mod + '._check_job', [job_id])
+        return resp[0]
+
+    def asynchronous_call(self, service_method, params,
+                          service_version=None, json_rpc_context=None):
+        job_id = self._asynchronous_call_async(
+            service_method, params, service_version, json_rpc_context)
+        print('got job id ' + job_id)
+        while True:
+            time.sleep(self.async_job_check_time)
+            print(str(time.time()) + " Generic client checking job state")
+            job_state = self._asynchronous_call_check(service_method, job_id)
+            if job_state['finished']:
+                return job_state['result']

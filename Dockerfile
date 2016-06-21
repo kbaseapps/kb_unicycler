@@ -16,7 +16,9 @@ RUN cd /opt \
     && sudo apt-get install python-dev libffi-dev libssl-dev \
     && pip install pyopenssl ndg-httpsclient pyasn1 \
     && pip install requests --upgrade \
-    && pip install 'requests[security]' --upgrade
+    && pip install 'requests[security]' --upgrade \
+    && pip install ipython \
+    && apt-get install nano
 
 ENV PATH $PATH:/opt/SPAdes-3.7.1-Linux/bin
 

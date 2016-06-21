@@ -13,8 +13,10 @@ import subprocess
 import hashlib
 import numpy as np
 import yaml
-from gaprice_SPAdes_test.GenericClient import GenericClient
-from gaprice_SPAdes_test.kbdynclient import KBDynClient, ServerError
+# from gaprice_SPAdes_test.GenericClient import GenericClient, ServerError
+# from gaprice_SPAdes_test.kbdynclient import KBDynClient, ServerError
+from kb_read_library_to_file.kb_read_library_to_fileClient import kb_read_library_to_file  # @IgnorePep8
+from kb_read_library_to_file.baseclient import ServerError
 import time
 
 
@@ -79,7 +81,7 @@ A coverage cutoff is not specified.
 
     def log(self, message, prefix_newline=False):
         print(('\n' if prefix_newline else '') +
-              str(time.time()) + ': ' + message)
+              str(time.time()) + ': ' + str(message))
 
     def check_shock_response(self, response, errtxt):
         if not response.ok:
@@ -167,7 +169,7 @@ A coverage cutoff is not specified.
             cmd += ['--careful']
         cmd += ['--dataset', self.generate_spades_yaml(reads_data)]
         self.log('Running SPAdes command line:')
-        self.log(str(cmd))
+        self.log(cmd)
 
         if self.DISABLE_SPADES_OUTPUT:
             with open(os.devnull, 'w') as null:
@@ -390,10 +392,11 @@ A coverage cutoff is not specified.
         return str(object_info[6]) + '/' + str(object_info[0]) + \
             '/' + str(object_info[4])
 
-    def check_reads(self, params, reads):
+    def check_reads(self, params, reads, reftoname):
 
-        for obj_name in reads:
-            rds = reads[obj_name]
+        for ref in reads:
+            rds = reads[ref]
+            obj_name = reftoname[ref]
             obj_ref = rds['ref']
             if rds['read_orientation_outward'] == self.TRUE:
                 raise ValueError(
@@ -455,8 +458,8 @@ A coverage cutoff is not specified.
     # be found
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
-        self.generic_clientURL = os.environ['SDK_CALLBACK_URL']
-        self.log('Callback URL: ' + self.generic_clientURL)
+        self.callbackURL = os.environ['SDK_CALLBACK_URL']
+        self.log('Callback URL: ' + self.callbackURL)
         self.workspaceURL = config[self.URL_WS]
         self.shockURL = config[self.URL_SHOCK]
         self.catalogURL = config[self.URL_KB_END] + '/catalog'
@@ -477,22 +480,41 @@ A coverage cutoff is not specified.
 
         token = ctx['token']
 
+        # the reads should really be specified as a list of absolute ws refs
+        # but the narrative doesn't do that yet
         self.process_params(params)
 
+        # get absolute refs from ws
+        wsname = params[self.PARAM_IN_WS]
+        obj_ids = []
+        for r in params[self.PARAM_IN_LIB]:
+            obj_ids.append({'ref': wsname + '/' + r})
+        ws = workspaceService(self.workspaceURL, token=token)
+        ws_info = ws.get_object_info_new({'objects': obj_ids})
+        reads_params = []
+        reftoname = {}
+        for wsi, oid in zip(ws_info, obj_ids):
+            ref = self.make_ref(wsi)
+            reads_params.append(ref)
+            reftoname[ref] = oid['ref']
         # Get the reads library
-        kbase = KBDynClient(self.catalogURL, ctx)
-        kbase.load_module('kb_read_library_to_file', version='dev')
-        reads_params = {self.PARAM_IN_WS: params[self.PARAM_IN_WS],
-                        self.PARAM_IN_LIB: params[self.PARAM_IN_LIB]}
+#         kbase = KBDynClient(self.catalogURL, ctx)
+#         kbase.load_module('kb_read_library_to_file', version='dev')
+#         gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
+#                            token=token)
+        readcli = kb_read_library_to_file(self.callbackURL, token=ctx['token'],
+                                          service_ver='dev')
 
         typeerr = ('Supported types: KBaseFile.SingleEndLibrary ' +
                    'KBaseFile.PairedEndLibrary ' +
                    'KBaseAssembly.SingleEndLibrary ' +
                    'KBaseAssembly.PairedEndLibrary')
         try:
-            reads = kbase.mods.kb_read_library_to_file \
-                    .convert_read_library_to_file(reads_params)['files']
-#             reads = gc.sync_call(
+            # reads = kbase.mods.kb_read_library_to_file \
+            #     .convert_read_library_to_file(reads_params)['files']
+            reads = readcli.convert_read_library_to_file(
+                {self.PARAM_IN_LIB: reads_params})['files']
+#             reads = gc.asynchronous_call(
 #                 "kb_read_library_to_file.convert_read_library_to_file",
 #                 [reads_params], json_rpc_context={"service_ver": "dev"}
 #                 )[0]['files']
@@ -510,20 +532,21 @@ A coverage cutoff is not specified.
 
         self.log('Got reads data from converter:\n' + pformat(reads))
 
-        self.check_reads(params, reads)
+        self.check_reads(params, reads, reftoname)
 
         reads_data = []
         for r in reads:
+            n = reftoname[r]
             f = reads[r]['files']
             if 'sing' in f:
                 raise ValueError(('{} is a single end read library, which ' +
-                                  'is not currently supported.').format(r))
+                                  'is not currently supported.').format(n))
             if 'inter' in f:
                 reads_data.append({'fwd_file': f['inter']})
             elif 'fwd' in f:
                 reads_data.append({'fwd_file': f['fwd'], 'rev_file': f['rev']})
             else:
-                raise ValueError('Something is very wrong with read lib' + r)
+                raise ValueError('Something is very wrong with read lib' + n)
 
         spades_out = self.exec_spades(params[self.PARAM_IN_DNA_SOURCE],
                                       reads_data)
@@ -541,23 +564,23 @@ A coverage cutoff is not specified.
                                      params[self.PARAM_IN_CS_NAME], shockid)
 
         # load the method provenance
-        gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
-                           token=token)
-        provenance = gc.sync_call("CallbackServer.get_provenance", [])[0]
+#         gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
+#                            token=token)
+#         provenance = gc.sync_call("CallbackServer.get_provenance", [])[0]
 #         provenance = [{}]
 #         if 'provenance' in ctx:
 #             provenance = ctx['provenance']
+        provenance = ctx.provenance()
         # add additional info to provenance here, in this case the input data
         # object reference
         iwso = 'input_ws_objects'
-        if iwso not in provenance[0] or not provenance[0][iwso]:
+        if not provenance[0].get(iwso):
             # only mess with the provenance if the auto-provenance doesn't
             # add wsids yet, also can be used for testing
             provenance[0][iwso] = \
                 [reads[x]['ref'] for x in reads]
 
         ws_id = reads[r]['ref'].split('/')[0]
-        ws = workspaceService(self.workspaceURL, token=token)
 
         # save the contigset output
         new_obj_info = ws.save_objects({
