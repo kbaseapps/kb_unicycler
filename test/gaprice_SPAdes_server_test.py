@@ -12,7 +12,8 @@ from biokbase.workspace.client import Workspace as workspaceService  # @Unresolv
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from gaprice_SPAdes_test.gaprice_SPAdes_testImpl import gaprice_SPAdes_test
 # from gaprice_SPAdes_test.kbdynclient import ServerError
-from gaprice_SPAdes_test.GenericClient import ServerError
+# from gaprice_SPAdes_test.GenericClient import ServerError
+from kb_read_library_to_file.baseclient import ServerError
 from gaprice_SPAdes_test.gaprice_SPAdes_testServer import MethodContext
 from pprint import pprint
 import shutil
@@ -516,7 +517,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['intbasic'],
-            'Reads object intbasic (' + self.staged['intbasic']['ref'] +
+            'Reads object ' + self.getWsName() + '/intbasic (' +
+            self.staged['intbasic']['ref'] +
             ') is marked as containing dna from a single genome but the ' +
             'assembly method was specified as metagenomic',
             dna_source='metagenome')
@@ -525,7 +527,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['meta'],
-            'Reads object meta (' + self.staged['meta']['ref'] +
+            'Reads object ' + self.getWsName() + '/meta (' +
+            self.staged['meta']['ref'] +
             ') is marked as containing metagenomic data but the assembly ' +
             'method was not specified as metagenomic')
 
@@ -533,7 +536,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['reads_out'],
-            'Reads object reads_out (' + self.staged['reads_out']['ref'] +
+            'Reads object ' + self.getWsName() + '/reads_out (' +
+            self.staged['reads_out']['ref'] +
             ') is marked as having outward oriented reads, which SPAdes ' +
             'does not support.')
 
@@ -547,7 +551,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
     def test_bad_type(self):
 
-        self.run_error(['single_end'],
+        self.run_error(['single_end'], self.getWsName() + '/' +
                        'single_end is a single end read library, which is ' +
                        'not currently supported.')
 

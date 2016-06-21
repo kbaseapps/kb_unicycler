@@ -13,8 +13,10 @@ import subprocess
 import hashlib
 import numpy as np
 import yaml
-from gaprice_SPAdes_test.GenericClient import GenericClient, ServerError
+# from gaprice_SPAdes_test.GenericClient import GenericClient, ServerError
 # from gaprice_SPAdes_test.kbdynclient import KBDynClient, ServerError
+from kb_read_library_to_file.kb_read_library_to_fileClient import kb_read_library_to_file  # @IgnorePep8
+from kb_read_library_to_file.baseclient import ServerError
 import time
 
 
@@ -455,8 +457,8 @@ A coverage cutoff is not specified.
     # be found
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
-        self.generic_clientURL = os.environ['SDK_CALLBACK_URL']
-        self.log('Callback URL: ' + self.generic_clientURL)
+        self.callbackURL = os.environ['SDK_CALLBACK_URL']
+        self.log('Callback URL: ' + self.callbackURL)
         self.workspaceURL = config[self.URL_WS]
         self.shockURL = config[self.URL_SHOCK]
         self.catalogURL = config[self.URL_KB_END] + '/catalog'
@@ -477,16 +479,20 @@ A coverage cutoff is not specified.
 
         token = ctx['token']
 
+        # the reads should really be specified as a list of absolute ws refs
+        # but the narrative doesn't do that yet
         self.process_params(params)
-
+        ws = params[self.PARAM_IN_WS]
+        reads_params = []
+        for r in params[self.PARAM_IN_LIB]:
+            reads_params.append(ws + '/' + r)
         # Get the reads library
 #         kbase = KBDynClient(self.catalogURL, ctx)
 #         kbase.load_module('kb_read_library_to_file', version='dev')
-        reads_params = {self.PARAM_IN_WS: params[self.PARAM_IN_WS],
-                        self.PARAM_IN_LIB: params[self.PARAM_IN_LIB]}
-
-        gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
-                           token=token)
+#         gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
+#                            token=token)
+        readcli = kb_read_library_to_file(self.callbackURL, token=ctx['token'],
+                                          service_ver='dev')
 
         typeerr = ('Supported types: KBaseFile.SingleEndLibrary ' +
                    'KBaseFile.PairedEndLibrary ' +
@@ -495,10 +501,12 @@ A coverage cutoff is not specified.
         try:
             # reads = kbase.mods.kb_read_library_to_file \
             #     .convert_read_library_to_file(reads_params)['files']
-            reads = gc.asynchronous_call(
-                "kb_read_library_to_file.convert_read_library_to_file",
-                [reads_params], json_rpc_context={"service_ver": "dev"}
-                )[0]['files']
+            reads = readcli.convert_read_library_to_file(
+                {self.PARAM_IN_LIB: reads_params})['files']
+#             reads = gc.asynchronous_call(
+#                 "kb_read_library_to_file.convert_read_library_to_file",
+#                 [reads_params], json_rpc_context={"service_ver": "dev"}
+#                 )[0]['files']
         except ServerError as se:
             self.log('logging stacktrace from dynamic client error')
             self.log(se.data)
