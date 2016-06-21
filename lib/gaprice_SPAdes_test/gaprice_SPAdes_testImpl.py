@@ -392,10 +392,11 @@ A coverage cutoff is not specified.
         return str(object_info[6]) + '/' + str(object_info[0]) + \
             '/' + str(object_info[4])
 
-    def check_reads(self, params, reads):
+    def check_reads(self, params, reads, reftoname):
 
-        for obj_name in reads:
-            rds = reads[obj_name]
+        for ref in reads:
+            rds = reads[ref]
+            obj_name = reftoname[ref]
             obj_ref = rds['ref']
             if rds['read_orientation_outward'] == self.TRUE:
                 raise ValueError(
@@ -482,10 +483,20 @@ A coverage cutoff is not specified.
         # the reads should really be specified as a list of absolute ws refs
         # but the narrative doesn't do that yet
         self.process_params(params)
-        ws = params[self.PARAM_IN_WS]
-        reads_params = []
+
+        # get absolute refs from ws
+        wsname = params[self.PARAM_IN_WS]
+        obj_ids = []
         for r in params[self.PARAM_IN_LIB]:
-            reads_params.append(ws + '/' + r)
+            obj_ids.append({'ref': wsname + '/' + r})
+        ws = workspaceService(self.workspaceURL, token=token)
+        ws_info = ws.get_object_info_new({'objects': obj_ids})
+        reads_params = []
+        reftoname = {}
+        for wsi, oid in zip(ws_info, obj_ids):
+            ref = self.make_ref(wsi)
+            reads_params.append(ref)
+            reftoname[ref] = oid['ref']
         # Get the reads library
 #         kbase = KBDynClient(self.catalogURL, ctx)
 #         kbase.load_module('kb_read_library_to_file', version='dev')
@@ -521,20 +532,21 @@ A coverage cutoff is not specified.
 
         self.log('Got reads data from converter:\n' + pformat(reads))
 
-        self.check_reads(params, reads)
+        self.check_reads(params, reads, reftoname)
 
         reads_data = []
         for r in reads:
+            n = reftoname[r]
             f = reads[r]['files']
             if 'sing' in f:
                 raise ValueError(('{} is a single end read library, which ' +
-                                  'is not currently supported.').format(r))
+                                  'is not currently supported.').format(n))
             if 'inter' in f:
                 reads_data.append({'fwd_file': f['inter']})
             elif 'fwd' in f:
                 reads_data.append({'fwd_file': f['fwd'], 'rev_file': f['rev']})
             else:
-                raise ValueError('Something is very wrong with read lib' + r)
+                raise ValueError('Something is very wrong with read lib' + n)
 
         spades_out = self.exec_spades(params[self.PARAM_IN_DNA_SOURCE],
                                       reads_data)
@@ -569,7 +581,6 @@ A coverage cutoff is not specified.
                 [reads[x]['ref'] for x in reads]
 
         ws_id = reads[r]['ref'].split('/')[0]
-        ws = workspaceService(self.workspaceURL, token=token)
 
         # save the contigset output
         new_obj_info = ws.save_objects({

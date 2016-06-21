@@ -9,6 +9,7 @@ import psutil
 
 import requests
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
+from biokbase.workspace.client import ServerError as WorkspaceError # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from gaprice_SPAdes_test.gaprice_SPAdes_testImpl import gaprice_SPAdes_test
 # from gaprice_SPAdes_test.kbdynclient import ServerError
@@ -471,7 +472,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             ['foo'], 'Object foo cannot be accessed: No workspace with name ' +
             'Ireallyhopethisworkspacedoesntexistorthistestwillfail exists',
             wsname='Ireallyhopethisworkspacedoesntexistorthistestwillfail',
-            exception=ServerError)
+            exception=WorkspaceError)
 
     def test_bad_lib_name(self):
 
@@ -489,7 +490,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['foo'], 'No object with name foo exists in workspace ' +
-            str(self.wsinfo[0]), exception=ServerError)
+            str(self.wsinfo[0]), exception=WorkspaceError)
 
     def test_no_libs(self):
 
