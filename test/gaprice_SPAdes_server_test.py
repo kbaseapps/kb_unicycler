@@ -489,8 +489,10 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def test_non_extant_lib(self):
 
         self.run_error(
-            ['foo'], 'No object with name foo exists in workspace ' +
-            str(self.wsinfo[0]), exception=WorkspaceError)
+            ['foo'], 
+            ('No object with name foo exists in workspace {} ' +
+            '(name {})').format(str(self.wsinfo[0]),self.wsinfo[1]),
+            exception=WorkspaceError)
 
     def test_no_libs(self):
 
@@ -648,7 +650,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             sa = sa[0]
             self.assertEqual(
                 sa['name'],
-                'kb_read_library_to_file.convert_read_library_to_file')
+                'kb_read_library_to_file')
             self.assertEqual(
                 sa['code_url'],
                 'https://github.com/MrCreosote/kb_read_library_to_file')
