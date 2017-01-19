@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #BEGIN_HEADER
 # The header block is where all import statements should live
 from __future__ import print_function
@@ -26,10 +27,10 @@ class ShockException(Exception):
 #END_HEADER
 
 
-class gaprice_SPAdes_test:
+class kb_SPAdes:
     '''
     Module Name:
-    gaprice_SPAdes_test
+    kb_SPAdes
 
     Module Description:
     A KBase module: gaprice_SPAdes
@@ -43,16 +44,16 @@ Autodetection is used for the PHRED quality offset and k-mer sizes.
 A coverage cutoff is not specified.
     '''
 
-    ######## WARNING FOR GEVENT USERS #######
+    ######## WARNING FOR GEVENT USERS ####### noqa
     # Since asynchronous IO can lead to methods - even the same method -
     # interrupting each other, you must be *very* careful when using global
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
-    #########################################
-    VERSION = "0.0.1"
-    GIT_URL = "https://github.com/mrcreosote/gaprice_SPAdes"
-    GIT_COMMIT_HASH = "41086fbc4658be1b14e2e623addbcf8e8ac5fff6"
-    
+    ######################################### noqa
+    VERSION = ""
+    GIT_URL = ""
+    GIT_COMMIT_HASH = ""
+
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
     DISABLE_SPADES_OUTPUT = False  # should be False in production
@@ -469,7 +470,30 @@ A coverage cutoff is not specified.
         #END_CONSTRUCTOR
         pass
 
+
     def run_SPAdes(self, ctx, params):
+        """
+        Run SPAdes on paired end libraries
+        :param params: instance of type "SPAdesParams" (Input parameters for
+           running SPAdes. string workspace_name - the name of the workspace
+           from which to take input and store output. string
+           output_contigset_name - the name of the output contigset
+           list<paired_end_lib> read_libraries - Illumina PairedEndLibrary
+           files to assemble. string dna_source - the source of the DNA used
+           for sequencing 'single_cell': DNA amplified from a single cell via
+           MDA 'metagenome': Metagenomic data anything else: Standard DNA
+           sample from multiple cells) -> structure: parameter
+           "workspace_name" of String, parameter "output_contigset_name" of
+           String, parameter "read_libraries" of list of type
+           "paired_end_lib" (The workspace object name of a PairedEndLibrary
+           file, whether of the KBaseAssembly or KBaseFile type.), parameter
+           "dna_source" of String
+        :returns: instance of type "SPAdesOutput" (Output parameters for
+           SPAdes run. string report_name - the name of the
+           KBaseReport.Report workspace object. string report_ref - the
+           workspace reference of the report.) -> structure: parameter
+           "report_name" of String, parameter "report_ref" of String
+        """
         # ctx is the context object
         # return variables are: output
         #BEGIN run_SPAdes
@@ -610,7 +634,6 @@ A coverage cutoff is not specified.
                              'output is not type dict as required.')
         # return the results
         return [output]
-
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",
