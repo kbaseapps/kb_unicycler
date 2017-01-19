@@ -9,31 +9,41 @@ import psutil
 
 import requests
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
+from biokbase.workspace.client import ServerError as WorkspaceError # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
-from gaprice_SPAdes.gaprice_SPAdesImpl import gaprice_SPAdes, ShockException
-from biokbase.workspace.client import ServerError as WorkspaceError  # @UnresolvedImport @IgnorePep8
+from gaprice_SPAdes_test.gaprice_SPAdes_testImpl import gaprice_SPAdes_test
+# from gaprice_SPAdes_test.kbdynclient import ServerError
+# from gaprice_SPAdes_test.GenericClient import ServerError
+from kb_read_library_to_file.baseclient import ServerError
+from gaprice_SPAdes_test.gaprice_SPAdes_testServer import MethodContext
 from pprint import pprint
 import shutil
 import inspect
+from gaprice_SPAdes_test.GenericClient import GenericClient
 
 
 class gaprice_SPAdesTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.token = environ.get('KB_AUTH_TOKEN', None)
-        cls.ctx = {'token': cls.token,
-                   'provenance': [
-                        {'service': 'gaprice_SPAdes',
-                         'method': 'please_never_use_it_in_production',
-                         'method_params': []
-                         }],
-                   'authenticated': 1}
+        cls.token = environ.get('KB_AUTH_TOKEN')
+        cls.callbackURL = environ.get('SDK_CALLBACK_URL')
+        print('CB URL: ' + cls.callbackURL)
+        # WARNING: don't call any logging methods on the context object,
+        # it'll result in a NoneType error
+        cls.ctx = MethodContext(None)
+        cls.ctx.update({'token': cls.token,
+                        'provenance': [
+                            {'service': 'gaprice_SPAdes_test',
+                             'method': 'please_never_use_it_in_production',
+                             'method_params': []
+                             }],
+                        'authenticated': 1})
         config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
         cls.cfg = {}
         config = ConfigParser()
         config.read(config_file)
-        for nameval in config.items('gaprice_SPAdes'):
+        for nameval in config.items('gaprice_SPAdes_test'):
             cls.cfg[nameval[0]] = nameval[1]
         cls.wsURL = cls.cfg['workspace-url']
         cls.shockURL = cls.cfg['shock-url']
@@ -41,10 +51,10 @@ class gaprice_SPAdesTest(unittest.TestCase):
                                token=cls.token)
         cls.wsClient = workspaceService(cls.wsURL, token=cls.token)
         wssuffix = int(time.time() * 1000)
-        wsName = "test_gaprice_SPAdes_" + str(wssuffix)
+        wsName = "test_gaprice_SPAdes_test_" + str(wssuffix)
         cls.wsinfo = cls.wsClient.create_workspace({'workspace': wsName})
         print('created workspace ' + cls.getWsName())
-        cls.serviceImpl = gaprice_SPAdes(cls.cfg)
+        cls.serviceImpl = gaprice_SPAdes_test(cls.cfg)
         cls.staged = {}
         cls.nodes_to_delete = []
         cls.handles_to_delete = []
@@ -218,14 +228,17 @@ class gaprice_SPAdesTest(unittest.TestCase):
                                  }
 
     @classmethod
-    def upload_empty_data(cls):
-        cls.wsClient.save_objects({
+    def upload_empty_data(cls, wsobjname):
+        objdata = cls.wsClient.save_objects({
             'workspace': cls.getWsName(),
             'objects': [{'type': 'Empty.AType',
                          'data': {},
                          'name': 'empty'
                          }]
-            })
+            })[0]
+        cls.staged[wsobjname] = {'info': objdata,
+                                 'ref': cls.make_ref(objdata),
+                                 }
 
     @classmethod
     def setupTestData(cls):
@@ -249,7 +262,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
                      'type': ''}
         cls.upload_assembly('frbasic', {}, fwd_reads, rev_reads=rev_reads)
         cls.upload_assembly('intbasic', {'single_genome': 1}, int_reads)
-        cls.upload_assembly('meta', {'single_genome': 0}, int_reads)
+        cls.upload_assembly('meta', {'single_genome': 0}, fwd_reads,
+                            rev_reads=rev_reads)
         cls.upload_assembly('reads_out', {'read_orientation_outward': 1},
                             int_reads)
         cls.upload_assembly('frbasic_kbassy', {}, fwd_reads,
@@ -269,7 +283,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         cls.upload_assembly('bad_file_type', {}, bad_fn_reads)
         cls.upload_assembly('bad_node', {}, fwd_reads)
         cls.delete_shock_node(cls.nodes_to_delete.pop())
-        cls.upload_empty_data()
+        cls.upload_empty_data('empty')
         print('Data staged.')
 
     @classmethod
@@ -417,7 +431,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def test_metagenome(self):
 
         self.run_success(
-            ['frbasic'], 'metagenome_out',
+            ['meta'], 'metagenome_out',
             {'contigs':
              [{'description': 'Note MD5 is generated from uppercasing ' +
                               'the sequence',
@@ -475,8 +489,10 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def test_non_extant_lib(self):
 
         self.run_error(
-            ['foo'], 'No object with name foo exists in workspace ' +
-            str(self.wsinfo[0]), exception=WorkspaceError)
+            ['foo'], 
+            ('No object with name foo exists in workspace {} ' +
+            '(name {})').format(str(self.wsinfo[0]),self.wsinfo[1]),
+            exception=WorkspaceError)
 
     def test_no_libs(self):
 
@@ -504,7 +520,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['intbasic'],
-            'Reads object intbasic (' + self.staged['intbasic']['ref'] +
+            'Reads object ' + self.getWsName() + '/intbasic (' +
+            self.staged['intbasic']['ref'] +
             ') is marked as containing dna from a single genome but the ' +
             'assembly method was specified as metagenomic',
             dna_source='metagenome')
@@ -513,7 +530,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['meta'],
-            'Reads object meta (' + self.staged['meta']['ref'] +
+            'Reads object ' + self.getWsName() + '/meta (' +
+            self.staged['meta']['ref'] +
             ') is marked as containing metagenomic data but the assembly ' +
             'method was not specified as metagenomic')
 
@@ -521,75 +539,128 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_error(
             ['reads_out'],
-            'Reads object reads_out (' + self.staged['reads_out']['ref'] +
+            'Reads object ' + self.getWsName() + '/reads_out (' +
+            self.staged['reads_out']['ref'] +
             ') is marked as having outward oriented reads, which SPAdes ' +
             'does not support.')
 
     def test_bad_module(self):
 
         self.run_error(['empty'],
-                       'Only the types KBaseAssembly.PairedEndLibrary and ' +
+                       'Invalid type for object ' +
+                       self.staged['empty']['ref'] + ' (empty). Only the ' +
+                       'types KBaseAssembly.PairedEndLibrary and ' +
                        'KBaseFile.PairedEndLibrary are supported')
 
     def test_bad_type(self):
 
-        self.run_error(['single_end'],
-                       'Only the types KBaseAssembly.PairedEndLibrary and ' +
-                       'KBaseFile.PairedEndLibrary are supported')
+        self.run_error(['single_end'], self.getWsName() + '/' +
+                       'single_end is a single end read library, which is ' +
+                       'not currently supported.')
 
     def test_bad_shock_filename(self):
 
         self.run_error(
             ['bad_shk_name'],
-            ('Reads object {} (bad_shk_name) contains a reads file stored ' +
-             'in Shock node {} for which a valid filename could not be ' +
-             'determined. In order of precedence:\n' +
+            ('Error downloading reads for object {} (bad_shk_name) from ' +
+             'Shock node {}: A valid file extension could not be determined ' +
+             'for the reads file. In order of precedence:\n' +
              'File type is: \nHandle file name is: \n' +
              'Shock file name is: small.forward.bad\n' +
              'Acceptable extensions: .fq .fastq .fq.gz ' +
              '.fastq.gz').format(self.staged['bad_shk_name']['ref'],
-                                 self.staged['bad_shk_name']['fwd_node_id']))
+                                 self.staged['bad_shk_name']['fwd_node_id']),
+            exception=ServerError)
 
     def test_bad_handle_filename(self):
 
         self.run_error(
             ['bad_file_name'],
-            ('Reads object {} (bad_file_name) contains a reads file stored ' +
-             'in Shock node {} for which a valid filename could not be ' +
-             'determined. In order of precedence:\n' +
+            ('Error downloading reads for object {} (bad_file_name) from ' +
+             'Shock node {}: A valid file extension could not be determined ' +
+             'for the reads file. In order of precedence:\n' +
              'File type is: \nHandle file name is: file.terrible\n' +
              'Shock file name is: small.forward.fq\n' +
              'Acceptable extensions: .fq .fastq .fq.gz ' +
              '.fastq.gz').format(self.staged['bad_file_name']['ref'],
-                                 self.staged['bad_file_name']['fwd_node_id']))
+                                 self.staged['bad_file_name']['fwd_node_id']),
+            exception=ServerError)
 
     def test_bad_file_type(self):
 
         self.run_error(
             ['bad_file_type'],
-            ('Reads object {} (bad_file_type) contains a reads file stored ' +
-             'in Shock node {} for which a valid filename could not be ' +
-             'determined. In order of precedence:\n' +
+            ('Error downloading reads for object {} (bad_file_type) from ' +
+             'Shock node {}: A valid file extension could not be determined ' +
+             'for the reads file. In order of precedence:\n' +
              'File type is: .xls\nHandle file name is: small.forward.fastq\n' +
              'Shock file name is: small.forward.fq\n' +
              'Acceptable extensions: .fq .fastq .fq.gz ' +
              '.fastq.gz').format(self.staged['bad_file_type']['ref'],
-                                 self.staged['bad_file_type']['fwd_node_id']))
+                                 self.staged['bad_file_type']['fwd_node_id']),
+            exception=ServerError)
 
     def test_bad_shock_node(self):
 
         self.run_error(['bad_node'],
                        ('Error downloading reads for object {} (bad_node) ' +
-                        'from shock node {}: Node not found').format(
+                        'from Shock node {}: Node not found').format(
                             self.staged['bad_node']['ref'],
                             self.staged['bad_node']['fwd_node_id']),
-                       exception=ShockException)
+                       exception=ServerError)
+
+    def test_provenance(self):
+
+        frbasic = 'frbasic'
+        ref = self.make_ref(self.staged[frbasic]['info'])
+        gc = GenericClient(self.callbackURL, use_url_lookup=False)
+        gc.sync_call('CallbackServer.set_provenance',
+                     [{'service': 'myserv',
+                       'method': 'mymeth',
+                       'service_ver': '0.0.2',
+                       'method_params': ['foo', 'bar', 'baz'],
+                       'input_ws_objects': [ref]
+                       }]
+                     )
+
+        params = {'workspace_name': self.getWsName(),
+                  'read_libraries': [frbasic],
+                  'output_contigset_name': 'foo'
+                  }
+
+        ret = self.getImpl().run_SPAdes(self.ctx, params)[0]
+        report = self.wsClient.get_objects([{'ref': ret['report_ref']}])[0]
+        cs_ref = report['data']['objects_created'][0]['ref']
+        cs = self.wsClient.get_objects([{'ref': cs_ref}])[0]
+
+        rep_prov = report['provenance']
+        cs_prov = cs['provenance']
+        self.assertEqual(len(rep_prov), 1)
+        self.assertEqual(len(cs_prov), 1)
+        rep_prov = rep_prov[0]
+        cs_prov = cs_prov[0]
+        for p in [rep_prov, cs_prov]:
+            self.assertEqual(p['service'], 'myserv')
+            self.assertEqual(p['method'], 'mymeth')
+            self.assertEqual(p['service_ver'], '0.0.2')
+            self.assertEqual(p['method_params'], ['foo', 'bar', 'baz'])
+            self.assertEqual(p['input_ws_objects'], [ref])
+            sa = p['subactions']
+            self.assertEqual(len(sa), 1)
+            sa = sa[0]
+            self.assertEqual(
+                sa['name'],
+                'kb_read_library_to_file')
+            self.assertEqual(
+                sa['code_url'],
+                'https://github.com/MrCreosote/kb_read_library_to_file')
+            # don't check ver or commit since they can change from run to run
 
     def run_error(self, readnames, error, wsname=('fake'), output_name='out',
                   dna_source=None, exception=ValueError):
 
         test_name = inspect.stack()[1][3]
-        print('\n===== starting expected fail test: ' + test_name + ' =====')
+        print('\n***** starting expected fail test: ' + test_name + ' *****')
         print('    libs: ' + str(readnames))
 
         if wsname == ('fake'):
@@ -619,7 +690,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                     dna_source=None):
 
         test_name = inspect.stack()[1][3]
-        print('\n==== starting expected success test: ' + test_name + ' =====')
+        print('\n**** starting expected success test: ' + test_name + ' *****')
         print('   libs: ' + str(readnames))
 
         if not contig_count:
