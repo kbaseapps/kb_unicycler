@@ -147,10 +147,10 @@ A coverage cutoff is not specified.
         if mem < self.MIN_MEMORY_GB:
             raise ValueError(
                 'Only ' + str(psutil.virtual_memory().available) +
-                ' bytes of memory are available. The SPAdes wrapper will ' +
+                ' bytes of memory are available. The SPAdes wrapper will' +
                 ' not run without at least ' +
                 str(self.MIN_MEMORY_GB + self.MEMORY_OFFSET_GB) +
-                ' bytes available')
+                ' gigabytes available')
 
         outdir = os.path.join(self.scratch, 'spades_output_dir')
         if not os.path.exists(outdir):
