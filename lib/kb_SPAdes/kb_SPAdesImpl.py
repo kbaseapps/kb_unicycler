@@ -16,8 +16,8 @@ import numpy as np
 import yaml
 # from gaprice_SPAdes_test.GenericClient import GenericClient, ServerError
 # from gaprice_SPAdes_test.kbdynclient import KBDynClient, ServerError
-from kb_read_library_to_file.kb_read_library_to_fileClient import kb_read_library_to_file  # @IgnorePep8
-from kb_read_library_to_file.baseclient import ServerError
+from ReadsUtils.ReadsUtilsClient import ReadsUtils  # @IgnorePep8
+from ReadsUtils.baseclient import ServerError
 import time
 
 
@@ -70,12 +70,13 @@ A coverage cutoff is not specified.
 
     THREADS_PER_CORE = 3
     MEMORY_OFFSET_GB = 1  # 1GB
-    MIN_MEMORY_GB = 5
+    MIN_MEMORY_GB = 6
     GB = 1000000000
 
     URL_WS = 'workspace-url'
     URL_SHOCK = 'shock-url'
     URL_KB_END = 'kbase-endpoint'
+    MIN_MEMORY_GB_PARAM = 'min-mem-gb'
 
     TRUE = 'true'
     FALSE = 'false'
@@ -145,12 +146,12 @@ A coverage cutoff is not specified.
         threads = psutil.cpu_count() * self.THREADS_PER_CORE
         mem = (psutil.virtual_memory().available / self.GB -
                self.MEMORY_OFFSET_GB)
-        if mem < self.MIN_MEMORY_GB:
+        if mem < self.min_mem_gb:
             raise ValueError(
                 'Only ' + str(psutil.virtual_memory().available) +
                 ' bytes of memory are available. The SPAdes wrapper will' +
                 ' not run without at least ' +
-                str(self.MIN_MEMORY_GB + self.MEMORY_OFFSET_GB) +
+                str(self.min_mem_gb + self.MEMORY_OFFSET_GB) +
                 ' gigabytes available')
 
         outdir = os.path.join(self.scratch, 'spades_output_dir')
@@ -467,6 +468,7 @@ A coverage cutoff is not specified.
         self.scratch = os.path.abspath(config['scratch'])
         if not os.path.exists(self.scratch):
             os.makedirs(self.scratch)
+        self.min_mem_gb = config.get(self.MIN_MEMORY_GB_PARAM, self.MIN_MEMORY_GB)
         #END_CONSTRUCTOR
         pass
 
@@ -520,13 +522,10 @@ A coverage cutoff is not specified.
         for wsi, oid in zip(ws_info, obj_ids):
             ref = self.make_ref(wsi)
             reads_params.append(ref)
-            reftoname[ref] = oid['ref']
-        # Get the reads library
-#         kbase = KBDynClient(self.catalogURL, ctx)
-#         kbase.load_module('kb_read_library_to_file', version='dev')
-#         gc = GenericClient(self.generic_clientURL, use_url_lookup=False,
-#                            token=token)
-        readcli = kb_read_library_to_file(self.callbackURL, token=ctx['token'],
+            obj_name = oid['ref']
+            reftoname[ref] = obj_name
+
+        readcli = ReadsUtils(self.callbackURL, token=ctx['token'],
                                           service_ver='dev')
 
         typeerr = ('Supported types: KBaseFile.SingleEndLibrary ' +
@@ -534,14 +533,10 @@ A coverage cutoff is not specified.
                    'KBaseAssembly.SingleEndLibrary ' +
                    'KBaseAssembly.PairedEndLibrary')
         try:
-            # reads = kbase.mods.kb_read_library_to_file \
-            #     .convert_read_library_to_file(reads_params)['files']
-            reads = readcli.convert_read_library_to_file(
-                {self.PARAM_IN_LIB: reads_params})['files']
-#             reads = gc.asynchronous_call(
-#                 "kb_read_library_to_file.convert_read_library_to_file",
-#                 [reads_params], json_rpc_context={"service_ver": "dev"}
-#                 )[0]['files']
+            reads = readcli.download_reads({'read_libraries': reads_params,
+                                            'interleaved': 'false',
+                                            'gzipped': None
+                                            })['files']
         except ServerError as se:
             self.log('logging stacktrace from dynamic client error')
             self.log(se.data)
@@ -559,18 +554,18 @@ A coverage cutoff is not specified.
         self.check_reads(params, reads, reftoname)
 
         reads_data = []
-        for r in reads:
-            n = reftoname[r]
-            f = reads[r]['files']
-            if 'sing' in f:
+        for ref in reads:
+            reads_name = reftoname[ref]
+            f = reads[ref]['files']
+            if f['type'] == 'single':
                 raise ValueError(('{} is a single end read library, which ' +
-                                  'is not currently supported.').format(n))
-            if 'inter' in f:
-                reads_data.append({'fwd_file': f['inter']})
-            elif 'fwd' in f:
+                                  'is not currently supported.').format(reads_name))
+            if f['type'] == 'interleaved':
+                reads_data.append({'fwd_file': f['fwd']})
+            elif f['type'] == 'paired':
                 reads_data.append({'fwd_file': f['fwd'], 'rev_file': f['rev']})
             else:
-                raise ValueError('Something is very wrong with read lib' + n)
+                raise ValueError('Something is very wrong with read lib' + reads_name)
 
         spades_out = self.exec_spades(params[self.PARAM_IN_DNA_SOURCE],
                                       reads_data)
