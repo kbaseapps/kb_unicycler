@@ -45,7 +45,6 @@ class gaprice_SPAdesTest(unittest.TestCase):
         config.read(config_file)
         for nameval in config.items('kb_SPAdes'):
             cls.cfg[nameval[0]] = nameval[1]
-        cls.cfg['min-mem-gb'] = "1"
         cls.wsURL = cls.cfg['workspace-url']
         cls.shockURL = cls.cfg['shock-url']
         cls.hs = HandleService(url=cls.cfg['handle-service-url'],

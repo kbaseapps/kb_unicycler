@@ -70,13 +70,12 @@ A coverage cutoff is not specified.
 
     THREADS_PER_CORE = 3
     MEMORY_OFFSET_GB = 1  # 1GB
-    MIN_MEMORY_GB = 6
+    MIN_MEMORY_GB = 5
     GB = 1000000000
 
     URL_WS = 'workspace-url'
     URL_SHOCK = 'shock-url'
     URL_KB_END = 'kbase-endpoint'
-    MIN_MEMORY_GB_PARAM = 'min-mem-gb'
 
     TRUE = 'true'
     FALSE = 'false'
@@ -146,12 +145,12 @@ A coverage cutoff is not specified.
         threads = psutil.cpu_count() * self.THREADS_PER_CORE
         mem = (psutil.virtual_memory().available / self.GB -
                self.MEMORY_OFFSET_GB)
-        if mem < self.min_mem_gb:
+        if mem < self.MIN_MEMORY_GB:
             raise ValueError(
                 'Only ' + str(psutil.virtual_memory().available) +
                 ' bytes of memory are available. The SPAdes wrapper will' +
                 ' not run without at least ' +
-                str(self.min_mem_gb + self.MEMORY_OFFSET_GB) +
+                str(self.MIN_MEMORY_GB + self.MEMORY_OFFSET_GB) +
                 ' gigabytes available')
 
         outdir = os.path.join(self.scratch, 'spades_output_dir')
@@ -468,7 +467,6 @@ A coverage cutoff is not specified.
         self.scratch = os.path.abspath(config['scratch'])
         if not os.path.exists(self.scratch):
             os.makedirs(self.scratch)
-        self.min_mem_gb = config.get(self.MIN_MEMORY_GB_PARAM, self.MIN_MEMORY_GB)
         #END_CONSTRUCTOR
         pass
 
