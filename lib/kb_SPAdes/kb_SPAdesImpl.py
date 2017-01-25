@@ -4,14 +4,14 @@
 from __future__ import print_function
 import os
 import re
-import uuid
+# import uuid
 from pprint import pformat
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 import requests
 import json
 import psutil
 import subprocess
-import hashlib
+# import hashlib
 import numpy as np
 import yaml
 # from gaprice_SPAdes_test.GenericClient import GenericClient, ServerError
@@ -229,7 +229,6 @@ A coverage cutoff is not specified.
             fasta_dict[contig_id] = sequence_len
         return fasta_dict
 
-
     def load_report(self, input_file_name, params, wsname):
         fasta_stats = self.load_stats(input_file_name)
         lengths = [fasta_stats[contig_id] for contig_id in fasta_stats]
@@ -237,7 +236,7 @@ A coverage cutoff is not specified.
         assembly_ref = params[self.PARAM_IN_WS] + '/' + params[self.PARAM_IN_CS_NAME]
 
         report = ''
-        report += 'Assembly saved to: ' + assembly_ref +'\n'
+        report += 'Assembly saved to: ' + assembly_ref + '\n'
         report += 'Assembled into ' + str(len(lengths)) + ' contigs.\n'
         report += 'Avg Length: ' + str(sum(lengths) / float(len(lengths))) + \
             ' bp.\n'
@@ -256,12 +255,11 @@ A coverage cutoff is not specified.
                                  'description': 'Assembled contigs'}],
             'text_message': report
         }
-        report_info = report_cl.create({'report': reportObj, 
-                                     'workspace_name': wsname})
+        report_info = report_cl.create({'report': reportObj,
+                                        'workspace_name': wsname})
         reportName = report_info['name']
         reportRef = report_info['ref']
         return reportName, reportRef
-
 
     def make_ref(self, object_info):
         return str(object_info[6]) + '/' + str(object_info[0]) + \
@@ -343,7 +341,6 @@ A coverage cutoff is not specified.
             os.makedirs(self.scratch)
         #END_CONSTRUCTOR
         pass
-
 
     def run_SPAdes(self, ctx, params):
         """
@@ -465,6 +462,7 @@ A coverage cutoff is not specified.
                              'output is not type dict as required.')
         # return the results
         return [output]
+
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",
