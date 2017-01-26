@@ -52,9 +52,9 @@ A coverage cutoff is not specified.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = ""
-    GIT_URL = ""
-    GIT_COMMIT_HASH = ""
+    VERSION = "0.0.3"
+    GIT_URL = "https://github.com/jkbaumohl/kb_SPAdes"
+    GIT_COMMIT_HASH = "614a888d44b21561ac18519d15bf6db65c0cc4c2"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -170,6 +170,8 @@ A coverage cutoff is not specified.
             cmd += ['--meta']
         else:
             cmd += ['--careful']
+#        print("LENGTH OF READSDATA IN EXEC: " + str(len(reads_data)))
+#        print("SPADES YAML: " + str(self.generate_spades_yaml(reads_data)))
         cmd += ['--dataset', self.generate_spades_yaml(reads_data)]
         self.log('Running SPAdes command line:')
         self.log(cmd)
@@ -194,7 +196,7 @@ A coverage cutoff is not specified.
     # which was adapted from an early version of
     # https://github.com/kbase/transform/blob/master/plugins/scripts/upload/trns_transform_FASTA_DNA_Assembly_to_KBaseGenomes_ContigSet.py
     def load_stats(self, input_file_name):
-        self.log('Starting conversion of FASTA to KBaseGenomes.ContigSet')
+        self.log('Starting conversion of FASTA to KBaseGenomeAnnotations.Assembly')
         self.log('Building Object.')
         if not os.path.isfile(input_file_name):
             raise Exception('The input file name {0} is not a file!'.format(
@@ -422,7 +424,7 @@ A coverage cutoff is not specified.
         self.check_reads(params, reads, reftoname)
 
         reads_data = []
-        for ref in reads:
+        for ref in sorted(reads):
             reads_name = reftoname[ref]
             f = reads[ref]['files']
             if f['type'] == 'single':
@@ -434,7 +436,6 @@ A coverage cutoff is not specified.
                 reads_data.append({'fwd_file': f['fwd'], 'rev_file': f['rev']})
             else:
                 raise ValueError('Something is very wrong with read lib' + reads_name)
-
         spades_out = self.exec_spades(params[self.PARAM_IN_DNA_SOURCE],
                                       reads_data)
         self.log('SPAdes output dir: ' + spades_out)

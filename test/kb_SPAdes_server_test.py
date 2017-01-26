@@ -297,22 +297,18 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['frbasic'], 'frbasic_out',
             {'contigs':
-             [{'description': 'Note MD5 is generated from uppercasing ' +
-                              'the sequence',
-               'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
+             [{'name': 'NODE_1_length_64822_cov_8.54567',
                'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'id': 'NODE_1_length_64822_cov_8.54567',
                'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'description': 'Note MD5 is generated from uppercasing ' +
-                              'the sequence',
-               'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
+              {'name': 'NODE_2_length_62607_cov_8.06011',
                'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'id': 'NODE_2_length_62607_cov_8.06011',
                'md5': 'e99fade8814bdb861532f493e5deddbd'
                }],
              'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
-             'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
+             'fasta_md5': 'eca1d944be8dc81c7e1b78d874628aea'
              })
 
     def test_fr_pair_kbassy(self):
@@ -320,22 +316,18 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['frbasic_kbassy'], 'frbasic_kbassy_out',
             {'contigs':
-             [{'description': 'Note MD5 is generated from uppercasing ' +
-                              'the sequence',
-               'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
+             [{'name': 'NODE_1_length_64822_cov_8.54567',
                'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'id': 'NODE_1_length_64822_cov_8.54567',
                'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'description': 'Note MD5 is generated from uppercasing ' +
-                              'the sequence',
-               'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
+              {'name': 'NODE_2_length_62607_cov_8.06011',
                'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'id': 'NODE_2_length_62607_cov_8.06011',
                'md5': 'e99fade8814bdb861532f493e5deddbd'
                }],
              'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
-             'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
+             'fasta_md5': 'eca1d944be8dc81c7e1b78d874628aea'
              })
 
     def test_interlaced_kbfile(self):
@@ -343,22 +335,18 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['intbasic'], 'intbasic_out',
             {'contigs':
-             [{'description': 'Note MD5 is generated from uppercasing ' +
-                              'the sequence',
-               'name': 'NODE_1000_length_274_cov_1.11168_ID_9587',
+             [{'name': 'NODE_1000_length_274_cov_1.11168',
                'length': 274,
-               'id': 'NODE_1000_length_274_cov_1.11168_ID_9587',
+               'id': 'NODE_1000_length_274_cov_1.11168',
                'md5': '1b00037a0f39ff0fcb577c4e7ff72cf1'
                },
-              {'description': 'Note MD5 is generated from uppercasing ' +
-                              'the sequence',
-               'name': 'NODE_1001_length_274_cov_1.1066_ID_9589',
+              {'name': 'NODE_1001_length_274_cov_1.1066',
                'length': 274,
-               'id': 'NODE_1001_length_274_cov_1.1066_ID_9589',
+               'id': 'NODE_1001_length_274_cov_1.1066',
                'md5': 'c1c853543b2bba9211e574238b842869'
                }],
-             'md5': 'affbb138ad3887c7d12e8ec28a9a8d52',
-             'fasta_md5': 'b3012dec12e4b6042affc9a933b60f7a'
+             'md5': 'f285181574a14b4ffd8828e319128e5a',
+             'fasta_md5': '94c70046956b7a9d04b5de7bd518513b'
              }, contig_count=1449)
 
     def test_interlaced_kbassy(self):
@@ -366,44 +354,57 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['intbasic_kbassy'], 'intbasic_kbassy_out',
             {'contigs':
-             [{'description': 'Note MD5 is generated from uppercasing ' +
-                              'the sequence',
-               'name': 'NODE_1000_length_274_cov_1.11168_ID_9587',
+             [{'name': 'NODE_1000_length_274_cov_1.11168',
                'length': 274,
-               'id': 'NODE_1000_length_274_cov_1.11168_ID_9587',
+               'id': 'NODE_1000_length_274_cov_1.11168',
                'md5': '1b00037a0f39ff0fcb577c4e7ff72cf1'
                },
-              {'description': 'Note MD5 is generated from uppercasing ' +
-                              'the sequence',
-               'name': 'NODE_1001_length_274_cov_1.1066_ID_9589',
+              {'name': 'NODE_1001_length_274_cov_1.1066',
                'length': 274,
-               'id': 'NODE_1001_length_274_cov_1.1066_ID_9589',
+               'id': 'NODE_1001_length_274_cov_1.1066',
                'md5': 'c1c853543b2bba9211e574238b842869'
                }],
-             'md5': 'affbb138ad3887c7d12e8ec28a9a8d52',
-             'fasta_md5': 'b3012dec12e4b6042affc9a933b60f7a'
+             'md5': 'f285181574a14b4ffd8828e319128e5a',
+             'fasta_md5': '94c70046956b7a9d04b5de7bd518513b'
              }, contig_count=1449, dna_source='')
 
     def test_multiple(self):
         self.run_success(
             ['intbasic_kbassy', 'frbasic'], 'multiple_out',
             {'contigs':
-             [{'description': 'Note MD5 is generated from uppercasing ' +
-                              'the sequence',
-               'name': 'NODE_1_length_64822_cov_8.54567_ID_29',
+             [{'name': 'NODE_5_length_253_cov_1.14646',
+               'length': 253,
+               'id': 'NODE_5_length_253_cov_1.14646',
+               'md5': 'cff75ad9223015a6e144a99a54ead5aa'
+               },
+              {'name': 'NODE_1_length_64822_cov_8.54567',
                'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.54567_ID_29',
+               'id': 'NODE_1_length_64822_cov_8.54567',
                'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'description': 'Note MD5 is generated from uppercasing ' +
-                              'the sequence',
-               'name': 'NODE_2_length_62607_cov_8.06011_ID_15',
+              {'name': 'NODE_6_length_251_cov_2.37245',
+               'length': 251,
+               'id': 'NODE_6_length_251_cov_2.37245',
+               'md5': '62dcce093b62d04f61ca943bb6fa66a2'
+               },
+              {'name': 'NODE_4_length_264_cov_2.01914',
+               'length': 264,
+               'id': 'NODE_4_length_264_cov_2.01914',
+               'md5': '80c3c2be067ed6a3264b95f0d635e731'
+               },
+              {'name': 'NODE_3_length_278_cov_2.57848',
+               'length': 278,
+               'id': 'NODE_3_length_278_cov_2.57848',
+               'md5': 'a23d8e7ec68a37a7e0e537ca0d2fce33'
+               },
+              {'name': 'NODE_2_length_62607_cov_8.06011',
                'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06011_ID_15',
+               'id': 'NODE_2_length_62607_cov_8.06011',
                'md5': 'e99fade8814bdb861532f493e5deddbd'
-               }],
+               }
+              ],
              'md5': 'a1bfe0a6d53afb2f0a8c186d4265703a',
-             'fasta_md5': '5b7d11cf6a1b01cb2857883a5dc74357'
+             'fasta_md5': '6767ace854160b5cc76fba4f3aa7a05a'
              }, contig_count=6, dna_source='None')
 
     def test_single_cell(self):
@@ -411,22 +412,18 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['frbasic'], 'single_cell_out',
             {'contigs':
-             [{'description': 'Note MD5 is generated from uppercasing ' +
-                              'the sequence',
-               'name': 'NODE_1_length_64822_cov_8.54567_ID_21',
+             [{'name': 'NODE_1_length_64822_cov_8.54567',
                'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.54567_ID_21',
+               'id': 'NODE_1_length_64822_cov_8.54567',
                'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'description': 'Note MD5 is generated from uppercasing ' +
-                              'the sequence',
-               'name': 'NODE_2_length_62607_cov_8.06011_ID_7',
+              {'name': 'NODE_2_length_62607_cov_8.06011',
                'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06011_ID_7',
+               'id': 'NODE_2_length_62607_cov_8.06011',
                'md5': 'e99fade8814bdb861532f493e5deddbd'
                }],
              'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
-             'fasta_md5': '7f6093a7e56a8dc5cbf1343b166eda67'
+             'fasta_md5': 'eca1d944be8dc81c7e1b78d874628aea'
              }, dna_source='single_cell')
 
     def test_metagenome(self):
@@ -434,22 +431,18 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['meta'], 'metagenome_out',
             {'contigs':
-             [{'description': 'Note MD5 is generated from uppercasing ' +
-                              'the sequence',
-               'name': 'NODE_1_length_64819_cov_8.54977_ID_184',
+             [{'name': 'NODE_1_length_64819_cov_8.54977',
                'length': 64819,
-               'id': 'NODE_1_length_64819_cov_8.54977_ID_184',
+               'id': 'NODE_1_length_64819_cov_8.54977',
                'md5': '319f720b2de1af6dc7f32a98c1d3048e'
                },
-              {'description': 'Note MD5 is generated from uppercasing ' +
-                              'the sequence',
-               'name': 'NODE_2_length_62607_cov_8.06601_ID_257',
+              {'name': 'NODE_2_length_62607_cov_8.06601',
                'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06601_ID_257',
+               'id': 'NODE_2_length_62607_cov_8.06601',
                'md5': '878ed3dfad7ccecd5bdfc8f5c2db00c4'
                }],
              'md5': '5951328d2b25b8d9f6248a9b0aa3c49a',
-             'fasta_md5': 'fe801b181101b2be1e64885e167cdfcb'
+             'fasta_md5': '42fb9bfec317e2277218a5cc2804c223'
              }, dna_source='metagenome')
 
     def test_no_workspace_param(self):
@@ -757,7 +750,14 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.assertEqual(expected['md5'], assembly['data']['md5'])
 
         for exp_contig in expected['contigs']:
-            obj_contig = assembly['data']['contigs'][exp_contig['id']]
-            self.assertEqual(exp_contig['name'], obj_contig['name'])
-            self.assertEqual(exp_contig['md5'], obj_contig['md5'])
-            self.assertEqual(exp_contig['length'], obj_contig['length'])
+            if exp_contig['id'] in assembly['data']['contigs']:
+                obj_contig = assembly['data']['contigs'][exp_contig['id']]
+                self.assertEqual(exp_contig['name'], obj_contig['name'])
+                self.assertEqual(exp_contig['md5'], obj_contig['md5'])
+                self.assertEqual(exp_contig['length'], obj_contig['length'])
+            else:
+                # Hacky way to do this, but need to see all the contig_ids
+                # They changed because the SPAdes version changed and
+                # Need to see them to update the tests accordingly.
+                # If code gets here this test is designed to always fail, but show results.
+                self.assertEqual(str(assembly['data']['contigs']),"BLAH")

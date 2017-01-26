@@ -7,20 +7,26 @@ MAINTAINER KBase Developer
 
 # RUN apt-get update
 
+
 RUN cd /opt \
-    && wget http://spades.bioinf.spbau.ru/release3.7.1/SPAdes-3.7.1-Linux.tar.gz \
-    && tar -xvzf SPAdes-3.7.1-Linux.tar.gz \
-    && rm SPAdes-3.7.1-Linux.tar.gz \
+    && wget http://spades.bioinf.spbau.ru/release3.9.1/SPAdes-3.9.1-Linux.tar.gz \
+    && tar -xvzf SPAdes-3.9.1-Linux.tar.gz \
+    && rm SPAdes-3.9.1-Linux.tar.gz \
     && pip install psutil \
-    && pip install pyyaml \
-    && sudo apt-get install python-dev libffi-dev libssl-dev \
-    && pip install pyopenssl ndg-httpsclient pyasn1 \
-    && pip install requests --upgrade \
+    && pip install pyyaml
+
+RUN sudo apt-get install python-dev libffi-dev libssl-dev
+RUN pip install cffi --upgrade
+RUN pip install pyopenssl --upgrade
+RUN pip install ndg-httpsclient --upgrade
+RUN pip install pyasn1 --upgrade
+
+RUN pip install requests --upgrade \
     && pip install 'requests[security]' --upgrade \
     && pip install ipython \
     && apt-get install nano
 
-ENV PATH $PATH:/opt/SPAdes-3.7.1-Linux/bin
+ENV PATH $PATH:/opt/SPAdes-3.9.1-Linux/bin
 
 # -----------------------------------------
 
