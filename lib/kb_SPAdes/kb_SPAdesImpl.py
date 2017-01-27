@@ -4,14 +4,14 @@
 from __future__ import print_function
 import os
 import re
-import uuid
+# import uuid
 from pprint import pformat
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 import requests
 import json
 import psutil
 import subprocess
-import hashlib
+# import hashlib
 import numpy as np
 import yaml
 # from gaprice_SPAdes_test.GenericClient import GenericClient, ServerError
@@ -52,9 +52,9 @@ A coverage cutoff is not specified.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = ""
-    GIT_URL = ""
-    GIT_COMMIT_HASH = ""
+    VERSION = "0.0.3"
+    GIT_URL = "https://github.com/jkbaumohl/kb_SPAdes"
+    GIT_COMMIT_HASH = "614a888d44b21561ac18519d15bf6db65c0cc4c2"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -170,6 +170,8 @@ A coverage cutoff is not specified.
             cmd += ['--meta']
         else:
             cmd += ['--careful']
+#        print("LENGTH OF READSDATA IN EXEC: " + str(len(reads_data)))
+#        print("SPADES YAML: " + str(self.generate_spades_yaml(reads_data)))
         cmd += ['--dataset', self.generate_spades_yaml(reads_data)]
         self.log('Running SPAdes command line:')
         self.log(cmd)
@@ -194,7 +196,7 @@ A coverage cutoff is not specified.
     # which was adapted from an early version of
     # https://github.com/kbase/transform/blob/master/plugins/scripts/upload/trns_transform_FASTA_DNA_Assembly_to_KBaseGenomes_ContigSet.py
     def load_stats(self, input_file_name):
-        self.log('Starting conversion of FASTA to KBaseGenomes.ContigSet')
+        self.log('Starting conversion of FASTA to KBaseGenomeAnnotations.Assembly')
         self.log('Building Object.')
         if not os.path.isfile(input_file_name):
             raise Exception('The input file name {0} is not a file!'.format(
@@ -229,7 +231,6 @@ A coverage cutoff is not specified.
             fasta_dict[contig_id] = sequence_len
         return fasta_dict
 
-
     def load_report(self, input_file_name, params, wsname):
         fasta_stats = self.load_stats(input_file_name)
         lengths = [fasta_stats[contig_id] for contig_id in fasta_stats]
@@ -237,7 +238,7 @@ A coverage cutoff is not specified.
         assembly_ref = params[self.PARAM_IN_WS] + '/' + params[self.PARAM_IN_CS_NAME]
 
         report = ''
-        report += 'Assembly saved to: ' + assembly_ref +'\n'
+        report += 'Assembly saved to: ' + assembly_ref + '\n'
         report += 'Assembled into ' + str(len(lengths)) + ' contigs.\n'
         report += 'Avg Length: ' + str(sum(lengths) / float(len(lengths))) + \
             ' bp.\n'
@@ -256,12 +257,11 @@ A coverage cutoff is not specified.
                                  'description': 'Assembled contigs'}],
             'text_message': report
         }
-        report_info = report_cl.create({'report': reportObj, 
-                                     'workspace_name': wsname})
+        report_info = report_cl.create({'report': reportObj,
+                                        'workspace_name': wsname})
         reportName = report_info['name']
         reportRef = report_info['ref']
         return reportName, reportRef
-
 
     def make_ref(self, object_info):
         return str(object_info[6]) + '/' + str(object_info[0]) + \
@@ -344,7 +344,6 @@ A coverage cutoff is not specified.
         #END_CONSTRUCTOR
         pass
 
-
     def run_SPAdes(self, ctx, params):
         """
         Run SPAdes on paired end libraries
@@ -425,7 +424,7 @@ A coverage cutoff is not specified.
         self.check_reads(params, reads, reftoname)
 
         reads_data = []
-        for ref in reads:
+        for ref in sorted(reads):
             reads_name = reftoname[ref]
             f = reads[ref]['files']
             if f['type'] == 'single':
@@ -437,7 +436,6 @@ A coverage cutoff is not specified.
                 reads_data.append({'fwd_file': f['fwd'], 'rev_file': f['rev']})
             else:
                 raise ValueError('Something is very wrong with read lib' + reads_name)
-
         spades_out = self.exec_spades(params[self.PARAM_IN_DNA_SOURCE],
                                       reads_data)
         self.log('SPAdes output dir: ' + spades_out)
@@ -465,6 +463,7 @@ A coverage cutoff is not specified.
                              'output is not type dict as required.')
         # return the results
         return [output]
+
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",
