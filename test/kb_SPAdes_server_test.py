@@ -334,7 +334,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'fasta_md5': '03a8b6fc00638dd176998e25e4a208b6'
              })
 
-    def orig_test_interlaced_kbfile(self):
+    def test_interlaced_kbfile(self):
 
         self.run_success(
             ['intbasic'], 'intbasic_out',
@@ -353,7 +353,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'fasta_md5': '94c70046956b7a9d04b5de7bd518513b'
              }, contig_count=1449)
 
-    def orig_test_interlaced_kbassy(self):
+    def test_interlaced_kbassy(self):
 
         self.run_success(
             ['intbasic_kbassy'], 'intbasic_kbassy_out',
@@ -372,7 +372,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'fasta_md5': '94c70046956b7a9d04b5de7bd518513b'
              }, contig_count=1449, dna_source='')
 
-    def orig_test_multiple(self):
+    def test_multiple(self):
         self.run_success(
             ['intbasic_kbassy', 'frbasic'], 'multiple_out',
             {'contigs':
@@ -390,7 +390,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'fasta_md5': 'd4b3a1fc90bb822de28c6caa96e1b712'
              }, contig_count=1452, dna_source='None')
 
-    def orig_test_multiple_bad(self):
+    def test_multiple_bad(self):
         # Testing where input reads have different phred types (33 and 64)
         self.run_error(['intbasic64', 'frbasic'],
                        ('The set of Reads objects passed in have reads that have different phred ' +
@@ -439,22 +439,22 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
              }, dna_source='metagenome')
 
-    def orig_test_no_workspace_param(self):
+    def test_no_workspace_param(self):
 
         self.run_error(
             ['foo'], 'workspace_name parameter is required', wsname=None)
 
-    def orig_test_no_workspace_name(self):
+    def test_no_workspace_name(self):
 
         self.run_error(
             ['foo'], 'workspace_name parameter is required', wsname='None')
 
-    def orig_test_bad_workspace_name(self):
+    def test_bad_workspace_name(self):
 
         self.run_error(['foo'], 'Invalid workspace name bad|name',
                        wsname='bad|name')
 
-    def orig_test_non_extant_workspace(self):
+    def test_non_extant_workspace(self):
 
         self.run_error(
             ['foo'], 'Object foo cannot be accessed: No workspace with name ' +
@@ -462,19 +462,19 @@ class gaprice_SPAdesTest(unittest.TestCase):
             wsname='Ireallyhopethisworkspacedoesntexistorthistestwillfail',
             exception=WorkspaceError)
 
-    def orig_test_bad_lib_name(self):
+    def test_bad_lib_name(self):
 
         self.run_error(['bad&name'], 'Invalid workspace object name bad&name')
 
-    def orig_test_no_libs_param(self):
+    def test_no_libs_param(self):
 
         self.run_error(None, 'read_libraries parameter is required')
 
-    def orig_test_no_libs_list(self):
+    def test_no_libs_list(self):
 
         self.run_error('foo', 'read_libraries must be a list')
 
-    def orig_test_non_extant_lib(self):
+    def test_non_extant_lib(self):
 
         self.run_error(
             ['foo'],
@@ -482,29 +482,29 @@ class gaprice_SPAdesTest(unittest.TestCase):
              '(name {})').format(str(self.wsinfo[0]), self.wsinfo[1]),
             exception=WorkspaceError)
 
-    def orig_test_no_libs(self):
+    def test_no_libs(self):
 
         self.run_error([], 'At least one reads library must be provided')
 
-    def orig_test_no_output_param(self):
+    def test_no_output_param(self):
 
         self.run_error(
             ['foo'], 'output_contigset_name parameter is required',
             output_name=None)
 
-    def orig_test_no_output_name(self):
+    def test_no_output_name(self):
 
         self.run_error(
             ['foo'], 'output_contigset_name parameter is required',
             output_name='')
 
-    def orig_test_bad_output_name(self):
+    def test_bad_output_name(self):
 
         self.run_error(
             ['frbasic'], 'Invalid workspace object name bad*name',
             output_name='bad*name')
 
-    def orig_test_inconsistent_metagenomics_1(self):
+    def test_inconsistent_metagenomics_1(self):
 
         self.run_error(
             ['intbasic'],
@@ -514,7 +514,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             'assembly method was specified as metagenomic',
             dna_source='metagenome')
 
-    def orig_test_inconsistent_metagenomics_2(self):
+    def test_inconsistent_metagenomics_2(self):
 
         self.run_error(
             ['meta'],
@@ -523,7 +523,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             ') is marked as containing metagenomic data but the assembly ' +
             'method was not specified as metagenomic')
 
-    def orig_test_outward_reads(self):
+    def test_outward_reads(self):
 
         self.run_error(
             ['reads_out'],
@@ -532,7 +532,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             ') is marked as having outward oriented reads, which SPAdes ' +
             'does not support.')
 
-    def orig_test_bad_module(self):
+    def test_bad_module(self):
 
         self.run_error(['empty'],
                        'Invalid type for object ' +
@@ -546,7 +546,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                        'single_end is a single end read library, which is ' +
                        'not currently supported.')
 
-    def orig_test_bad_shock_filename(self):
+    def test_bad_shock_filename(self):
 
         self.run_error(
             ['bad_shk_name'],
@@ -556,7 +556,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                           self.staged['bad_shk_name']['fwd_node_id']),
             exception=ServerError)
 
-    def orig_test_bad_handle_filename(self):
+    def test_bad_handle_filename(self):
 
         self.run_error(
             ['bad_file_name'],
@@ -566,7 +566,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                           self.staged['bad_file_name']['fwd_node_id']),
             exception=ServerError)
 
-    def orig_test_bad_file_type(self):
+    def test_bad_file_type(self):
 
         self.run_error(
             ['bad_file_type'],
@@ -576,7 +576,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                           self.staged['bad_file_type']['fwd_node_id']),
             exception=ServerError)
 
-    def orig_test_bad_shock_node(self):
+    def test_bad_shock_node(self):
 
         self.run_error(['bad_node'],
                        ('Handle error for object {}: The Handle Manager ' +
@@ -587,7 +587,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                             self.staged['bad_node']['fwd_handle_id']),
                        exception=ServerError)
 
-    def orig_test_provenance(self):
+    def test_provenance(self):
 
         frbasic = 'frbasic'
         ref = self.make_ref(self.staged[frbasic]['info'])

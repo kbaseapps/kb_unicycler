@@ -359,7 +359,7 @@ A coverage cutoff is not specified.
         elif len(phred33_reads) > 0:
             return '33'
         else:
-            raise ValueError('The phred type was unable to be determined')
+            raise ValueError('The phred type of the read(s) was unable to be determined')
 
     def process_params(self, params):
         if (self.PARAM_IN_WS not in params or
