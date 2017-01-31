@@ -261,8 +261,12 @@ class gaprice_SPAdesTest(unittest.TestCase):
         int_reads = {'file': 'data/interleaved.fq',
                      'name': '',
                      'type': ''}
+        int64_reads = {'file': 'data/interleaved64.fq',
+                       'name': '',
+                       'type': ''}
         cls.upload_assembly('frbasic', {}, fwd_reads, rev_reads=rev_reads)
         cls.upload_assembly('intbasic', {'single_genome': 1}, int_reads)
+        cls.upload_assembly('intbasic64', {'single_genome': 1}, int64_reads)
         cls.upload_assembly('meta', {'single_genome': 0}, fwd_reads,
                             rev_reads=rev_reads)
         cls.upload_assembly('reads_out', {'read_orientation_outward': 1},
@@ -297,18 +301,18 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['frbasic'], 'frbasic_out',
             {'contigs':
-             [{'name': 'NODE_1_length_64822_cov_8.54567',
+             [{'name': 'NODE_1_length_64822_cov_8.99582',
                'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.54567',
+               'id': 'NODE_1_length_64822_cov_8.99582',
                'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'name': 'NODE_2_length_62607_cov_8.06011',
-               'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06011',
-               'md5': 'e99fade8814bdb861532f493e5deddbd'
+              {'name': 'NODE_2_length_62656_cov_8.64322',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_8.64322',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
                }],
-             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
-             'fasta_md5': 'eca1d944be8dc81c7e1b78d874628aea'
+             'md5': '08d0b92ce7c0a5e346b3077436edaa42',
+             'fasta_md5': '03a8b6fc00638dd176998e25e4a208b6'
              })
 
     def test_fr_pair_kbassy(self):
@@ -316,21 +320,21 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['frbasic_kbassy'], 'frbasic_kbassy_out',
             {'contigs':
-             [{'name': 'NODE_1_length_64822_cov_8.54567',
+             [{'name': 'NODE_1_length_64822_cov_8.99582',
                'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.54567',
+               'id': 'NODE_1_length_64822_cov_8.99582',
                'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'name': 'NODE_2_length_62607_cov_8.06011',
-               'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06011',
-               'md5': 'e99fade8814bdb861532f493e5deddbd'
+              {'name': 'NODE_2_length_62656_cov_8.64322',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_8.64322',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
                }],
-             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
-             'fasta_md5': 'eca1d944be8dc81c7e1b78d874628aea'
+             'md5': '08d0b92ce7c0a5e346b3077436edaa42',
+             'fasta_md5': '03a8b6fc00638dd176998e25e4a208b6'
              })
 
-    def test_interlaced_kbfile(self):
+    def orig_test_interlaced_kbfile(self):
 
         self.run_success(
             ['intbasic'], 'intbasic_out',
@@ -349,7 +353,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'fasta_md5': '94c70046956b7a9d04b5de7bd518513b'
              }, contig_count=1449)
 
-    def test_interlaced_kbassy(self):
+    def orig_test_interlaced_kbassy(self):
 
         self.run_success(
             ['intbasic_kbassy'], 'intbasic_kbassy_out',
@@ -368,62 +372,52 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'fasta_md5': '94c70046956b7a9d04b5de7bd518513b'
              }, contig_count=1449, dna_source='')
 
-    def test_multiple(self):
+    def orig_test_multiple(self):
         self.run_success(
             ['intbasic_kbassy', 'frbasic'], 'multiple_out',
             {'contigs':
-             [{'name': 'NODE_5_length_253_cov_1.14646',
-               'length': 253,
-               'id': 'NODE_5_length_253_cov_1.14646',
-               'md5': 'cff75ad9223015a6e144a99a54ead5aa'
+             [{'name': 'NODE_1391_length_233_cov_1.40385',
+               'length': 233,
+               'id': 'NODE_1391_length_233_cov_1.40385',
+               'md5': '7fc057f5b65b026eb3c4956c4b14bd70'
                },
-              {'name': 'NODE_1_length_64822_cov_8.54567',
-               'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.54567',
-               'md5': '8a67351c7d6416039c6f613c31b10764'
-               },
-              {'name': 'NODE_6_length_251_cov_2.37245',
-               'length': 251,
-               'id': 'NODE_6_length_251_cov_2.37245',
-               'md5': '62dcce093b62d04f61ca943bb6fa66a2'
-               },
-              {'name': 'NODE_4_length_264_cov_2.01914',
-               'length': 264,
-               'id': 'NODE_4_length_264_cov_2.01914',
-               'md5': '80c3c2be067ed6a3264b95f0d635e731'
-               },
-              {'name': 'NODE_3_length_278_cov_2.57848',
-               'length': 278,
-               'id': 'NODE_3_length_278_cov_2.57848',
-               'md5': 'a23d8e7ec68a37a7e0e537ca0d2fce33'
-               },
-              {'name': 'NODE_2_length_62607_cov_8.06011',
-               'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06011',
-               'md5': 'e99fade8814bdb861532f493e5deddbd'
-               }
-              ],
-             'md5': 'a1bfe0a6d53afb2f0a8c186d4265703a',
-             'fasta_md5': '6767ace854160b5cc76fba4f3aa7a05a'
-             }, contig_count=6, dna_source='None')
+              {'name': 'NODE_685_length_338_cov_1.58238',
+               'length': 338,
+               'id': 'NODE_685_length_338_cov_1.58238',
+               'md5': '3aa0f771c4d2b916d810c5172ba914ae'
+               }],
+             'md5': 'bb0803169c99b171b9f1b997228f278b',
+             'fasta_md5': 'd4b3a1fc90bb822de28c6caa96e1b712'
+             }, contig_count=1452, dna_source='None')
+
+    def orig_test_multiple_bad(self):
+        # Testing where input reads have different phred types (33 and 64)
+        self.run_error(['intbasic64', 'frbasic'],
+                       ('The set of Reads objects passed in have reads that have different phred ' +
+                        'type scores. SPAdes does not support assemblies of reads with different ' +
+                        'phred type scores.\nThe following read objects have ' +
+                        'phred 33 scores : {}/frbasic.\n' +
+                        'The following read objects have phred 64 scores : ' +
+                        '{}/intbasic64').format(self.getWsName(), self.getWsName()),
+                       exception=ValueError)
 
     def test_single_cell(self):
 
         self.run_success(
             ['frbasic'], 'single_cell_out',
             {'contigs':
-             [{'name': 'NODE_1_length_64822_cov_8.54567',
+             [{'name': 'NODE_1_length_64822_cov_8.99582',
                'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.54567',
+               'id': 'NODE_1_length_64822_cov_8.99582',
                'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'name': 'NODE_2_length_62607_cov_8.06011',
-               'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06011',
-               'md5': 'e99fade8814bdb861532f493e5deddbd'
+              {'name': 'NODE_2_length_62656_cov_8.64322',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_8.64322',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
                }],
-             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
-             'fasta_md5': 'eca1d944be8dc81c7e1b78d874628aea'
+             'md5': '08d0b92ce7c0a5e346b3077436edaa42',
+             'fasta_md5': '03a8b6fc00638dd176998e25e4a208b6'
              }, dna_source='single_cell')
 
     def test_metagenome(self):
@@ -431,36 +425,36 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['meta'], 'metagenome_out',
             {'contigs':
-             [{'name': 'NODE_1_length_64819_cov_8.54977',
-               'length': 64819,
-               'id': 'NODE_1_length_64819_cov_8.54977',
-               'md5': '319f720b2de1af6dc7f32a98c1d3048e'
+             [{'name': 'NODE_1_length_64822_cov_8.99795',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.99795',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'name': 'NODE_2_length_62607_cov_8.06601',
-               'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06601',
-               'md5': '878ed3dfad7ccecd5bdfc8f5c2db00c4'
+              {'name': 'NODE_2_length_62656_cov_8.64555',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_8.64555',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
                }],
-             'md5': '5951328d2b25b8d9f6248a9b0aa3c49a',
-             'fasta_md5': '42fb9bfec317e2277218a5cc2804c223'
+             'md5': '08d0b92ce7c0a5e346b3077436edaa42',
+             'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
              }, dna_source='metagenome')
 
-    def test_no_workspace_param(self):
+    def orig_test_no_workspace_param(self):
 
         self.run_error(
             ['foo'], 'workspace_name parameter is required', wsname=None)
 
-    def test_no_workspace_name(self):
+    def orig_test_no_workspace_name(self):
 
         self.run_error(
             ['foo'], 'workspace_name parameter is required', wsname='None')
 
-    def test_bad_workspace_name(self):
+    def orig_test_bad_workspace_name(self):
 
         self.run_error(['foo'], 'Invalid workspace name bad|name',
                        wsname='bad|name')
 
-    def test_non_extant_workspace(self):
+    def orig_test_non_extant_workspace(self):
 
         self.run_error(
             ['foo'], 'Object foo cannot be accessed: No workspace with name ' +
@@ -468,19 +462,19 @@ class gaprice_SPAdesTest(unittest.TestCase):
             wsname='Ireallyhopethisworkspacedoesntexistorthistestwillfail',
             exception=WorkspaceError)
 
-    def test_bad_lib_name(self):
+    def orig_test_bad_lib_name(self):
 
         self.run_error(['bad&name'], 'Invalid workspace object name bad&name')
 
-    def test_no_libs_param(self):
+    def orig_test_no_libs_param(self):
 
         self.run_error(None, 'read_libraries parameter is required')
 
-    def test_no_libs_list(self):
+    def orig_test_no_libs_list(self):
 
         self.run_error('foo', 'read_libraries must be a list')
 
-    def test_non_extant_lib(self):
+    def orig_test_non_extant_lib(self):
 
         self.run_error(
             ['foo'],
@@ -488,29 +482,29 @@ class gaprice_SPAdesTest(unittest.TestCase):
              '(name {})').format(str(self.wsinfo[0]), self.wsinfo[1]),
             exception=WorkspaceError)
 
-    def test_no_libs(self):
+    def orig_test_no_libs(self):
 
         self.run_error([], 'At least one reads library must be provided')
 
-    def test_no_output_param(self):
+    def orig_test_no_output_param(self):
 
         self.run_error(
             ['foo'], 'output_contigset_name parameter is required',
             output_name=None)
 
-    def test_no_output_name(self):
+    def orig_test_no_output_name(self):
 
         self.run_error(
             ['foo'], 'output_contigset_name parameter is required',
             output_name='')
 
-    def test_bad_output_name(self):
+    def orig_test_bad_output_name(self):
 
         self.run_error(
             ['frbasic'], 'Invalid workspace object name bad*name',
             output_name='bad*name')
 
-    def test_inconsistent_metagenomics_1(self):
+    def orig_test_inconsistent_metagenomics_1(self):
 
         self.run_error(
             ['intbasic'],
@@ -520,7 +514,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             'assembly method was specified as metagenomic',
             dna_source='metagenome')
 
-    def test_inconsistent_metagenomics_2(self):
+    def orig_test_inconsistent_metagenomics_2(self):
 
         self.run_error(
             ['meta'],
@@ -529,7 +523,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             ') is marked as containing metagenomic data but the assembly ' +
             'method was not specified as metagenomic')
 
-    def test_outward_reads(self):
+    def orig_test_outward_reads(self):
 
         self.run_error(
             ['reads_out'],
@@ -538,7 +532,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             ') is marked as having outward oriented reads, which SPAdes ' +
             'does not support.')
 
-    def test_bad_module(self):
+    def orig_test_bad_module(self):
 
         self.run_error(['empty'],
                        'Invalid type for object ' +
@@ -552,7 +546,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                        'single_end is a single end read library, which is ' +
                        'not currently supported.')
 
-    def test_bad_shock_filename(self):
+    def orig_test_bad_shock_filename(self):
 
         self.run_error(
             ['bad_shk_name'],
@@ -562,7 +556,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                           self.staged['bad_shk_name']['fwd_node_id']),
             exception=ServerError)
 
-    def test_bad_handle_filename(self):
+    def orig_test_bad_handle_filename(self):
 
         self.run_error(
             ['bad_file_name'],
@@ -572,7 +566,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                           self.staged['bad_file_name']['fwd_node_id']),
             exception=ServerError)
 
-    def test_bad_file_type(self):
+    def orig_test_bad_file_type(self):
 
         self.run_error(
             ['bad_file_type'],
@@ -582,7 +576,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                           self.staged['bad_file_type']['fwd_node_id']),
             exception=ServerError)
 
-    def test_bad_shock_node(self):
+    def orig_test_bad_shock_node(self):
 
         self.run_error(['bad_node'],
                        ('Handle error for object {}: The Handle Manager ' +
@@ -593,7 +587,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                             self.staged['bad_node']['fwd_handle_id']),
                        exception=ServerError)
 
-    def test_provenance(self):
+    def orig_test_provenance(self):
 
         frbasic = 'frbasic'
         ref = self.make_ref(self.staged[frbasic]['info'])
