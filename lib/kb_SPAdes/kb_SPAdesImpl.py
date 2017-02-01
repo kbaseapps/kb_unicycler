@@ -459,9 +459,9 @@ A coverage cutoff is not specified.
         
         reftoname = {}
         for wsi, oid in zip(ws_info, obj_ids):
-            ref = self.make_ref(wsi)
+            ref = oid['ref']
             reads_params.append(ref)
-            obj_name = oid['ref']
+            obj_name = wsi[1]
             reftoname[ref] = obj_name
 
         readcli = ReadsUtils(self.callbackURL, token=ctx['token'], service_ver='dev')
