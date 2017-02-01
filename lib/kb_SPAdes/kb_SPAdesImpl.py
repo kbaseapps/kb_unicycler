@@ -20,6 +20,7 @@ from ReadsUtils.ReadsUtilsClient import ReadsUtils  # @IgnorePep8
 from ReadsUtils.baseclient import ServerError
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from KBaseReport.KBaseReportClient import KBaseReport
+from kb_ea_utils.kb_ea_utilsClient import kb_ea_utils
 import time
 
 
@@ -143,7 +144,7 @@ A coverage cutoff is not specified.
             yaml.safe_dump(yml, yml_file)
         return yml_path
 
-    def exec_spades(self, dna_source, reads_data):
+    def exec_spades(self, dna_source, reads_data, phred_type):
         threads = psutil.cpu_count() * self.THREADS_PER_CORE
         mem = (psutil.virtual_memory().available / self.GB -
                self.MEMORY_OFFSET_GB)
@@ -170,10 +171,12 @@ A coverage cutoff is not specified.
             cmd += ['--meta']
         else:
             cmd += ['--careful']
+        cmd += ['--phred-offset', phred_type]
 #        print("LENGTH OF READSDATA IN EXEC: " + str(len(reads_data)))
-#        print("SPADES YAML: " + str(self.generate_spades_yaml(reads_data)))
+        print("SPADES YAML: " + str(self.generate_spades_yaml(reads_data)))
         cmd += ['--dataset', self.generate_spades_yaml(reads_data)]
         self.log('Running SPAdes command line:')
+#        print("SPADES CMD:" + str(cmd))
         self.log(cmd)
 
         if self.DISABLE_SPADES_OUTPUT:
@@ -267,17 +270,61 @@ A coverage cutoff is not specified.
         return str(object_info[6]) + '/' + str(object_info[0]) + \
             '/' + str(object_info[4])
 
+    def determine_unknown_phreds(self, reads,
+                                 phred64_reads,
+                                 phred33_reads,
+                                 unknown_phred_reads,
+                                 reftoname):
+        print("IN UNKNOWN CHECKING")
+        eautils = kb_ea_utils(self.callbackURL)
+        for ref in unknown_phred_reads:
+            rds = reads[ref]
+            obj_name = reftoname[ref]
+            files_to_check = []
+            f = rds['files']
+            if f['type'] == 'interleaved':
+                files_to_check.append(f['fwd'])
+            elif f['type'] == 'paired':
+                files_to_check.append(f['fwd'])
+                files_to_check.append(f['rev'])
+            print("FILES TO CHECK:" + str(files_to_check))
+            for file_path in files_to_check:
+                ea_stats_dict = eautils.calculate_fastq_stats({'read_library_path': file_path})
+                print("EA UTILS STATS : " + str(ea_stats_dict))
+                if ea_stats_dict['phred_type'] == '33':
+                    phred33_reads.add(obj_name)
+                elif ea_stats_dict['phred_type'] == '64':
+                    phred64_reads.add(obj_name)
+                else: 
+                    raise ValueError(('Reads object {} ({}) phred type is not of the ' +
+                                      'expected value of 33 or 64. It had a phred type of' +
+                                      '{}').format(obj_name, rds, ea_stats_dict['phred_type']))
+        return phred64_reads, phred33_reads
+
     def check_reads(self, params, reads, reftoname):
+
+        phred64_reads, phred33_reads, unknown_phred_reads = (set() for i in range(3))
 
         for ref in reads:
             rds = reads[ref]
             obj_name = reftoname[ref]
             obj_ref = rds['ref']
+            if rds['phred_type'] == 33:
+                phred33_reads.add(obj_name)
+            elif rds['phred_type'] == 64:
+                phred64_reads.add(obj_name)
+            else:
+                unknown_phred_reads.add(ref)
+
             if rds['read_orientation_outward'] == self.TRUE:
                 raise ValueError(
                     ('Reads object {} ({}) is marked as having outward ' +
                      'oriented reads, which SPAdes does not ' +
                      'support.').format(obj_name, obj_ref))
+
+            if rds['files']['type'] == 'single':
+                raise ValueError(('{} is a single end read library, which ' +
+                                  'is not currently supported.').format(obj_name))
 
             # ideally types would be firm enough that we could rely on the
             # metagenomic boolean. However KBaseAssembly doesn't have the field
@@ -297,6 +344,26 @@ A coverage cutoff is not specified.
                     ('Reads object {} ({}) is marked as containing ' +
                      'metagenomic data but the assembly method was not ' +
                      'specified as metagenomic').format(obj_name, obj_ref))
+
+        # IF UNKNOWN TYPE NEED TO DETERMINE PHRED TYPE USING EAUTILS
+        if len(unknown_phred_reads) > 0:
+            phred64_reads, phred33_reads = \
+                self.determine_unknown_phreds(reads, phred64_reads, phred33_reads,
+                                              unknown_phred_reads, reftoname)
+        # IF THERE ARE READS OF BOTH PHRED 33 and 64, throw an error
+        if (len(phred64_reads) > 0) and (len(phred33_reads) > 0):
+            raise ValueError(
+                    ('The set of Reads objects passed in have reads that have different ' +
+                     'phred type scores. SPAdes does not support assemblies of ' +
+                     'reads with different phred type scores.\nThe following read objects ' +
+                     'have phred 33 scores : {}.\nThe following read objects have phred 64 ' +
+                     'scores : {}').format(", ".join(phred33_reads), ", ".join(phred64_reads)))
+        elif len(phred64_reads) > 0:
+            return '64'
+        elif len(phred33_reads) > 0:
+            return '33'
+        else:
+            raise ValueError('The phred type of the read(s) was unable to be determined')
 
     def process_params(self, params):
         if (self.PARAM_IN_WS not in params or
@@ -421,15 +488,12 @@ A coverage cutoff is not specified.
 
         self.log('Got reads data from converter:\n' + pformat(reads))
 
-        self.check_reads(params, reads, reftoname)
+        phred_type = self.check_reads(params, reads, reftoname)
 
         reads_data = []
-        for ref in sorted(reads):
+        for ref in reads:
             reads_name = reftoname[ref]
             f = reads[ref]['files']
-            if f['type'] == 'single':
-                raise ValueError(('{} is a single end read library, which ' +
-                                  'is not currently supported.').format(reads_name))
             if f['type'] == 'interleaved':
                 reads_data.append({'fwd_file': f['fwd']})
             elif f['type'] == 'paired':
@@ -437,7 +501,7 @@ A coverage cutoff is not specified.
             else:
                 raise ValueError('Something is very wrong with read lib' + reads_name)
         spades_out = self.exec_spades(params[self.PARAM_IN_DNA_SOURCE],
-                                      reads_data)
+                                      reads_data, phred_type)
         self.log('SPAdes output dir: ' + spades_out)
 
         # parse the output and save back to KBase

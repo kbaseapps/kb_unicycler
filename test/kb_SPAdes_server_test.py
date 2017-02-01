@@ -261,8 +261,12 @@ class gaprice_SPAdesTest(unittest.TestCase):
         int_reads = {'file': 'data/interleaved.fq',
                      'name': '',
                      'type': ''}
+        int64_reads = {'file': 'data/interleaved64.fq',
+                       'name': '',
+                       'type': ''}
         cls.upload_assembly('frbasic', {}, fwd_reads, rev_reads=rev_reads)
         cls.upload_assembly('intbasic', {'single_genome': 1}, int_reads)
+        cls.upload_assembly('intbasic64', {'single_genome': 1}, int64_reads)
         cls.upload_assembly('meta', {'single_genome': 0}, fwd_reads,
                             rev_reads=rev_reads)
         cls.upload_assembly('reads_out', {'read_orientation_outward': 1},
@@ -297,18 +301,18 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['frbasic'], 'frbasic_out',
             {'contigs':
-             [{'name': 'NODE_1_length_64822_cov_8.54567',
+             [{'name': 'NODE_1_length_64822_cov_8.99582',
                'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.54567',
+               'id': 'NODE_1_length_64822_cov_8.99582',
                'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'name': 'NODE_2_length_62607_cov_8.06011',
-               'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06011',
-               'md5': 'e99fade8814bdb861532f493e5deddbd'
+              {'name': 'NODE_2_length_62656_cov_8.64322',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_8.64322',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
                }],
-             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
-             'fasta_md5': 'eca1d944be8dc81c7e1b78d874628aea'
+             'md5': '08d0b92ce7c0a5e346b3077436edaa42',
+             'fasta_md5': '03a8b6fc00638dd176998e25e4a208b6'
              })
 
     def test_fr_pair_kbassy(self):
@@ -316,18 +320,18 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['frbasic_kbassy'], 'frbasic_kbassy_out',
             {'contigs':
-             [{'name': 'NODE_1_length_64822_cov_8.54567',
+             [{'name': 'NODE_1_length_64822_cov_8.99582',
                'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.54567',
+               'id': 'NODE_1_length_64822_cov_8.99582',
                'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'name': 'NODE_2_length_62607_cov_8.06011',
-               'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06011',
-               'md5': 'e99fade8814bdb861532f493e5deddbd'
+              {'name': 'NODE_2_length_62656_cov_8.64322',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_8.64322',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
                }],
-             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
-             'fasta_md5': 'eca1d944be8dc81c7e1b78d874628aea'
+             'md5': '08d0b92ce7c0a5e346b3077436edaa42',
+             'fasta_md5': '03a8b6fc00638dd176998e25e4a208b6'
              })
 
     def test_interlaced_kbfile(self):
@@ -372,58 +376,48 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['intbasic_kbassy', 'frbasic'], 'multiple_out',
             {'contigs':
-             [{'name': 'NODE_5_length_253_cov_1.14646',
-               'length': 253,
-               'id': 'NODE_5_length_253_cov_1.14646',
-               'md5': 'cff75ad9223015a6e144a99a54ead5aa'
+             [{'name': 'NODE_1391_length_233_cov_1.40385',
+               'length': 233,
+               'id': 'NODE_1391_length_233_cov_1.40385',
+               'md5': '7fc057f5b65b026eb3c4956c4b14bd70'
                },
-              {'name': 'NODE_1_length_64822_cov_8.54567',
-               'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.54567',
-               'md5': '8a67351c7d6416039c6f613c31b10764'
-               },
-              {'name': 'NODE_6_length_251_cov_2.37245',
-               'length': 251,
-               'id': 'NODE_6_length_251_cov_2.37245',
-               'md5': '62dcce093b62d04f61ca943bb6fa66a2'
-               },
-              {'name': 'NODE_4_length_264_cov_2.01914',
-               'length': 264,
-               'id': 'NODE_4_length_264_cov_2.01914',
-               'md5': '80c3c2be067ed6a3264b95f0d635e731'
-               },
-              {'name': 'NODE_3_length_278_cov_2.57848',
-               'length': 278,
-               'id': 'NODE_3_length_278_cov_2.57848',
-               'md5': 'a23d8e7ec68a37a7e0e537ca0d2fce33'
-               },
-              {'name': 'NODE_2_length_62607_cov_8.06011',
-               'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06011',
-               'md5': 'e99fade8814bdb861532f493e5deddbd'
-               }
-              ],
-             'md5': 'a1bfe0a6d53afb2f0a8c186d4265703a',
-             'fasta_md5': '6767ace854160b5cc76fba4f3aa7a05a'
-             }, contig_count=6, dna_source='None')
+              {'name': 'NODE_685_length_338_cov_1.58238',
+               'length': 338,
+               'id': 'NODE_685_length_338_cov_1.58238',
+               'md5': '3aa0f771c4d2b916d810c5172ba914ae'
+               }],
+             'md5': 'bb0803169c99b171b9f1b997228f278b',
+             'fasta_md5': 'd4b3a1fc90bb822de28c6caa96e1b712'
+             }, contig_count=1452, dna_source='None')
+
+    def test_multiple_bad(self):
+        # Testing where input reads have different phred types (33 and 64)
+        self.run_error(['intbasic64', 'frbasic'],
+                       ('The set of Reads objects passed in have reads that have different phred ' +
+                        'type scores. SPAdes does not support assemblies of reads with different ' +
+                        'phred type scores.\nThe following read objects have ' +
+                        'phred 33 scores : {}/frbasic.\n' +
+                        'The following read objects have phred 64 scores : ' +
+                        '{}/intbasic64').format(self.getWsName(), self.getWsName()),
+                       exception=ValueError)
 
     def test_single_cell(self):
 
         self.run_success(
             ['frbasic'], 'single_cell_out',
             {'contigs':
-             [{'name': 'NODE_1_length_64822_cov_8.54567',
+             [{'name': 'NODE_1_length_64822_cov_8.99582',
                'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.54567',
+               'id': 'NODE_1_length_64822_cov_8.99582',
                'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'name': 'NODE_2_length_62607_cov_8.06011',
-               'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06011',
-               'md5': 'e99fade8814bdb861532f493e5deddbd'
+              {'name': 'NODE_2_length_62656_cov_8.64322',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_8.64322',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
                }],
-             'md5': '09a27dd5107ad23ee2b7695aee8c09d0',
-             'fasta_md5': 'eca1d944be8dc81c7e1b78d874628aea'
+             'md5': '08d0b92ce7c0a5e346b3077436edaa42',
+             'fasta_md5': '03a8b6fc00638dd176998e25e4a208b6'
              }, dna_source='single_cell')
 
     def test_metagenome(self):
@@ -431,18 +425,18 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['meta'], 'metagenome_out',
             {'contigs':
-             [{'name': 'NODE_1_length_64819_cov_8.54977',
-               'length': 64819,
-               'id': 'NODE_1_length_64819_cov_8.54977',
-               'md5': '319f720b2de1af6dc7f32a98c1d3048e'
+             [{'name': 'NODE_1_length_64822_cov_8.99795',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.99795',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'name': 'NODE_2_length_62607_cov_8.06601',
-               'length': 62607,
-               'id': 'NODE_2_length_62607_cov_8.06601',
-               'md5': '878ed3dfad7ccecd5bdfc8f5c2db00c4'
+              {'name': 'NODE_2_length_62656_cov_8.64555',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_8.64555',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
                }],
-             'md5': '5951328d2b25b8d9f6248a9b0aa3c49a',
-             'fasta_md5': '42fb9bfec317e2277218a5cc2804c223'
+             'md5': '08d0b92ce7c0a5e346b3077436edaa42',
+             'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
              }, dna_source='metagenome')
 
     def test_no_workspace_param(self):
