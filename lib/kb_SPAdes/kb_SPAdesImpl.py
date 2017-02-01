@@ -381,11 +381,6 @@ A coverage cutoff is not specified.
         #for l in params[self.PARAM_IN_LIB]:
         #    if self.INVALID_WS_OBJ_NAME_RE.search(l):
         #        raise ValueError('Invalid workspace object name ' + l)
-        ws_name = params[self.PARAM_IN_WS]
-        lib_list = params[self.PARAM_IN_LIB]
-        for pos,l in enumerate(lib_list):
-            if not '/' in l:
-                lib_list[pos] = ws_name + '/' + l
         if (self.PARAM_IN_CS_NAME not in params or
                 not params[self.PARAM_IN_CS_NAME]):
             raise ValueError(self.PARAM_IN_CS_NAME + ' parameter is required')
@@ -457,10 +452,11 @@ A coverage cutoff is not specified.
         wsname = params[self.PARAM_IN_WS]
         obj_ids = []
         for r in params[self.PARAM_IN_LIB]:
-            obj_ids.append({'ref': wsname + '/' + r})
+            obj_ids.append({'ref': r if '/' in r else (wsname + '/' + r)})
         ws = workspaceService(self.workspaceURL, token=token)
         ws_info = ws.get_object_info_new({'objects': obj_ids})
         reads_params = []
+        
         reftoname = {}
         for wsi, oid in zip(ws_info, obj_ids):
             ref = self.make_ref(wsi)
