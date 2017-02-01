@@ -378,9 +378,14 @@ A coverage cutoff is not specified.
             raise ValueError(self.PARAM_IN_LIB + ' must be a list')
         if not params[self.PARAM_IN_LIB]:
             raise ValueError('At least one reads library must be provided')
-        for l in params[self.PARAM_IN_LIB]:
-            if self.INVALID_WS_OBJ_NAME_RE.search(l):
-                raise ValueError('Invalid workspace object name ' + l)
+        #for l in params[self.PARAM_IN_LIB]:
+        #    if self.INVALID_WS_OBJ_NAME_RE.search(l):
+        #        raise ValueError('Invalid workspace object name ' + l)
+        ws_name = params[self.PARAM_IN_WS]
+        lib_list = params[self.PARAM_IN_LIB]
+        for pos,l in enumerate(lib_list):
+            if not '/' in l:
+                lib_list[pos] = ws_name + '/' + l
         if (self.PARAM_IN_CS_NAME not in params or
                 not params[self.PARAM_IN_CS_NAME]):
             raise ValueError(self.PARAM_IN_CS_NAME + ' parameter is required')
