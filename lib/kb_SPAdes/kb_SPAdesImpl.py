@@ -295,6 +295,10 @@ A coverage cutoff is not specified.
                     phred33_reads.add(obj_name)
                 elif ea_stats_dict['phred_type'] == '64':
                     phred64_reads.add(obj_name)
+                else: 
+                    raise ValueError(('Reads object {} ({}) phred type is not of the ' +
+                                      'expected value of 33 or 64. It had a phred type of' +
+                                      '{}').format(obj_name, rds, ea_stats_dict['phred_type']))
         return phred64_reads, phred33_reads
 
     def check_reads(self, params, reads, reftoname):
