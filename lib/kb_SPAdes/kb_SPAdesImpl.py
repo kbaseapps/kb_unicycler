@@ -456,13 +456,13 @@ A coverage cutoff is not specified.
         ws = workspaceService(self.workspaceURL, token=token)
         ws_info = ws.get_object_info_new({'objects': obj_ids})
         reads_params = []
-        
+
         reftoname = {}
         for wsi, oid in zip(ws_info, obj_ids):
             ref = oid['ref']
             reads_params.append(ref)
             obj_name = wsi[1]
-            reftoname[ref] = obj_name
+            reftoname[ref] = wsi[7] + '/' + obj_name
 
         readcli = ReadsUtils(self.callbackURL, token=ctx['token'], service_ver='dev')
 
