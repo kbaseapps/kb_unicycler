@@ -698,7 +698,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                          report['data']['objects_created'][0]['description'])
         self.assertIn('Assembled into ' + str(contig_count) +
                       ' contigs', report['data']['text_message'])
-        self.assertEqual(1, len(report['provenance']))
+        self.assertEqual(2, len(report['provenance']))
         # PERHAPS ADD THESE TESTS BACK IN THE FUTURE, BUT AssemblyUtils and this
         # would need to pass in the extra provenance information
 #        self.assertEqual(
