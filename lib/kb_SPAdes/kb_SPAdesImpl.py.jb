@@ -270,45 +270,19 @@ A coverage cutoff is not specified.
         return str(object_info[6]) + '/' + str(object_info[0]) + \
             '/' + str(object_info[4])
 
-    def determine_unknown_phreds(self, reads,
-                                 phred64_reads,
-                                 phred33_reads,
-                                 unknown_phred_reads,
-                                 reftoname):
-        print("IN UNKNOWN CHECKING")
-        eautils = kb_ea_utils(self.callbackURL)
-        for ref in unknown_phred_reads:
-            rds = reads[ref]
-            obj_name = reftoname[ref]
-            files_to_check = []
-            f = rds['files']
-            if f['type'] == 'interleaved':
-                files_to_check.append(f['fwd'])
-            elif f['type'] == 'paired':
-                files_to_check.append(f['fwd'])
-                files_to_check.append(f['rev'])
-            # print("FILES TO CHECK:" + str(files_to_check))
-            for file_path in files_to_check:
-                ea_stats_dict = eautils.calculate_fastq_stats({'read_library_path': file_path})
-                # print("EA UTILS STATS : " + str(ea_stats_dict))
-                if ea_stats_dict['phred_type'] == '33':
-                    phred33_reads.add(obj_name)
-                elif ea_stats_dict['phred_type'] == '64':
-                    phred64_reads.add(obj_name)
-                else: 
-                    raise ValueError(('Reads object {} ({}) phred type is not of the ' +
-                                      'expected value of 33 or 64. It had a phred type of' +
-                                      '{}').format(obj_name, rds, ea_stats_dict['phred_type']))
-        return phred64_reads, phred33_reads
-
     def check_reads(self, params, reads, reftoname):
 
-        phred64_reads, phred33_reads, unknown_phred_reads = (set() for i in range(3))
+        phred64_reads = set()
+        phred33_reads = set()
+        unknown_phred_reads = set()
+
+        print("BEFORE READ CHECK LOOPING")
 
         for ref in reads:
             rds = reads[ref]
             obj_name = reftoname[ref]
             obj_ref = rds['ref']
+
             if rds['phred_type'] == 33:
                 phred33_reads.add(obj_name)
             elif rds['phred_type'] == 64:
@@ -316,15 +290,15 @@ A coverage cutoff is not specified.
             else:
                 unknown_phred_reads.add(ref)
 
+            print("READ PHRED33:"+str(len(phred33_reads)))
+            print("READ PHRED64:"+str(len(phred64_reads)))
+            print("READ UNKNOWN:"+str(len(unknown_phred_reads)))
+
             if rds['read_orientation_outward'] == self.TRUE:
                 raise ValueError(
                     ('Reads object {} ({}) is marked as having outward ' +
                      'oriented reads, which SPAdes does not ' +
                      'support.').format(obj_name, obj_ref))
-
-            if rds['files']['type'] == 'single':
-                raise ValueError(('{} is a single end read library, which ' +
-                                  'is not currently supported.').format(obj_name))
 
             # ideally types would be firm enough that we could rely on the
             # metagenomic boolean. However KBaseAssembly doesn't have the field
@@ -345,11 +319,39 @@ A coverage cutoff is not specified.
                      'metagenomic data but the assembly method was not ' +
                      'specified as metagenomic').format(obj_name, obj_ref))
 
+        print("BEFORE CHECKING")
+        # CHECK TO SEE IF ALL READS CONSISTENT IN PHRED Type
         # IF UNKNOWN TYPE NEED TO DETERMINE PHRED TYPE USING EAUTILS
         if len(unknown_phred_reads) > 0:
-            phred64_reads, phred33_reads = \
-                self.determine_unknown_phreds(reads, phred64_reads, phred33_reads,
-                                              unknown_phred_reads, reftoname)
+            print("IN UNKNOWN CHECKING")
+            eautils = kb_ea_utils(self.callbackURL)
+            for ref in unknown_phred_reads:
+                rds = reads[ref]
+                obj_name = reftoname[ref]
+                files_to_check = []
+                f = rds['files']
+                if f['type'] == 'interleaved':
+                    files_to_check.append(f['fwd'])
+                elif f['type'] == 'paired':
+                    files_to_check.append(f['fwd'])
+                    files_to_check.append(f['rev'])
+                print("FILES TO CHECK:" + str(files_to_check))
+                for file_path in files_to_check:
+                    ea_stats_dict = eautils.calculate_fastq_stats({'read_library_path': file_path})
+                    print("EA UTILS STATS : " + str(ea_stats_dict))
+                    if ea_stats_dict['phred_type'] == '33':
+                        phred33_reads.add(obj_name)
+                        print("IN 33 ADD")
+                    elif ea_stats_dict['phred_type'] == '64':
+                        phred64_reads.add(obj_name)
+                        print("IN 64 ADD")
+                    print("FILE {} PHRED {}".format(file_path, ea_stats_dict['phred_type']))
+
+        print("ROUND2:")
+        print("READ PHRED33:"+str(len(phred33_reads)))
+        print("READ PHRED64:"+str(len(phred64_reads)))
+        print("READ UNKNOWN:"+str(len(unknown_phred_reads)))
+
         # IF THERE ARE READS OF BOTH PHRED 33 and 64, throw an error
         if (len(phred64_reads) > 0) and (len(phred33_reads) > 0):
             raise ValueError(
@@ -357,13 +359,12 @@ A coverage cutoff is not specified.
                      'phred type scores. SPAdes does not support assemblies of ' +
                      'reads with different phred type scores.\nThe following read objects ' +
                      'have phred 33 scores : {}.\nThe following read objects have phred 64 ' +
-                     'scores : {}').format(", ".join(phred33_reads), ", ".join(phred64_reads)))
+                     'scores : {}').format(", ".join(phred33_reads),", ".join(phred64_reads)))
         elif len(phred64_reads) > 0:
             return '64'
         elif len(phred33_reads) > 0:
             return '33'
-        else:
-            raise ValueError('The phred type of the read(s) was unable to be determined')
+        print("AFTER CHECKING")
 
     def process_params(self, params):
         if (self.PARAM_IN_WS not in params or
@@ -378,9 +379,9 @@ A coverage cutoff is not specified.
             raise ValueError(self.PARAM_IN_LIB + ' must be a list')
         if not params[self.PARAM_IN_LIB]:
             raise ValueError('At least one reads library must be provided')
-        # for l in params[self.PARAM_IN_LIB]:
-        #    if self.INVALID_WS_OBJ_NAME_RE.search(l):
-        #        raise ValueError('Invalid workspace object name ' + l)
+        for l in params[self.PARAM_IN_LIB]:
+            if self.INVALID_WS_OBJ_NAME_RE.search(l):
+                raise ValueError('Invalid workspace object name ' + l)
         if (self.PARAM_IN_CS_NAME not in params or
                 not params[self.PARAM_IN_CS_NAME]):
             raise ValueError(self.PARAM_IN_CS_NAME + ' parameter is required')
@@ -452,16 +453,15 @@ A coverage cutoff is not specified.
         wsname = params[self.PARAM_IN_WS]
         obj_ids = []
         for r in params[self.PARAM_IN_LIB]:
-            obj_ids.append({'ref': r if '/' in r else (wsname + '/' + r)})
+            obj_ids.append({'ref': wsname + '/' + r})
         ws = workspaceService(self.workspaceURL, token=token)
         ws_info = ws.get_object_info_new({'objects': obj_ids})
         reads_params = []
-        
         reftoname = {}
         for wsi, oid in zip(ws_info, obj_ids):
-            ref = oid['ref']
+            ref = self.make_ref(wsi)
             reads_params.append(ref)
-            obj_name = wsi[1]
+            obj_name = oid['ref']
             reftoname[ref] = obj_name
 
         readcli = ReadsUtils(self.callbackURL, token=ctx['token'], service_ver='dev')
@@ -495,6 +495,9 @@ A coverage cutoff is not specified.
         for ref in reads:
             reads_name = reftoname[ref]
             f = reads[ref]['files']
+            if f['type'] == 'single':
+                raise ValueError(('{} is a single end read library, which ' +
+                                  'is not currently supported.').format(reads_name))
             if f['type'] == 'interleaved':
                 reads_data.append({'fwd_file': f['fwd']})
             elif f['type'] == 'paired':
