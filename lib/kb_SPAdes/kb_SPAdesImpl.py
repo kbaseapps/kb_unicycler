@@ -68,7 +68,7 @@ A coverage cutoff is not specified.
     PARAM_IN_SINGLE_CELL = 'single_cell'
     PARAM_IN_METAGENOME = 'metagenome'
 
-    INVALID_WS_OBJ_NAME_RE = re.compile('PARAM_IN_LIB')
+    INVALID_WS_OBJ_NAME_RE = re.compile('[^\\w\\|._-]')
     INVALID_WS_NAME_RE = re.compile('[^\\w:._-]')
 
     THREADS_PER_CORE = 3
