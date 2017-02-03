@@ -4,7 +4,7 @@
 from __future__ import print_function
 import os
 import re
-# import uuid
+import uuid
 from pprint import pformat
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 import requests
@@ -20,6 +20,9 @@ from ReadsUtils.ReadsUtilsClient import ReadsUtils  # @IgnorePep8
 from ReadsUtils.baseclient import ServerError
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from KBaseReport.KBaseReportClient import KBaseReport
+from KBaseReport.baseclient import ServerError as _RepError
+from kb_quast.kb_quastClient import kb_quast
+from kb_quast.baseclient import ServerError as QUASTError
 from kb_ea_utils.kb_ea_utilsClient import kb_ea_utils
 import time
 
@@ -254,14 +257,31 @@ A coverage cutoff is not specified.
         for c in range(bins):
             report += '   ' + str(counts[c]) + '\t--\t' + str(edges[c]) +\
                 ' to ' + str(edges[c + 1]) + ' bp\n'
-        report_cl = KBaseReport(self.callbackURL, service_ver='dev')
-        reportObj = {
-            'objects_created': [{'ref': assembly_ref,
-                                 'description': 'Assembled contigs'}],
-            'text_message': report
-        }
-        report_info = report_cl.create({'report': reportObj,
-                                        'workspace_name': wsname})
+#        report_cl = KBaseReport(self.callbackURL, service_ver='dev')
+#        reportObj = {
+#            'objects_created': [{'ref': assembly_ref,
+#                                 'description': 'Assembled contigs'}],
+#            'text_message': report
+#        }
+#        report_info = report_cl.create({'report': reportObj,
+#                                        'workspace_name': wsname})
+        print('Running QUAST')
+        kbq = kb_quast(self.callbackURL)
+        quastret = kbq.run_QUAST({'files': [{'path': input_file_name,
+                                             'label': params[self.PARAM_IN_CS_NAME]}]})
+        print('Saving report')
+        kbr = KBaseReport(self.callbackURL)
+        report_info = kbr.create_extended_report(
+            {'message': report,
+             'objects_created': [{'ref': output_data_ref, 'description': 'Assembled contigs'}],
+             'direct_html_link_index': 0,
+             'html_links': [{'shock_id': quastret['shock_id'],
+                             'name': 'report.html',
+                             'label': 'QUAST report'}
+                            ],
+             'report_object_name': 'kb_megahit_report_' + str(uuid.uuid4()),
+             'workspace_name': params['workspace_name']
+            })
         reportName = report_info['name']
         reportRef = report_info['ref']
         return reportName, reportRef
@@ -378,9 +398,8 @@ A coverage cutoff is not specified.
             raise ValueError(self.PARAM_IN_LIB + ' must be a list')
         if not params[self.PARAM_IN_LIB]:
             raise ValueError('At least one reads library must be provided')
-        for l in params[self.PARAM_IN_LIB]:
-            print("PARAM_IN_LIB : " + str(l))
         # for l in params[self.PARAM_IN_LIB]:
+        #    print("PARAM_IN_LIB : " + str(l))
         #    if self.INVALID_WS_OBJ_NAME_RE.search(l):
         #        raise ValueError('Invalid workspace object name ' + l)
         if (self.PARAM_IN_CS_NAME not in params or
