@@ -273,7 +273,7 @@ A coverage cutoff is not specified.
         kbr = KBaseReport(self.callbackURL)
         report_info = kbr.create_extended_report(
             {'message': report,
-             'objects_created': [{'ref': output_data_ref, 'description': 'Assembled contigs'}],
+             'objects_created': [{'ref': assembly_ref, 'description': 'Assembled contigs'}],
              'direct_html_link_index': 0,
              'html_links': [{'shock_id': quastret['shock_id'],
                              'name': 'report.html',
