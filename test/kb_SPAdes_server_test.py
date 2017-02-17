@@ -13,6 +13,7 @@ from biokbase.workspace.client import ServerError as WorkspaceError  # @Unresolv
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from kb_SPAdes.kb_SPAdesImpl import kb_SPAdes
 from ReadsUtils.baseclient import ServerError
+from ReadsUtils.ReadsUtilsClient import ReadsUtils
 from kb_SPAdes.kb_SPAdesServer import MethodContext
 from pprint import pprint
 import shutil
@@ -53,6 +54,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         cls.wsinfo = cls.wsClient.create_workspace({'workspace': wsName})
         print('created workspace ' + cls.getWsName())
         cls.serviceImpl = kb_SPAdes(cls.cfg)
+        cls.readUtilsImpl = ReadsUtils(cls.callbackURL, token=cls.token)
         cls.staged = {}
         cls.nodes_to_delete = []
         cls.handles_to_delete = []
@@ -141,8 +143,47 @@ class gaprice_SPAdesTest(unittest.TestCase):
         return node['id'], handle_id, md5, node['file']['size']
 
     @classmethod
+    def upload_reads(cls, wsobjname, object_body, fwd_reads,
+                     rev_reads=None, single_end=False, sequencing_tech='Illumina'):
+
+        ob = dict(object_body)  # copy
+        ob['sequencing_tech'] = sequencing_tech
+        ob['wsname']= cls.getWsName()
+        ob['name']= wsobjname
+        if single_end or rev_reads:
+            ob['interleaved']= 0
+        else:
+            ob['interleaved']= 1
+        print('\n===============staging data for object ' + wsobjname +
+              '================')
+        print('uploading forward reads file ' + fwd_reads['file'])
+        fwd_id, fwd_handle_id, fwd_md5, fwd_size = \
+            cls.upload_file_to_shock_and_get_handle(fwd_reads['file'])
+
+        ob['fwd_id']= fwd_id
+        rev_id = None
+        rev_handle_id = None
+        if rev_reads:
+            print('uploading reverse reads file ' + rev_reads['file'])
+            rev_id, rev_handle_id, rev_md5, rev_size = \
+                cls.upload_file_to_shock_and_get_handle(rev_reads['file'])
+            ob['rev_id']= rev_id
+        obj_ref = cls.readUtilsImpl.upload_reads(ob)
+        objdata = cls.wsClient.get_object_info_new({
+            'objects': [{'ref': obj_ref['obj_ref']}]
+            })[0]
+        cls.staged[wsobjname] = {'info': objdata,
+                                 'ref': cls.make_ref(objdata),
+                                 'fwd_node_id': fwd_id,
+                                 'rev_node_id': rev_id,
+                                 'fwd_handle_id': fwd_handle_id,
+                                 'rev_handle_id': rev_handle_id
+                                 }
+
+    @classmethod
     def upload_assembly(cls, wsobjname, object_body, fwd_reads,
-                        rev_reads=None, kbase_assy=False, single_end=False):
+                        rev_reads=None, kbase_assy=False,
+                        single_end=False, sequencing_tech='Illumina'):
         if single_end and rev_reads:
             raise ValueError('u r supr dum')
 
@@ -161,7 +202,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                       }
 
         ob = dict(object_body)  # copy
-        ob['sequencing_tech'] = 'fake data'
+        ob['sequencing_tech'] = sequencing_tech
         if kbase_assy:
             if single_end:
                 wstype = 'KBaseAssembly.SingleEndLibrary'
@@ -217,8 +258,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
                          'name': wsobjname
                          }]
             })[0]
-        print('Saved object: ')
+        print('Saved object objdata: ')
         pprint(objdata)
+        print('Saved object ob: ')
         pprint(ob)
         cls.staged[wsobjname] = {'info': objdata,
                                  'ref': cls.make_ref(objdata),
@@ -264,17 +306,33 @@ class gaprice_SPAdesTest(unittest.TestCase):
         int64_reads = {'file': 'data/interleaved64.fq',
                        'name': '',
                        'type': ''}
-        cls.upload_assembly('frbasic', {}, fwd_reads, rev_reads=rev_reads)
-        cls.upload_assembly('intbasic', {'single_genome': 1}, int_reads)
-        cls.upload_assembly('intbasic64', {'single_genome': 1}, int64_reads)
-        cls.upload_assembly('meta', {'single_genome': 0}, fwd_reads,
+        pacbio_reads = {'file': 'data/pacbio_filtered_small.fastq.gz',
+                        'name': '',
+                        'type': ''}
+        pacbio_ccs_reads = {'file': 'data/pacbioCCS_small.fastq.gz',
+                            'name': '',
+                            'type': ''}
+        iontorrent_reads = {'file': 'data/IonTorrent_single_small.fastq',
+                            'name': '',
+                            'type': ''}
+        cls.upload_reads('frbasic', {}, fwd_reads, rev_reads=rev_reads)
+        cls.upload_reads('intbasic', {'single_genome': 1}, int_reads)
+        cls.upload_reads('intbasic64', {'single_genome': 1}, int64_reads)
+        cls.upload_reads('pacbio', {'single_genome': 1},
+                            pacbio_reads, single_end=True, sequencing_tech="PacBio CLR")
+        cls.upload_reads('pacbioccs', {'single_genome': 1},
+                            pacbio_ccs_reads, single_end=True, sequencing_tech="PacBio CCS")
+        cls.upload_reads('iontorrent', {'single_genome': 1},
+                            iontorrent_reads, single_end=True, sequencing_tech="IonTorrent")
+        cls.upload_reads('meta', {'single_genome': 0}, fwd_reads,
                             rev_reads=rev_reads)
-        cls.upload_assembly('reads_out', {'read_orientation_outward': 1},
+        cls.upload_reads('reads_out', {'read_orientation_outward': 1},
                             int_reads)
         cls.upload_assembly('frbasic_kbassy', {}, fwd_reads,
                             rev_reads=rev_reads, kbase_assy=True)
         cls.upload_assembly('intbasic_kbassy', {}, int_reads, kbase_assy=True)
-        cls.upload_assembly('single_end', {}, fwd_reads, single_end=True)
+        cls.upload_reads('single_end', {}, fwd_reads, single_end=True)
+        cls.upload_reads('single_end2', {}, rev_reads, single_end=True)
         shutil.copy2('data/small.forward.fq', 'data/small.forward.bad')
         bad_fn_reads = {'file': 'data/small.forward.bad',
                         'name': '',
@@ -389,6 +447,160 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'md5': 'bb0803169c99b171b9f1b997228f278b',
              'fasta_md5': 'd4b3a1fc90bb822de28c6caa96e1b712'
              }, contig_count=1452, dna_source='None')
+
+    def test_multiple_pacbio_illumina(self):
+        self.run_success(
+            ['intbasic_kbassy', 'pacbio'], 'pacbio_multiple_out',
+            {'contigs':
+             [{'name': 'NODE_1222_length_250_cov_1.22543',
+               'length': 250,
+               'id': 'NODE_1222_length_250_cov_1.22543',
+               'md5': '80c33530fd2943bf0699aead0d9f4691'
+               },
+              {'name': 'NODE_72_length_779_cov_1.24501',
+               'length': 779,
+               'id': 'NODE_72_length_779_cov_1.24501',
+               'md5': '48783388b66400ea43edf9e443583615'
+               }],
+             'md5': '74e61533ee3e3cf340ca6429ff0217a2',
+             'fasta_md5': '683c339c173bee18d687addd54e60641'
+             }, contig_count=1446, dna_source='None')
+
+    def test_multiple_pacbio_single(self):
+        self.run_success(
+            ['single_end', 'pacbio'], 'pacbio_single_out',
+            {'contigs':
+             [{'name': 'NODE_1_length_46307_cov_4.43576',
+               'length': 46307,
+               'id': 'NODE_1_length_46307_cov_4.43576',
+               'md5': 'fe4d97654a63c0f2f172894ae7b3ad85'
+               },
+              {'name': 'NODE_2_length_41003_cov_4.30011',
+               'length': 41003,
+               'id': 'NODE_2_length_41003_cov_4.30011',
+               'md5': 'a3bb8457f8e98f95d471d4d43653c2dd'
+               }],
+             'md5': 'cade3c3a5db42701e09c3f091edd83e6',
+             'fasta_md5': 'ad834a03295f11ab0b10308c72a89626'
+             }, contig_count=7, dna_source='None')
+
+    def test_multiple_single(self):
+        self.run_success(
+            ['single_end', 'single_end2'], 'multiple_single_out',
+            {'contigs':
+             [{'name': 'NODE_2_length_62656_cov_8.64322',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_8.64322',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
+               },
+              {'name': 'NODE_1_length_64822_cov_8.99582',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.99582',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
+               }],
+             'md5': '08d0b92ce7c0a5e346b3077436edaa42',
+             'fasta_md5': '03a8b6fc00638dd176998e25e4a208b6'
+             }, contig_count=2, dna_source='None')
+
+    def test_multi_paired_single(self):
+        self.run_success(
+            ['intbasic_kbassy','single_end'], 'multi_paired_single_out',
+            {'contigs':
+             [{'name': 'NODE_274_length_495_cov_1.22249',
+               'length': 495,
+               'id': 'NODE_274_length_495_cov_1.22249',
+               'md5': 'c393d68ecaf4cb1c4644d21960c6b72b'
+               },
+              {'name': 'NODE_49_length_928_cov_2.0517',
+               'length': 928,
+               'id': 'NODE_49_length_928_cov_2.0517',
+               'md5': 'fe82bda17020c4ac02081245ca9d3fab'
+               }],
+             'md5': '0ee2ab30a0e0b0b6e20f05316f1409df',
+             'fasta_md5': '0344648e31d0aaea1c6670c4a44f2fad'
+             }, contig_count=1461, dna_source='None')
+
+    def test_iontorrent_alone(self):
+        self.run_success(
+            ['iontorrent'], 'iontorrent_alone_out',
+            {'contigs':
+             [{'name': 'NODE_1222_length_250_cov_1.22543',
+               'length': 250,
+               'id': 'NODE_1222_length_250_cov_1.22543',
+               'md5': '80c33530fd2943bf0699aead0d9f4691'
+               },
+              {'name': 'NODE_72_length_779_cov_1.24501',
+               'length': 779,
+               'id': 'NODE_72_length_779_cov_1.24501',
+               'md5': '48783388b66400ea43edf9e443583615'
+               }],
+             'md5': '0a3849c7d61cec90d2a157c89be28688',
+             'fasta_md5': '32e48388270ae5c40b8bcd5aa4ecc465'
+             }, contig_count=1446, dna_source='None')
+
+    def test_multiple_iontorrent_illumina(self):
+        self.run_error(['intbasic_kbassy', 'iontorrent'],
+                       'Both IonTorrent and Illumina read libraries exist. SPAdes ' +
+                       'can not assemble them together.')
+
+    def test_pacbio_alone(self):
+        self.run_error(['pacbio'],
+                       'Per SPAdes requirements : If doing PacBio CLR reads, you must also ' +
+                       'supply at least one paired end or single end reads library')
+
+    def orig_test_pacbioccs_alone(self):
+        self.run_success(
+            ['pacbioccs'], 'pacbioccs_alone_out',
+            {'contigs':
+             [{'name': 'NODE_1222_length_250_cov_1.22543',
+               'length': 250,
+               'id': 'NODE_1222_length_250_cov_1.22543',
+               'md5': '80c33530fd2943bf0699aead0d9f4691'
+               },
+              {'name': 'NODE_72_length_779_cov_1.24501',
+               'length': 779,
+               'id': 'NODE_72_length_779_cov_1.24501',
+               'md5': '48783388b66400ea43edf9e443583615'
+               }],
+             'md5': '0a3849c7d61cec90d2a157c89be28688',
+             'fasta_md5': '32e48388270ae5c40b8bcd5aa4ecc465'
+             }, contig_count=1446, dna_source='None')
+
+    def orig_test_multiple_pacbioccs_illumina(self):
+        self.run_success(
+            ['intbasic_kbassy', 'pacbioccs'], 'pacbioccs_multiple_out',
+            {'contigs':
+             [{'name': 'NODE_1222_length_250_cov_1.22543',
+               'length': 250,
+               'id': 'NODE_1222_length_250_cov_1.22543',
+               'md5': '80c33530fd2943bf0699aead0d9f4691'
+               },
+              {'name': 'NODE_72_length_779_cov_1.24501',
+               'length': 779,
+               'id': 'NODE_72_length_779_cov_1.24501',
+               'md5': '48783388b66400ea43edf9e443583615'
+               }],
+             'md5': '0a3849c7d61cec90d2a157c89be28688',
+             'fasta_md5': '32e48388270ae5c40b8bcd5aa4ecc465'
+             }, contig_count=1446, dna_source='None')
+
+    def test_single_reads(self):
+        self.run_success(
+            ['single_end'], 'single_out',
+            {'contigs':
+             [{'name': 'NODE_1_length_46307_cov_4.43576',
+               'length': 46307,
+               'id': 'NODE_1_length_46307_cov_4.43576',
+               'md5': 'fe4d97654a63c0f2f172894ae7b3ad85'
+               },
+              {'name': 'NODE_2_length_41003_cov_4.30011',
+               'length': 41003,
+               'id': 'NODE_2_length_41003_cov_4.30011',
+               'md5': 'a3bb8457f8e98f95d471d4d43653c2dd'
+               }],
+             'md5': 'cade3c3a5db42701e09c3f091edd83e6',
+             'fasta_md5': 'ad834a03295f11ab0b10308c72a89626'
+             }, contig_count=7, dna_source='None')
 
     def test_multiple_bad(self):
         # Testing where input reads have different phred types (33 and 64)
@@ -674,6 +886,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         if not contig_count:
             contig_count = len(expected['contigs'])
+
+        print("READNAMES: " + str(readnames))
+        print("STAGED: " + str(self.staged))
 
         libs = [self.staged[n]['info'][1] for n in readnames]
 #        assyrefs = sorted(
