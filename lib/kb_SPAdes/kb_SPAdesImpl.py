@@ -361,7 +361,7 @@ A coverage cutoff is not specified.
                     phred64_reads.add(obj_name)
                 else: 
                     raise ValueError(('Reads object {} ({}) phred type is not of the ' +
-                                      'expected value of 33 or 64. It had a phred type of' +
+                                      'expected value of 33 or 64. It had a phred type of ' +
                                       '{}').format(obj_name, rds, ea_stats_dict['phred_type']))
         return phred64_reads, phred33_reads
 
@@ -373,9 +373,9 @@ A coverage cutoff is not specified.
             rds = reads[ref]
             obj_name = reftoname[ref]
             obj_ref = rds['ref']
-            if rds['phred_type'] == 33:
+            if rds['phred_type'] == '33':
                 phred33_reads.add(obj_name)
-            elif rds['phred_type'] == 64:
+            elif rds['phred_type'] == '64':
                 phred64_reads.add(obj_name)
             else:
                 unknown_phred_reads.add(ref)
