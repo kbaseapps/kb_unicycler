@@ -563,7 +563,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                'md5': '48783388b66400ea43edf9e443583615'
                }],
              'md5': '0a3849c7d61cec90d2a157c89be28688',
-             'fasta_md5': '32e48388270ae5c40b8bcd5aa4ecc465'
+             'fasta_md5': 'c3f768d168f44c9574c224a8afcc1530'
              }, contig_count=87, dna_source='None')
 
     def orig_test_multiple_pacbioccs_illumina(self):
