@@ -552,15 +552,15 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['pacbioccs'], 'pacbioccs_alone_out',
             {'contigs':
-             [{'name': 'NODE_1222_length_250_cov_1.22543',
-               'length': 250,
-               'id': 'NODE_1222_length_250_cov_1.22543',
-               'md5': '80c33530fd2943bf0699aead0d9f4691'
+             [{'name': 'NODE_1_length_497242_cov_3.07893',
+               'length': 497242,
+               'id': 'NODE_1_length_497242_cov_3.07893',
+               'md5': '3bce716f534a547da4c42e60c81a9e1b'
                },
-              {'name': 'NODE_72_length_779_cov_1.24501',
-               'length': 779,
-               'id': 'NODE_72_length_779_cov_1.24501',
-               'md5': '48783388b66400ea43edf9e443583615'
+              {'name': 'NODE_2_length_421917_cov_3.16403',
+               'length': 421917,
+               'id': 'NODE_2_length_421917_cov_3.16403',
+               'md5': '0d5ff1244c38dc7e1b6e912b6bd7114e'
                }],
              'md5': '1848ae6ab151a083ca662d8f1ee51055',
              'fasta_md5': 'c3f768d168f44c9574c224a8afcc1530'
