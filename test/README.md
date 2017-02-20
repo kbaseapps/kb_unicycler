@@ -7,3 +7,4 @@ server code to be running.
 
 Note that this assembler takes a large amount of memory.
 The PacbioCCS tests will not complete unless on 20GB plus docker instance.
+The tests take over 4hours on docker01
