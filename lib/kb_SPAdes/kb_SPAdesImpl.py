@@ -299,14 +299,6 @@ A coverage cutoff is not specified.
         for c in range(bins):
             report += '   ' + str(counts[c]) + '\t--\t' + str(edges[c]) +\
                 ' to ' + str(edges[c + 1]) + ' bp\n'
-#        report_cl = KBaseReport(self.callbackURL, service_ver='dev')
-#        reportObj = {
-#            'objects_created': [{'ref': assembly_ref,
-#                                 'description': 'Assembled contigs'}],
-#            'text_message': report
-#        }
-#        report_info = report_cl.create({'report': reportObj,
-#                                        'workspace_name': wsname})
         print('Running QUAST')
         kbq = kb_quast(self.callbackURL)
         quastret = kbq.run_QUAST({'files': [{'path': input_file_name,
@@ -385,11 +377,6 @@ A coverage cutoff is not specified.
                     ('Reads object {} ({}) is marked as having outward ' +
                      'oriented reads, which SPAdes does not ' +
                      'support.').format(obj_name, obj_ref))
-
-# REMOVED SINGLE CHECK
-#            if rds['files']['type'] == 'single':
-#                raise ValueError(('{} is a single end read library, which ' +
-#                                  'is not currently supported.').format(obj_name))
 
             # ideally types would be firm enough that we could rely on the
             # metagenomic boolean. However KBaseAssembly doesn't have the field
