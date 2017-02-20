@@ -562,7 +562,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                'id': 'NODE_72_length_779_cov_1.24501',
                'md5': '48783388b66400ea43edf9e443583615'
                }],
-             'md5': '0a3849c7d61cec90d2a157c89be28688',
+             'md5': '1848ae6ab151a083ca662d8f1ee51055',
              'fasta_md5': 'c3f768d168f44c9574c224a8afcc1530'
              }, contig_count=87, dna_source='None')
 
