@@ -536,7 +536,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                }],
              'md5': '78757ec836a7447360210fe1cd82d69b',
              'fasta_md5': 'f4088d74edfcd3759920d1bbab5abe65'
-             }, contig_count=233, dna_source='None')
+             }, contig_count=308, dna_source='None')
 
     def test_multiple_iontorrent_illumina(self):
         self.run_error(['intbasic_kbassy', 'iontorrent'],
