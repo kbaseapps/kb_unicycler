@@ -26,7 +26,7 @@ RUN pip install requests --upgrade \
     && pip install ipython \
     && apt-get install nano
 
-ENV PATH $PATH:/opt/SPAdes-3.9.1-Linux/bin
+ENV PATH $PATH:/opt/SPAdes-3.10.0-Linux/bin
 
 # -----------------------------------------
 
