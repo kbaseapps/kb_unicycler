@@ -187,7 +187,7 @@ A coverage cutoff is not specified.
         yml_path = os.path.join(self.scratch, 'run.yaml')
         with open(yml_path, 'w') as yml_file:
             yaml.safe_dump(yml, yml_file)
-        return yml_path
+        return yml_path, iontorrent_present
 
     def exec_spades(self, dna_source, reads_data, phred_type):
         threads = psutil.cpu_count() * self.THREADS_PER_CORE
@@ -219,9 +219,12 @@ A coverage cutoff is not specified.
         cmd += ['--phred-offset', phred_type]
 #        print("LENGTH OF READSDATA IN EXEC: " + str(len(reads_data)))
         print("SPADES YAML: " + str(self.generate_spades_yaml(reads_data)))
-        cmd += ['--dataset', self.generate_spades_yaml(reads_data)]
+        spades_yaml_path, iontorrent_present = self.generate_spades_yaml(reads_data)
+        if iontorrent_present == 1:
+            cmd += ['--iontorrent']
+        cmd += ['--dataset', spades_yaml_path]
         self.log('Running SPAdes command line:')
-#        print("SPADES CMD:" + str(cmd))
+        print("SPADES CMD:" + str(cmd))
         self.log(cmd)
 
         if self.DISABLE_SPADES_OUTPUT:
