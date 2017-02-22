@@ -9,9 +9,9 @@ MAINTAINER KBase Developer
 
 
 RUN cd /opt \
-    && wget http://spades.bioinf.spbau.ru/release3.9.1/SPAdes-3.9.1-Linux.tar.gz \
-    && tar -xvzf SPAdes-3.9.1-Linux.tar.gz \
-    && rm SPAdes-3.9.1-Linux.tar.gz \
+    && wget http://spades.bioinf.spbau.ru/release3.10.0/SPAdes-3.10.0-Linux.tar.gz \
+    && tar -xvzf SPAdes-3.10.0-Linux.tar.gz \
+    && rm SPAdes-3.10.0-Linux.tar.gz \
     && pip install psutil \
     && pip install pyyaml
 
