@@ -354,7 +354,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         return str(object_info[6]) + '/' + str(object_info[0]) + \
             '/' + str(object_info[4])
 
-    def orig_test_fr_pair_kbfile(self):
+    def test_fr_pair_kbfile(self):
 
         self.run_success(
             ['frbasic'], 'frbasic_out',
