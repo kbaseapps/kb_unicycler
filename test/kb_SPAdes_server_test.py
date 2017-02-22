@@ -979,9 +979,6 @@ class gaprice_SPAdesTest(unittest.TestCase):
         print('\n**** starting expected success test: ' + test_name + ' *****')
         print('   libs: ' + str(readnames))
 
-        if not contig_count:
-            contig_count = len(expected['contigs'])
-
         print("READNAMES: " + str(readnames))
         print("STAGED: " + str(self.staged))
 
