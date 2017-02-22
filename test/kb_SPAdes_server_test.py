@@ -524,7 +524,6 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_non_deterministic_success(
             ['iontorrent'], 'iontorrent_alone_out',
             dna_source='None')
-        )
 
 #        self.run_success(
 #            ['iontorrent'], 'iontorrent_alone_out',
