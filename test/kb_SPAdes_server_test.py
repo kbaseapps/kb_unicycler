@@ -444,7 +444,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                'id': 'NODE_685_length_338_cov_1.58238',
                'md5': '3aa0f771c4d2b916d810c5172ba914ae'
                }],
-             'md5': 'bb0803169c99b171b9f1b997228f278b',
+             'md5': '43db43d141d5f122b93cec5718eead70',
              'fasta_md5': '0e2de918428b3bb8e6ed42669428b868'
              }, contig_count=1452, dna_source='None')
 
@@ -463,7 +463,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                'md5': '48783388b66400ea43edf9e443583615'
                }],
              'md5': '74e61533ee3e3cf340ca6429ff0217a2',
-             'fasta_md5': '683c339c173bee18d687addd54e60641'
+             'fasta_md5': '6a23b8a37c33f1bd63de77d5a67f2d0c'
              }, contig_count=1447, dna_source='None')
 
     def orig_test_multiple_pacbio_single(self):
@@ -516,7 +516,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                'id': 'NODE_49_length_928_cov_2.0517',
                'md5': 'fe82bda17020c4ac02081245ca9d3fab'
                }],
-             'md5': '0ee2ab30a0e0b0b6e20f05316f1409df',
+             'md5': '5787862150f820a2629bcddb3b2df8f8',
              'fasta_md5': '5231eedcd0d2ea5087b4d9594f40e443'
              }, contig_count=1461, dna_source='None')
 
@@ -567,7 +567,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                'md5': '0d5ff1244c38dc7e1b6e912b6bd7114e'
                }],
              'md5': '1848ae6ab151a083ca662d8f1ee51055',
-             'fasta_md5': 'c3f768d168f44c9574c224a8afcc1530'
+             'fasta_md5': 'eff807bfdc3fdc5b0343c35138bdf74f'
              }, contig_count=88, dna_source='None')
 
     def orig_test_multiple_pacbioccs_illumina(self):
