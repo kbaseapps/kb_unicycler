@@ -408,7 +408,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                'md5': 'c1c853543b2bba9211e574238b842869'
                }],
              'md5': 'f285181574a14b4ffd8828e319128e5a',
-             'fasta_md5': '94c70046956b7a9d04b5de7bd518513b'
+             'fasta_md5': 'ab7aadf4046d5fdabd71ae5813b34f7f'
              }, contig_count=1450)
 
     def test_interlaced_kbassy(self):
@@ -427,22 +427,22 @@ class gaprice_SPAdesTest(unittest.TestCase):
                'md5': 'c1c853543b2bba9211e574238b842869'
                }],
              'md5': 'f285181574a14b4ffd8828e319128e5a',
-             'fasta_md5': '94c70046956b7a9d04b5de7bd518513b'
+             'fasta_md5': 'ab7aadf4046d5fdabd71ae5813b34f7f'
              }, contig_count=1450, dna_source='')
 
     def test_multiple(self):
         self.run_success(
             ['intbasic_kbassy', 'frbasic'], 'multiple_out',
             {'contigs':
-             [{'name': 'NODE_1391_length_233_cov_1.40385',
-               'length': 233,
-               'id': 'NODE_1391_length_233_cov_1.40385',
-               'md5': '7fc057f5b65b026eb3c4956c4b14bd70'
+             [{'name': 'NODE_1_length_64822_cov_4.59581',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_4.59581',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'name': 'NODE_685_length_338_cov_1.58238',
-               'length': 338,
-               'id': 'NODE_685_length_338_cov_1.58238',
-               'md5': '3aa0f771c4d2b916d810c5172ba914ae'
+              {'name': 'NODE_2_length_62656_cov_4.41539',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_4.41539',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
                }],
              'md5': '43db43d141d5f122b93cec5718eead70',
              'fasta_md5': '0e2de918428b3bb8e6ed42669428b868'
@@ -462,7 +462,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                'id': 'NODE_72_length_779_cov_1.24501',
                'md5': '48783388b66400ea43edf9e443583615'
                }],
-             'md5': '74e61533ee3e3cf340ca6429ff0217a2',
+             'md5': '38c94314d0db51075a78ab8d5b85cb60',
              'fasta_md5': '6a23b8a37c33f1bd63de77d5a67f2d0c'
              }, contig_count=1447, dna_source='None')
 
@@ -566,7 +566,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                'id': 'NODE_2_length_421917_cov_3.16403',
                'md5': '0d5ff1244c38dc7e1b6e912b6bd7114e'
                }],
-             'md5': '1848ae6ab151a083ca662d8f1ee51055',
+             'md5': '3a2bcdd1dd5795e038160f227b5627df',
              'fasta_md5': 'eff807bfdc3fdc5b0343c35138bdf74f'
              }, contig_count=88, dna_source='None')
 
