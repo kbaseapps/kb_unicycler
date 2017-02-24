@@ -18,7 +18,7 @@
             "default_values": [ "" ],
             "field_type": "text",
             "text_options": {
-                "valid_ws_types": ["KBaseFile.PairedEndLibrary", "KBaseAssembly.PairedEndLibrary"]
+                "valid_ws_types": ["KBaseFile.PairedEndLibrary", "KBaseAssembly.PairedEndLibrary", "KBaseFile.SingleEndLibrary", "KBaseAssembly.SingleEndLibrary"]
             }
         },
         {
@@ -41,6 +41,10 @@
                 {
                   "value": "metagenomic",
                   "display": "metagenomic"
+                },
+                {
+                  "value": "plasmid",
+                  "display": "plasmid"
                 }
               ]
             }

@@ -70,6 +70,7 @@ A coverage cutoff is not specified.
     PARAM_IN_DNA_SOURCE = 'dna_source'
     PARAM_IN_SINGLE_CELL = 'single_cell'
     PARAM_IN_METAGENOME = 'metagenome'
+    PARAM_IN_PLASMID = 'plasmid'
 
     INVALID_WS_OBJ_NAME_RE = re.compile('[^\\w\\|._-]')
     INVALID_WS_NAME_RE = re.compile('[^\\w:._-]')
@@ -212,13 +213,28 @@ A coverage cutoff is not specified.
                '--memory', str(mem), '-o', outdir, '--tmp-dir', tmpdir]
         if dna_source == self.PARAM_IN_SINGLE_CELL:
             cmd += ['--sc']
+        if dna_source == self.PARAM_IN_PLASMID:
+            cmd += ['--plasmid']
+            # The plasmid assembly can only be run on a single library
+            if len(reads_data) > 1 :
+                raise ValueError('Plasmid assembly requires that one ' +
+                                 'and only one library as input. ' +
+                                 str(len(reads_data)) + ' libraries detected.')
         if dna_source == self.PARAM_IN_METAGENOME:
             cmd += ['--meta']
+            # The metagenome assembly can only be run on a single library
+            if len(reads_data) > 1 :
+                raise ValueError('Metagenome assembly requires that one ' +
+                                 'and only one paired end library as input. ' +
+                                 str(len(reads_data)) + ' libraries detected.')
+            # The library must be paired end.
+
         else:
             cmd += ['--careful']
         cmd += ['--phred-offset', phred_type]
-#        print("LENGTH OF READSDATA IN EXEC: " + str(len(reads_data)))
-        print("SPADES YAML: " + str(self.generate_spades_yaml(reads_data)))
+        print("LENGTH OF READSDATA IN EXEC: " + str(len(reads_data)))
+        print("READS DATA: " + str(reads_data))
+#        print("SPADES YAML: " + str(self.generate_spades_yaml(reads_data)))
         spades_yaml_path, iontorrent_present = self.generate_spades_yaml(reads_data)
         if iontorrent_present == 1:
             cmd += ['--iontorrent']

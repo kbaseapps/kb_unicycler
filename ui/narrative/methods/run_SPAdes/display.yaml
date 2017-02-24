@@ -31,13 +31,13 @@ parameters :
         ui-name : |
             Read library
         short-hint : |
-            The libraries of Illumina reads to be assembled
+            The libraries of reads to be assembled
     dna_source :
         ui-name : |
             DNA source
         short-hint : |
             The source of the sequenced DNA - either standard, single cell / 
-            MDA, or metagenomic.
+            MDA, metagenomic or plasmid.
     output_contigset_name :
         ui-name : |
             Output ContigSet
@@ -51,24 +51,28 @@ description : |
     </p>
     
     <p>
-    SPAdes is designed for assembling bacterial reads and is not intended
-    for larger genomes.
+    SPAdes is designed for assembling reads. 
+    We strongly recommend not to use it for large and medium-size eukaryotic genomes.
     </p>
 
     <p>
     Operational notes:
     <ul>
-        <li> Currently the wrapper only supports Illumina paired-end reads
+        <li> Currently the wrapper only supports Illumina, IonTorrent, PacBIO CLR and PacBIO CCS
              in FASTQ format, either uncompressed or gzipped.</li>
         <li> The --careful flag is always used, except for metagenomic
              assemblies where it is not allowed.</li>
+        <li> Metagenome and Plasmid assembly can only be run on one reads library.</li>
+        <li> Metagenome assembly can only be run on a paired end library.</li>
+        <li> Illumina and IonTorrent reads can not be mixed in the same assembly.</li>
+        <li> PacBIO CLR needs to be run with at least one accompanying Illumina or IonTorrent library.</li>
         <li> The k-mer parameter is autodetected by SPAdes.</li>
-        <li> The PHRED parameter is autodetected by SPAdes.</li>
+        <li> The PHRED parameter is autodetected by EAUtils.</li>
     </ul>
     If you need support for command line options not exposed in the wrapper
     please contact KBase Help.
     </p>
-    <p>SPAdes version: 3.7.1</p>
+    <p>SPAdes version: 3.10.0</p>
     
 publications :
     -
