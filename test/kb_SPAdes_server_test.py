@@ -411,6 +411,37 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'fasta_md5': 'ab7aadf4046d5fdabd71ae5813b34f7f'
              }, contig_count=1450)
 
+    def test_metagenome_kbfile(self):
+
+        self.run_success(
+            ['intbasic'], 'intbasic_out',
+            {'contigs':
+             [{'name': 'NODE_1_length_4084_cov_1.3132',
+               'length': 4084,
+               'id': 'NODE_1_length_4084_cov_1.3132',
+               'md5': '8d434467d0158fd0eaa2e909c7314a69'
+               },
+              {'name': 'NODE_2_length_3873_cov_2.43151',
+               'length': 3873,
+               'id': 'NODE_2_length_3873_cov_2.43151',
+               'md5': '64668c2d1ccb121a88404989b54808c7'
+               }],
+             'md5': '200c2a4b6bc9f79fbf2fecdbcf997978',
+             'fasta_md5': 'ab7aadf4046d5fdabd71ae5813b34f7f'
+             }, contig_count=1450, dna_source='plasmid')
+
+    def test_metagenome_multiple(self):
+        self.run_error(['intbasic_kbassy', 'intbasic'],
+                        'Metagenome assembly requires that one ' +
+                        'and only one paired end library as input. ' +
+                        '2 libraries detected.')
+
+    def test_metagenome_single_end(self):
+        self.run_error(['single_end'],
+                        'Metagenome assembly requires that one ' +
+                        'and only one paired end library as input. ' +
+                        '2 libraries detected.')
+
     def orig_test_interlaced_kbassy(self):
 
         self.run_success(
@@ -502,7 +533,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'fasta_md5': '03a8b6fc00638dd176998e25e4a208b6'
              }, contig_count=2, dna_source='None')
 
-    def test_multi_paired_single(self):
+    def orig_test_multi_paired_single(self):
         self.run_success(
             ['intbasic_kbassy','single_end'], 'multi_paired_single_out',
             {'contigs':
@@ -524,23 +555,6 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_non_deterministic_success(
             ['iontorrent'], 'iontorrent_alone_out',
             dna_source='None')
-
-#        self.run_success(
-#            ['iontorrent'], 'iontorrent_alone_out',
-#            {'contigs':
-#             [{'name': 'NODE_49_length_2425_cov_3.35708',
-#               'length': 2425,
-#               'id': 'NODE_49_length_2425_cov_3.35708',
-#               'md5': 'd572d55827561bd8fd3b12aa1f393593'
-#               },
-#              {'name': 'NODE_20_length_3016_cov_1.71013',
-#               'length': 3016,
-#               'id': 'NODE_20_length_3016_cov_1.71013',
-#               'md5': 'e247b5985aeec4aa1a922512324ea0b9'
-#               }],
-#             'md5': '78757ec836a7447360210fe1cd82d69b',
-#             'fasta_md5': 'f4088d74edfcd3759920d1bbab5abe65'
-#             }, contig_count=309, dna_source='None')
 
     def orig_test_multiple_iontorrent_illumina(self):
         self.run_error(['intbasic_kbassy', 'iontorrent'],

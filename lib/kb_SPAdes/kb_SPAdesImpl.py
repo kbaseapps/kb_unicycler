@@ -223,12 +223,11 @@ A coverage cutoff is not specified.
         if dna_source == self.PARAM_IN_METAGENOME:
             cmd += ['--meta']
             # The metagenome assembly can only be run on a single library
-            if len(reads_data) > 1 :
+            # The library must be paired end.
+            if len(reads_data) > 1 or reads_data[0]['type'] != 'paired':
                 raise ValueError('Metagenome assembly requires that one ' +
                                  'and only one paired end library as input. ' +
                                  str(len(reads_data)) + ' libraries detected.')
-            # The library must be paired end.
-
         else:
             cmd += ['--careful']
         cmd += ['--phred-offset', phred_type]
