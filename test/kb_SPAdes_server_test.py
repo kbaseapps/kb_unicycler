@@ -397,15 +397,15 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['intbasic'], 'intbasic_out',
             {'contigs':
-             [{'name': 'NODE_1000_length_274_cov_1.11168',
-               'length': 274,
-               'id': 'NODE_1000_length_274_cov_1.11168',
-               'md5': '1b00037a0f39ff0fcb577c4e7ff72cf1'
+             [{'name': 'NODE_1_length_4084_cov_1.3132',
+               'length': 4084,
+               'id': 'NODE_1_length_4084_cov_1.3132',
+               'md5': '8d434467d0158fd0eaa2e909c7314a69'
                },
-              {'name': 'NODE_1001_length_274_cov_1.1066',
-               'length': 274,
-               'id': 'NODE_1001_length_274_cov_1.1066',
-               'md5': 'c1c853543b2bba9211e574238b842869'
+              {'name': 'NODE_2_length_3873_cov_2.43151',
+               'length': 3873,
+               'id': 'NODE_2_length_3873_cov_2.43151',
+               'md5': '64668c2d1ccb121a88404989b54808c7'
                }],
              'md5': '200c2a4b6bc9f79fbf2fecdbcf997978',
              'fasta_md5': 'ab7aadf4046d5fdabd71ae5813b34f7f'
@@ -416,15 +416,15 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['intbasic_kbassy'], 'intbasic_kbassy_out',
             {'contigs':
-             [{'name': 'NODE_1000_length_274_cov_1.11168',
-               'length': 274,
-               'id': 'NODE_1000_length_274_cov_1.11168',
-               'md5': '1b00037a0f39ff0fcb577c4e7ff72cf1'
+             [{'name': 'NODE_1_length_4084_cov_1.3132',
+               'length': 4084,
+               'id': 'NODE_1_length_4084_cov_1.3132',
+               'md5': '8d434467d0158fd0eaa2e909c7314a69'
                },
-              {'name': 'NODE_1001_length_274_cov_1.1066',
-               'length': 274,
-               'id': 'NODE_1001_length_274_cov_1.1066',
-               'md5': 'c1c853543b2bba9211e574238b842869'
+              {'name': 'NODE_2_length_3873_cov_2.43151',
+               'length': 3873,
+               'id': 'NODE_2_length_3873_cov_2.43151',
+               'md5': '64668c2d1ccb121a88404989b54808c7'
                }],
              'md5': '200c2a4b6bc9f79fbf2fecdbcf997978',
              'fasta_md5': 'ab7aadf4046d5fdabd71ae5813b34f7f'
