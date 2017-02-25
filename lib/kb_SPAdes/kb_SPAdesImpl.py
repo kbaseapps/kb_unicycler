@@ -462,10 +462,12 @@ A coverage cutoff is not specified.
                              params[self.PARAM_IN_CS_NAME])
         if self.PARAM_IN_DNA_SOURCE in params:
             s = params[self.PARAM_IN_DNA_SOURCE]
-            if s not in [self.PARAM_IN_SINGLE_CELL, self.PARAM_IN_METAGENOME]:
+            print("FOUND THE DNA SOURCE: " + str(params[self.PARAM_IN_DNA_SOURCE]))
+            if s not in [self.PARAM_IN_SINGLE_CELL, self.PARAM_IN_METAGENOME, self.PARAM_IN_PLASMID]:
                 params[self.PARAM_IN_DNA_SOURCE] = None
         else:
             params[self.PARAM_IN_DNA_SOURCE] = None
+            print("PARAMS ARE:" + str(params))
 
     #END_CLASS_HEADER
 
