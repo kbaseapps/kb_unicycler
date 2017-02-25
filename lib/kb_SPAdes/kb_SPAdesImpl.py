@@ -211,6 +211,8 @@ A coverage cutoff is not specified.
 
         cmd = ['spades.py', '--threads', str(threads),
                '--memory', str(mem), '-o', outdir, '--tmp-dir', tmpdir]
+
+        print("THE DNA SOURCE IS : " + dna_source)
         if dna_source == self.PARAM_IN_SINGLE_CELL:
             cmd += ['--sc']
         if dna_source == self.PARAM_IN_PLASMID:

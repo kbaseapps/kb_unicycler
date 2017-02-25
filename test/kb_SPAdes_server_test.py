@@ -434,13 +434,15 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_error(['intbasic_kbassy', 'intbasic'],
                         'Metagenome assembly requires that one ' +
                         'and only one paired end library as input. ' +
-                        '2 libraries detected.')
+                        '2 libraries detected.',
+                        dna_source='plasmid')
 
     def test_metagenome_single_end(self):
         self.run_error(['single_end'],
                         'Metagenome assembly requires that one ' +
                         'and only one paired end library as input. ' +
-                        '2 libraries detected.')
+                        '2 libraries detected.',
+                        dna_source='plasmid')
 
     def orig_test_interlaced_kbassy(self):
 
