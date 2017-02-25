@@ -428,21 +428,21 @@ class gaprice_SPAdesTest(unittest.TestCase):
                }],
              'md5': '200c2a4b6bc9f79fbf2fecdbcf997978',
              'fasta_md5': 'ab7aadf4046d5fdabd71ae5813b34f7f'
-             }, contig_count=1450, dna_source='plasmid')
+             }, contig_count=1450, dna_source='metagenome')
 
     def test_metagenome_multiple(self):
         self.run_error(['intbasic_kbassy', 'intbasic'],
                         'Metagenome assembly requires that one ' +
                         'and only one paired end library as input. ' +
                         '2 libraries detected.',
-                        dna_source='plasmid')
+                        dna_source='metagenome')
 
     def test_metagenome_single_end(self):
         self.run_error(['single_end'],
                         'Metagenome assembly requires that one ' +
                         'and only one paired end library as input. ' +
                         '2 libraries detected.',
-                        dna_source='plasmid')
+                        dna_source='metagenome')
 
     def orig_test_interlaced_kbassy(self):
 
