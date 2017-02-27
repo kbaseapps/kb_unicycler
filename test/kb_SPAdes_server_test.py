@@ -453,7 +453,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
     def test_plasmid_kbfile(self):
         self.run_success(
-            ['plasmid'], 'plasmid_out',
+            ['plasmid_reads'], 'plasmid_out',
             {'contigs':
              [{'name': 'NODE_1_length_64822_cov_8.99795',
                'length': 64822,
@@ -467,13 +467,14 @@ class gaprice_SPAdesTest(unittest.TestCase):
                }],
              'md5': '08d0b92ce7c0a5e346b3077436edaa42',
              'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
-             }, contig_count=2, dna_source='metagenome')
+             }, contig_count=2, dna_source='plasmid')
 
     def test_plasmid_multiple(self):
-        self.run_error(['plasmid', 'frbasic'],
+        self.run_error(['plasmid_reads', 'frbasic'],
                        'Plasmid assembly requires that one ' +
                        'and only one paired end library as input. ' +
-                       '2 libraries detected.')
+                       '2 libraries detected.',
+                       dna_source='plasmid')
 
     def orig_test_interlaced_kbassy(self):
 
