@@ -317,7 +317,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         iontorrent_reads = {'file': 'data/IonTorrent_single.fastq.gz',
                             'name': '',
                             'type': ''}
-        plasmid_reads = {'file': 'data/ecoli_plasmid_pe.fastq.gz',
+        plasmid_reads = {'file': 'data/SRR3934037_100000.fastq.gz',
                             'name': '',
                             'type': ''}
         cls.upload_reads('frbasic', {}, fwd_reads, rev_reads=rev_reads)
@@ -341,7 +341,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         cls.upload_assembly('intbasic_kbassy', {}, int_reads, kbase_assy=True)
         cls.upload_reads('single_end', {}, fwd_reads, single_end=True)
         cls.upload_reads('single_end2', {}, rev_reads, single_end=True)
-        cls.upload_reads('plasmid_reads', {'single_genome': 1}, plasmid_reads)
+        cls.upload_reads('plasmid_reads', {'single_genome': 1}, plasmid_reads, single_end=True)
         shutil.copy2('data/small.forward.fq', 'data/small.forward.bad')
         bad_fn_reads = {'file': 'data/small.forward.bad',
                         'name': '',
@@ -472,7 +472,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def test_plasmid_multiple(self):
         self.run_error(['plasmid_reads', 'frbasic'],
                        'Plasmid assembly requires that one ' +
-                       'and only one paired end library as input. ' +
+                       'and only one library as input. ' +
                        '2 libraries detected.',
                        dna_source='plasmid')
 
