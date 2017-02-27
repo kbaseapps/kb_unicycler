@@ -431,7 +431,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                'id': 'NODE_2_length_3873_cov_2.43151',
                'md5': '64668c2d1ccb121a88404989b54808c7'
                }],
-             'md5': '200c2a4b6bc9f79fbf2fecdbcf997978',
+             'md5': '08d0b92ce7c0a5e346b3077436edaa42',
              'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
              }, contig_count=2, dna_source='metagenome')
 

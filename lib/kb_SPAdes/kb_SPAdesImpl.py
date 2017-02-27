@@ -231,7 +231,7 @@ A coverage cutoff is not specified.
                             'only one paired end library as input.'
                 if len(reads_data) > 1:
                     error_msg += ' ' + str(len(reads_data)) + \
-                                 ' libraries detected'
+                                 ' libraries detected.'
                 raise ValueError(error_msg)
         else:
             cmd += ['--careful']
