@@ -330,7 +330,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                             rev_reads=rev_reads)
         cls.upload_reads('meta2', {'single_genome': 0}, fwd_reads,
                             rev_reads=rev_reads)
-        cls.upload_reads('meta_single_end', {'single_genome': 0}, fwd_reads)
+        cls.upload_reads('meta_single_end', {'single_genome': 0}, fwd_reads, single_end=True)
         cls.upload_reads('reads_out', {'read_orientation_outward': 1},
                             int_reads)
         cls.upload_assembly('frbasic_kbassy', {}, fwd_reads,
@@ -433,7 +433,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                }],
              'md5': '200c2a4b6bc9f79fbf2fecdbcf997978',
              'fasta_md5': 'ab7aadf4046d5fdabd71ae5813b34f7f'
-             }, contig_count=1450, dna_source='metagenome')
+             }, contig_count=2, dna_source='metagenome')
 
     def test_metagenome_multiple(self):
         self.run_error(['meta', 'meta2'],
@@ -444,6 +444,13 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
     def test_metagenome_single_end(self):
         self.run_error(['meta_single_end'],
+                        'Metagenome assembly requires that one ' +
+                        'and only one paired end library as input. ' +
+                        '2 libraries detected.',
+                        dna_source='metagenome')
+
+    def test_metagenome_single_genome(self):
+        self.run_error(['intbasic'],
                         'Metagenome assembly requires that one ' +
                         'and only one paired end library as input. ' +
                         '2 libraries detected.',
