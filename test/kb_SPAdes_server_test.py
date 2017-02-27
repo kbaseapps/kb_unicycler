@@ -150,8 +150,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
         ob = dict(object_body)  # copy
         ob['sequencing_tech'] = sequencing_tech
 #        ob['single_genome'] = single_genome
-        ob['wsname']= cls.getWsName()
-        ob['name']= wsobjname
+        ob['wsname'] = cls.getWsName()
+        ob['name'] = wsobjname
         if single_end or rev_reads:
             ob['interleaved']= 0
         else:
@@ -432,29 +432,29 @@ class gaprice_SPAdesTest(unittest.TestCase):
                'md5': '64668c2d1ccb121a88404989b54808c7'
                }],
              'md5': '200c2a4b6bc9f79fbf2fecdbcf997978',
-             'fasta_md5': 'ab7aadf4046d5fdabd71ae5813b34f7f'
+             'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
              }, contig_count=2, dna_source='metagenome')
 
     def test_metagenome_multiple(self):
         self.run_error(['meta', 'meta2'],
-                        'Metagenome assembly requires that one ' +
-                        'and only one paired end library as input. ' +
-                        '2 libraries detected.',
-                        dna_source='metagenome')
+                       'Metagenome assembly requires that one ' +
+                       'and only one paired end library as input. ' +
+                       '2 libraries detected.',
+                       dna_source='metagenome')
 
     def test_metagenome_single_end(self):
         self.run_error(['meta_single_end'],
-                        'Metagenome assembly requires that one ' +
-                        'and only one paired end library as input. ' +
-                        '2 libraries detected.',
-                        dna_source='metagenome')
+                       'Metagenome assembly requires that one ' +
+                       'and only one paired end library as input.',
+                       dna_source='metagenome')
 
-    def test_metagenome_single_genome(self):
-        self.run_error(['intbasic'],
-                        'Metagenome assembly requires that one ' +
-                        'and only one paired end library as input. ' +
-                        '2 libraries detected.',
-                        dna_source='metagenome')
+#    def test_metagenome_single_genome(self):
+#        self.run_error(['intbasic'],
+#                       'Reads object ' + test_kb_SPAdes_1488226367977/intbasic +
+#                       ' (' + 18019/2/1 + ') is marked as containing dna from a ' +
+#                       'single genome but the assembly method was specified as '+ 
+#                       'metagenomic',
+#                       dna_source='metagenome')
 
     def orig_test_interlaced_kbassy(self):
 
@@ -749,7 +749,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             ['frbasic'], 'Invalid workspace object name bad*name',
             output_name='bad*name')
 
-    def orig_test_inconsistent_metagenomics_1(self):
+    def test_inconsistent_metagenomics_1(self):
 
         self.run_error(
             ['intbasic'],

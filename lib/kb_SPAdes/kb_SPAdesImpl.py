@@ -227,9 +227,12 @@ A coverage cutoff is not specified.
             # The metagenome assembly can only be run on a single library
             # The library must be paired end.
             if len(reads_data) > 1 or reads_data[0]['type'] != 'paired':
-                raise ValueError('Metagenome assembly requires that one ' +
-                                 'and only one paired end library as input. ' +
-                                 str(len(reads_data)) + ' libraries detected.')
+                error_msg = 'Metagenome assembly requires that one and ' + \
+                            'only one paired end library as input.'
+                if len(reads_data) > 1:
+                    error_msg += ' ' + str(len(reads_data)) + \
+                                 ' libraries detected'
+                raise ValueError(error_msg)
         else:
             cmd += ['--careful']
         cmd += ['--phred-offset', phred_type]
