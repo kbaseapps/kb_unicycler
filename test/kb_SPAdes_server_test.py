@@ -144,10 +144,12 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
     @classmethod
     def upload_reads(cls, wsobjname, object_body, fwd_reads,
-                     rev_reads=None, single_end=False, sequencing_tech='Illumina'):
+                     rev_reads=None, single_end=False, sequencing_tech='Illumina',
+                     single_genome='1'):
 
         ob = dict(object_body)  # copy
         ob['sequencing_tech'] = sequencing_tech
+        ob['single_genome'] = single_genome
         ob['wsname']= cls.getWsName()
         ob['name']= wsobjname
         if single_end or rev_reads:
@@ -326,6 +328,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
                             iontorrent_reads, single_end=True, sequencing_tech="IonTorrent")
         cls.upload_reads('meta', {'single_genome': 0}, fwd_reads,
                             rev_reads=rev_reads)
+        cls.upload_reads('meta2', {'single_genome': 0}, fwd_reads,
+                            rev_reads=rev_reads)
+        cls.upload_reads('meta_single_end', {'single_genome': 0}, fwd_reads)
         cls.upload_reads('reads_out', {'read_orientation_outward': 1},
                             int_reads)
         cls.upload_assembly('frbasic_kbassy', {}, fwd_reads,
@@ -414,7 +419,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def test_metagenome_kbfile(self):
 
         self.run_success(
-            ['intbasic'], 'intbasic_out',
+            ['meta'], 'metabasic_out',
             {'contigs':
              [{'name': 'NODE_1_length_4084_cov_1.3132',
                'length': 4084,
@@ -431,14 +436,14 @@ class gaprice_SPAdesTest(unittest.TestCase):
              }, contig_count=1450, dna_source='metagenome')
 
     def test_metagenome_multiple(self):
-        self.run_error(['intbasic_kbassy', 'intbasic'],
+        self.run_error(['meta', 'meta2'],
                         'Metagenome assembly requires that one ' +
                         'and only one paired end library as input. ' +
                         '2 libraries detected.',
                         dna_source='metagenome')
 
     def test_metagenome_single_end(self):
-        self.run_error(['single_end'],
+        self.run_error(['meta_single_end'],
                         'Metagenome assembly requires that one ' +
                         'and only one paired end library as input. ' +
                         '2 libraries detected.',
