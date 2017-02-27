@@ -317,6 +317,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
         iontorrent_reads = {'file': 'data/IonTorrent_single.fastq.gz',
                             'name': '',
                             'type': ''}
+        plasmid_reads = {'file': 'data/ecoli_plasmid_pe.fastq.gz',
+                            'name': '',
+                            'type': ''}
         cls.upload_reads('frbasic', {}, fwd_reads, rev_reads=rev_reads)
         cls.upload_reads('intbasic', {'single_genome': 1}, int_reads)
         cls.upload_reads('intbasic64', {'single_genome': 1}, int64_reads)
@@ -338,6 +341,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         cls.upload_assembly('intbasic_kbassy', {}, int_reads, kbase_assy=True)
         cls.upload_reads('single_end', {}, fwd_reads, single_end=True)
         cls.upload_reads('single_end2', {}, rev_reads, single_end=True)
+        cls.upload_reads('plasmid_reads', {'single_genome': 1}, plasmid_reads)
         shutil.copy2('data/small.forward.fq', 'data/small.forward.bad')
         bad_fn_reads = {'file': 'data/small.forward.bad',
                         'name': '',
@@ -417,19 +421,18 @@ class gaprice_SPAdesTest(unittest.TestCase):
              }, contig_count=1450)
 
     def test_metagenome_kbfile(self):
-
         self.run_success(
             ['meta'], 'metabasic_out',
             {'contigs':
-             [{'name': 'NODE_1_length_4084_cov_1.3132',
-               'length': 4084,
-               'id': 'NODE_1_length_4084_cov_1.3132',
-               'md5': '8d434467d0158fd0eaa2e909c7314a69'
+             [{'name': 'NODE_1_length_64822_cov_8.99795',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.99795',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'name': 'NODE_2_length_3873_cov_2.43151',
-               'length': 3873,
-               'id': 'NODE_2_length_3873_cov_2.43151',
-               'md5': '64668c2d1ccb121a88404989b54808c7'
+              {'name': 'NODE_2_length_62656_cov_8.64555',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_8.64555',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
                }],
              'md5': '08d0b92ce7c0a5e346b3077436edaa42',
              'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
@@ -448,13 +451,29 @@ class gaprice_SPAdesTest(unittest.TestCase):
                        'and only one paired end library as input.',
                        dna_source='metagenome')
 
-#    def test_metagenome_single_genome(self):
-#        self.run_error(['intbasic'],
-#                       'Reads object ' + test_kb_SPAdes_1488226367977/intbasic +
-#                       ' (' + 18019/2/1 + ') is marked as containing dna from a ' +
-#                       'single genome but the assembly method was specified as '+ 
-#                       'metagenomic',
-#                       dna_source='metagenome')
+    def test_plasmid_kbfile(self):
+        self.run_success(
+            ['plasmid'], 'plasmid_out',
+            {'contigs':
+             [{'name': 'NODE_1_length_64822_cov_8.99795',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.99795',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
+               },
+              {'name': 'NODE_2_length_62656_cov_8.64555',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_8.64555',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
+               }],
+             'md5': '08d0b92ce7c0a5e346b3077436edaa42',
+             'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
+             }, contig_count=2, dna_source='metagenome')
+
+    def test_plasmid_multiple(self):
+        self.run_error(['plasmid', 'frbasic'],
+                       'Plasmid assembly requires that one ' +
+                       'and only one paired end library as input. ' +
+                       '2 libraries detected.')
 
     def orig_test_interlaced_kbassy(self):
 
@@ -616,7 +635,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'fasta_md5': '8bfd5da65e11d068672201d4f857e4dd'
              }, contig_count=76, dna_source='None')
 
-    def test_single_reads(self):
+    def orig_test_single_reads(self):
         self.run_success(
             ['single_end'], 'single_out',
             {'contigs':
