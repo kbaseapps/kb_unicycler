@@ -149,7 +149,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         ob = dict(object_body)  # copy
         ob['sequencing_tech'] = sequencing_tech
-        ob['single_genome'] = single_genome
+#        ob['single_genome'] = single_genome
         ob['wsname']= cls.getWsName()
         ob['name']= wsobjname
         if single_end or rev_reads:
