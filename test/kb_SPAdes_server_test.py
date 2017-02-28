@@ -317,7 +317,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         iontorrent_reads = {'file': 'data/IonTorrent_single.fastq.gz',
                             'name': '',
                             'type': ''}
-        plasmid_reads = {'file': 'data/SRR3934037_100000.fastq.gz',
+        plasmid_reads = {'file': 'data/pl1.fq.gz',
                             'name': '',
                             'type': ''}
         cls.upload_reads('frbasic', {}, fwd_reads, rev_reads=rev_reads)
