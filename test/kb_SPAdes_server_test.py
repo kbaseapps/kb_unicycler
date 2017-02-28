@@ -459,10 +459,10 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['plasmid_reads'], 'plasmid_out',
             {'contigs':
-             [{'name': 'NODE_1_length_64822_cov_8.99795',
-               'length': 64822,
-               'id': 'NODE_1_length_64822_cov_8.99795',
-               'md5': '8a67351c7d6416039c6f613c31b10764'
+             [{'name': 'NODE_1_length_9667_cov_9.19777_component_0',
+               'length': 9667,
+               'id': 'NODE_1_length_9667_cov_9.19777_component_0',
+               'md5': 'c8c02dd26a71aa6ef5486802f070aa0d'
                }],
              'md5': '010787c609153b4c07103f54051a2761',
              'fasta_md5': 'dd55c47f1c16657762222d0152683bc9'
