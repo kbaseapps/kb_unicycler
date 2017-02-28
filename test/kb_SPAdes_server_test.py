@@ -13,6 +13,7 @@ from biokbase.workspace.client import ServerError as WorkspaceError  # @Unresolv
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from kb_SPAdes.kb_SPAdesImpl import kb_SPAdes
 from ReadsUtils.baseclient import ServerError
+from ReadsUtils.ReadsUtilsClient import ReadsUtils
 from kb_SPAdes.kb_SPAdesServer import MethodContext
 from pprint import pprint
 import shutil
@@ -53,6 +54,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         cls.wsinfo = cls.wsClient.create_workspace({'workspace': wsName})
         print('created workspace ' + cls.getWsName())
         cls.serviceImpl = kb_SPAdes(cls.cfg)
+        cls.readUtilsImpl = ReadsUtils(cls.callbackURL, token=cls.token)
         cls.staged = {}
         cls.nodes_to_delete = []
         cls.handles_to_delete = []
@@ -141,8 +143,49 @@ class gaprice_SPAdesTest(unittest.TestCase):
         return node['id'], handle_id, md5, node['file']['size']
 
     @classmethod
+    def upload_reads(cls, wsobjname, object_body, fwd_reads,
+                     rev_reads=None, single_end=False, sequencing_tech='Illumina',
+                     single_genome='1'):
+
+        ob = dict(object_body)  # copy
+        ob['sequencing_tech'] = sequencing_tech
+#        ob['single_genome'] = single_genome
+        ob['wsname'] = cls.getWsName()
+        ob['name'] = wsobjname
+        if single_end or rev_reads:
+            ob['interleaved']= 0
+        else:
+            ob['interleaved']= 1
+        print('\n===============staging data for object ' + wsobjname +
+              '================')
+        print('uploading forward reads file ' + fwd_reads['file'])
+        fwd_id, fwd_handle_id, fwd_md5, fwd_size = \
+            cls.upload_file_to_shock_and_get_handle(fwd_reads['file'])
+
+        ob['fwd_id']= fwd_id
+        rev_id = None
+        rev_handle_id = None
+        if rev_reads:
+            print('uploading reverse reads file ' + rev_reads['file'])
+            rev_id, rev_handle_id, rev_md5, rev_size = \
+                cls.upload_file_to_shock_and_get_handle(rev_reads['file'])
+            ob['rev_id']= rev_id
+        obj_ref = cls.readUtilsImpl.upload_reads(ob)
+        objdata = cls.wsClient.get_object_info_new({
+            'objects': [{'ref': obj_ref['obj_ref']}]
+            })[0]
+        cls.staged[wsobjname] = {'info': objdata,
+                                 'ref': cls.make_ref(objdata),
+                                 'fwd_node_id': fwd_id,
+                                 'rev_node_id': rev_id,
+                                 'fwd_handle_id': fwd_handle_id,
+                                 'rev_handle_id': rev_handle_id
+                                 }
+
+    @classmethod
     def upload_assembly(cls, wsobjname, object_body, fwd_reads,
-                        rev_reads=None, kbase_assy=False, single_end=False):
+                        rev_reads=None, kbase_assy=False,
+                        single_end=False, sequencing_tech='Illumina'):
         if single_end and rev_reads:
             raise ValueError('u r supr dum')
 
@@ -161,7 +204,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                       }
 
         ob = dict(object_body)  # copy
-        ob['sequencing_tech'] = 'fake data'
+        ob['sequencing_tech'] = sequencing_tech
         if kbase_assy:
             if single_end:
                 wstype = 'KBaseAssembly.SingleEndLibrary'
@@ -217,8 +260,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
                          'name': wsobjname
                          }]
             })[0]
-        print('Saved object: ')
+        print('Saved object objdata: ')
         pprint(objdata)
+        print('Saved object ob: ')
         pprint(ob)
         cls.staged[wsobjname] = {'info': objdata,
                                  'ref': cls.make_ref(objdata),
@@ -264,17 +308,44 @@ class gaprice_SPAdesTest(unittest.TestCase):
         int64_reads = {'file': 'data/interleaved64.fq',
                        'name': '',
                        'type': ''}
-        cls.upload_assembly('frbasic', {}, fwd_reads, rev_reads=rev_reads)
-        cls.upload_assembly('intbasic', {'single_genome': 1}, int_reads)
-        cls.upload_assembly('intbasic64', {'single_genome': 1}, int64_reads)
-        cls.upload_assembly('meta', {'single_genome': 0}, fwd_reads,
+        pacbio_reads = {'file': 'data/pacbio_filtered_small.fastq.gz',
+                        'name': '',
+                        'type': ''}
+        pacbio_ccs_reads = {'file': 'data/pacbioCCS_small.fastq.gz',
+                            'name': '',
+                            'type': ''}
+        iontorrent_reads = {'file': 'data/IonTorrent_single.fastq.gz',
+                            'name': '',
+                            'type': ''}
+        plasmid1_reads = {'file': 'data/pl1.fq.gz',
+                          'name': '',
+                          'type': ''}
+        plasmid2_reads = {'file': 'data/pl2.fq.gz',
+                          'name': '',
+                          'type': ''}
+        cls.upload_reads('frbasic', {}, fwd_reads, rev_reads=rev_reads)
+        cls.upload_reads('intbasic', {'single_genome': 1}, int_reads)
+        cls.upload_reads('intbasic64', {'single_genome': 1}, int64_reads)
+        cls.upload_reads('pacbio', {'single_genome': 1},
+                            pacbio_reads, single_end=True, sequencing_tech="PacBio CLR")
+        cls.upload_reads('pacbioccs', {'single_genome': 1},
+                            pacbio_ccs_reads, single_end=True, sequencing_tech="PacBio CCS")
+        cls.upload_reads('iontorrent', {'single_genome': 1},
+                            iontorrent_reads, single_end=True, sequencing_tech="IonTorrent")
+        cls.upload_reads('meta', {'single_genome': 0}, fwd_reads,
                             rev_reads=rev_reads)
-        cls.upload_assembly('reads_out', {'read_orientation_outward': 1},
+        cls.upload_reads('meta2', {'single_genome': 0}, fwd_reads,
+                            rev_reads=rev_reads)
+        cls.upload_reads('meta_single_end', {'single_genome': 0}, fwd_reads, single_end=True)
+        cls.upload_reads('reads_out', {'read_orientation_outward': 1},
                             int_reads)
         cls.upload_assembly('frbasic_kbassy', {}, fwd_reads,
                             rev_reads=rev_reads, kbase_assy=True)
         cls.upload_assembly('intbasic_kbassy', {}, int_reads, kbase_assy=True)
-        cls.upload_assembly('single_end', {}, fwd_reads, single_end=True)
+        cls.upload_reads('single_end', {}, fwd_reads, single_end=True)
+        cls.upload_reads('single_end2', {}, rev_reads, single_end=True)
+        cls.upload_reads('plasmid_reads', {'single_genome': 1},
+                         plasmid1_reads, rev_reads=plasmid2_reads)
         shutil.copy2('data/small.forward.fq', 'data/small.forward.bad')
         bad_fn_reads = {'file': 'data/small.forward.bad',
                         'name': '',
@@ -339,56 +410,248 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.run_success(
             ['intbasic'], 'intbasic_out',
             {'contigs':
-             [{'name': 'NODE_1000_length_274_cov_1.11168',
-               'length': 274,
-               'id': 'NODE_1000_length_274_cov_1.11168',
-               'md5': '1b00037a0f39ff0fcb577c4e7ff72cf1'
+             [{'name': 'NODE_1_length_4084_cov_1.3132',
+               'length': 4084,
+               'id': 'NODE_1_length_4084_cov_1.3132',
+               'md5': '8d434467d0158fd0eaa2e909c7314a69'
                },
-              {'name': 'NODE_1001_length_274_cov_1.1066',
-               'length': 274,
-               'id': 'NODE_1001_length_274_cov_1.1066',
-               'md5': 'c1c853543b2bba9211e574238b842869'
+              {'name': 'NODE_2_length_3873_cov_2.43151',
+               'length': 3873,
+               'id': 'NODE_2_length_3873_cov_2.43151',
+               'md5': '64668c2d1ccb121a88404989b54808c7'
                }],
-             'md5': 'f285181574a14b4ffd8828e319128e5a',
-             'fasta_md5': '94c70046956b7a9d04b5de7bd518513b'
-             }, contig_count=1449)
+             'md5': '200c2a4b6bc9f79fbf2fecdbcf997978',
+             'fasta_md5': 'ab7aadf4046d5fdabd71ae5813b34f7f'
+             }, contig_count=1450)
+
+    def test_metagenome_kbfile(self):
+        self.run_success(
+            ['meta'], 'metabasic_out',
+            {'contigs':
+             [{'name': 'NODE_1_length_64822_cov_8.99795',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.99795',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
+               },
+              {'name': 'NODE_2_length_62656_cov_8.64555',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_8.64555',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
+               }],
+             'md5': '08d0b92ce7c0a5e346b3077436edaa42',
+             'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
+             }, contig_count=2, dna_source='metagenome')
+
+    def test_metagenome_multiple(self):
+        self.run_error(['meta', 'meta2'],
+                       'Metagenome assembly requires that one ' +
+                       'and only one paired end library as input. ' +
+                       '2 libraries detected.',
+                       dna_source='metagenome')
+
+    def test_metagenome_single_end(self):
+        self.run_error(['meta_single_end'],
+                       'Metagenome assembly requires that one ' +
+                       'and only one paired end library as input.',
+                       dna_source='metagenome')
+
+    def test_plasmid_kbfile(self):
+        self.run_success(
+            ['plasmid_reads'], 'plasmid_out',
+            {'contigs':
+             [{'name': 'NODE_1_length_9667_cov_9.19777_component_0',
+               'length': 9667,
+               'id': 'NODE_1_length_9667_cov_9.19777_component_0',
+               'md5': 'c8c02dd26a71aa6ef5486802f070aa0d'
+               }],
+             'md5': '010787c609153b4c07103f54051a2761',
+             'fasta_md5': 'dd55c47f1c16657762222d0152683bc9'
+             }, contig_count=1, dna_source='plasmid')
+
+    def test_plasmid_multiple(self):
+        self.run_error(['plasmid_reads', 'frbasic'],
+                       'Plasmid assembly requires that one ' +
+                       'and only one library as input. ' +
+                       '2 libraries detected.',
+                       dna_source='plasmid')
 
     def test_interlaced_kbassy(self):
 
         self.run_success(
             ['intbasic_kbassy'], 'intbasic_kbassy_out',
             {'contigs':
-             [{'name': 'NODE_1000_length_274_cov_1.11168',
-               'length': 274,
-               'id': 'NODE_1000_length_274_cov_1.11168',
-               'md5': '1b00037a0f39ff0fcb577c4e7ff72cf1'
+             [{'name': 'NODE_1_length_4084_cov_1.3132',
+               'length': 4084,
+               'id': 'NODE_1_length_4084_cov_1.3132',
+               'md5': '8d434467d0158fd0eaa2e909c7314a69'
                },
-              {'name': 'NODE_1001_length_274_cov_1.1066',
-               'length': 274,
-               'id': 'NODE_1001_length_274_cov_1.1066',
-               'md5': 'c1c853543b2bba9211e574238b842869'
+              {'name': 'NODE_2_length_3873_cov_2.43151',
+               'length': 3873,
+               'id': 'NODE_2_length_3873_cov_2.43151',
+               'md5': '64668c2d1ccb121a88404989b54808c7'
                }],
-             'md5': 'f285181574a14b4ffd8828e319128e5a',
-             'fasta_md5': '94c70046956b7a9d04b5de7bd518513b'
-             }, contig_count=1449, dna_source='')
+             'md5': '200c2a4b6bc9f79fbf2fecdbcf997978',
+             'fasta_md5': 'ab7aadf4046d5fdabd71ae5813b34f7f'
+             }, contig_count=1450, dna_source='')
 
     def test_multiple(self):
         self.run_success(
             ['intbasic_kbassy', 'frbasic'], 'multiple_out',
             {'contigs':
-             [{'name': 'NODE_1391_length_233_cov_1.40385',
-               'length': 233,
-               'id': 'NODE_1391_length_233_cov_1.40385',
-               'md5': '7fc057f5b65b026eb3c4956c4b14bd70'
+             [{'name': 'NODE_1_length_64822_cov_4.59581',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_4.59581',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
                },
-              {'name': 'NODE_685_length_338_cov_1.58238',
-               'length': 338,
-               'id': 'NODE_685_length_338_cov_1.58238',
-               'md5': '3aa0f771c4d2b916d810c5172ba914ae'
+              {'name': 'NODE_2_length_62656_cov_4.41539',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_4.41539',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
                }],
-             'md5': 'bb0803169c99b171b9f1b997228f278b',
-             'fasta_md5': 'd4b3a1fc90bb822de28c6caa96e1b712'
+             'md5': '43db43d141d5f122b93cec5718eead70',
+             'fasta_md5': '0e2de918428b3bb8e6ed42669428b868'
              }, contig_count=1452, dna_source='None')
+
+    def test_multiple_pacbio_illumina(self):
+        self.run_success(
+            ['intbasic_kbassy', 'pacbio'], 'pacbio_multiple_out',
+            {'contigs':
+             [{'name': 'NODE_1_length_4084_cov_1.3132',
+               'length': 4084,
+               'id': 'NODE_1_length_4084_cov_1.3132',
+               'md5': '8d434467d0158fd0eaa2e909c7314a69'
+               },
+              {'name': 'NODE_2_length_3873_cov_2.43151',
+               'length': 3873,
+               'id': 'NODE_2_length_3873_cov_2.43151',
+               'md5': '64668c2d1ccb121a88404989b54808c7'
+               }],
+             'md5': '38c94314d0db51075a78ab8d5b85cb60',
+             'fasta_md5': '6a23b8a37c33f1bd63de77d5a67f2d0c'
+             }, contig_count=1447, dna_source='None')
+
+    def test_multiple_pacbio_single(self):
+        self.run_success(
+            ['single_end', 'pacbio'], 'pacbio_single_out',
+            {'contigs':
+             [{'name': 'NODE_1_length_46307_cov_4.43576',
+               'length': 46307,
+               'id': 'NODE_1_length_46307_cov_4.43576',
+               'md5': 'fe4d97654a63c0f2f172894ae7b3ad85'
+               },
+              {'name': 'NODE_2_length_41003_cov_4.30011',
+               'length': 41003,
+               'id': 'NODE_2_length_41003_cov_4.30011',
+               'md5': 'a3bb8457f8e98f95d471d4d43653c2dd'
+               }],
+             'md5': 'cade3c3a5db42701e09c3f091edd83e6',
+             'fasta_md5': 'ad834a03295f11ab0b10308c72a89626'
+             }, contig_count=7, dna_source='None')
+
+    def test_multiple_single(self):
+        self.run_success(
+            ['single_end', 'single_end2'], 'multiple_single_out',
+            {'contigs':
+             [{'name': 'NODE_2_length_62656_cov_8.64322',
+               'length': 62656,
+               'id': 'NODE_2_length_62656_cov_8.64322',
+               'md5': '8e7483c2223234aeff0c78f70b2e068a'
+               },
+              {'name': 'NODE_1_length_64822_cov_8.99582',
+               'length': 64822,
+               'id': 'NODE_1_length_64822_cov_8.99582',
+               'md5': '8a67351c7d6416039c6f613c31b10764'
+               }],
+             'md5': '08d0b92ce7c0a5e346b3077436edaa42',
+             'fasta_md5': '03a8b6fc00638dd176998e25e4a208b6'
+             }, contig_count=2, dna_source='None')
+
+    def test_multi_paired_single(self):
+        self.run_success(
+            ['intbasic_kbassy','single_end'], 'multi_paired_single_out',
+            {'contigs':
+             [{'name': 'NODE_274_length_495_cov_1.22249',
+               'length': 495,
+               'id': 'NODE_274_length_495_cov_1.22249',
+               'md5': 'c393d68ecaf4cb1c4644d21960c6b72b'
+               },
+              {'name': 'NODE_49_length_928_cov_2.0517',
+               'length': 928,
+               'id': 'NODE_49_length_928_cov_2.0517',
+               'md5': 'fe82bda17020c4ac02081245ca9d3fab'
+               }],
+             'md5': '5787862150f820a2629bcddb3b2df8f8',
+             'fasta_md5': '5231eedcd0d2ea5087b4d9594f40e443'
+             }, contig_count=1461, dna_source='None')
+
+    def test_iontorrent_alone(self):
+        self.run_non_deterministic_success(
+            ['iontorrent'], 'iontorrent_alone_out',
+            dna_source='None')
+
+    def test_multiple_iontorrent_illumina(self):
+        self.run_error(['intbasic_kbassy', 'iontorrent'],
+                       'Both IonTorrent and Illumina read libraries exist. SPAdes ' +
+                       'can not assemble them together.')
+
+    def test_pacbio_alone(self):
+        self.run_error(['pacbio'],
+                       'Per SPAdes requirements : If doing PacBio CLR reads, you must also ' +
+                       'supply at least one paired end or single end reads library')
+
+    def test_pacbioccs_alone(self):
+        self.run_success(
+            ['pacbioccs'], 'pacbioccs_alone_out',
+            {'contigs':
+             [{'name': 'NODE_1_length_497242_cov_3.07893',
+               'length': 497242,
+               'id': 'NODE_1_length_497242_cov_3.07893',
+               'md5': '3bce716f534a547da4c42e60c81a9e1b'
+               },
+              {'name': 'NODE_2_length_421917_cov_3.16403',
+               'length': 421917,
+               'id': 'NODE_2_length_421917_cov_3.16403',
+               'md5': '0d5ff1244c38dc7e1b6e912b6bd7114e'
+               }],
+             'md5': '3a2bcdd1dd5795e038160f227b5627df',
+             'fasta_md5': 'eff807bfdc3fdc5b0343c35138bdf74f'
+             }, contig_count=88, dna_source='None')
+
+    def test_multiple_pacbioccs_illumina(self):
+        self.run_success(
+            ['intbasic_kbassy', 'pacbioccs'], 'pacbioccs_multiple_out',
+            {'contigs':
+             [{'name': 'NODE_1_length_752414_cov_3.12176',
+               'length': 752414,
+               'id': 'NODE_1_length_752414_cov_3.12176',
+               'md5': '950378bba6923ea17b7fd33ed124dea0'
+               },
+              {'name': 'NODE_2_length_459413_cov_3.19014',
+               'length': 459413,
+               'id': 'NODE_2_length_459413_cov_3.19014',
+               'md5': '389c3acf2586f42e9c2c9bf5fe5fba12'
+               }],
+             'md5': '2bd209a0b2851362cb2fda75a500c90e',
+             'fasta_md5': '8bfd5da65e11d068672201d4f857e4dd'
+             }, contig_count=76, dna_source='None')
+
+    def test_single_reads(self):
+        self.run_success(
+            ['single_end'], 'single_out',
+            {'contigs':
+             [{'name': 'NODE_1_length_46307_cov_4.43576',
+               'length': 46307,
+               'id': 'NODE_1_length_46307_cov_4.43576',
+               'md5': 'fe4d97654a63c0f2f172894ae7b3ad85'
+               },
+              {'name': 'NODE_2_length_41003_cov_4.30011',
+               'length': 41003,
+               'id': 'NODE_2_length_41003_cov_4.30011',
+               'md5': 'a3bb8457f8e98f95d471d4d43653c2dd'
+               }],
+             'md5': 'cade3c3a5db42701e09c3f091edd83e6',
+             'fasta_md5': 'ad834a03295f11ab0b10308c72a89626'
+             }, contig_count=7, dna_source='None')
 
     def test_multiple_bad(self):
         # Testing where input reads have different phred types (33 and 64)
@@ -541,12 +804,6 @@ class gaprice_SPAdesTest(unittest.TestCase):
                        'types KBaseAssembly.PairedEndLibrary and ' +
                        'KBaseFile.PairedEndLibrary are supported')
 
-    def test_bad_type(self):
-
-        self.run_error(['single_end'], self.getWsName() + '/' +
-                       'single_end is a single end read library, which is ' +
-                       'not currently supported.')
-
     def test_bad_shock_filename(self):
 
         self.run_error(
@@ -675,6 +932,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
         if not contig_count:
             contig_count = len(expected['contigs'])
 
+        print("READNAMES: " + str(readnames))
+        print("STAGED: " + str(self.staged))
+
         libs = [self.staged[n]['info'][1] for n in readnames]
 #        assyrefs = sorted(
 #            [self.make_ref(self.staged[n]['info']) for n in readnames])
@@ -757,3 +1017,42 @@ class gaprice_SPAdesTest(unittest.TestCase):
                 # Need to see them to update the tests accordingly.
                 # If code gets here this test is designed to always fail, but show results.
                 self.assertEqual(str(assembly['data']['contigs']),"BLAH")
+
+
+    def run_non_deterministic_success(self, readnames, output_name,
+                    dna_source=None):
+
+        test_name = inspect.stack()[1][3]
+        print('\n**** starting expected success test: ' + test_name + ' *****')
+        print('   libs: ' + str(readnames))
+
+        print("READNAMES: " + str(readnames))
+        print("STAGED: " + str(self.staged))
+
+        libs = [self.staged[n]['info'][1] for n in readnames]
+
+        params = {'workspace_name': self.getWsName(),
+                  'read_libraries': libs,
+                  'output_contigset_name': output_name
+                  }
+
+        if not (dna_source is None):
+            if dna_source == 'None':
+                params['dna_source'] = None
+            else:
+                params['dna_source'] = dna_source
+
+        ret = self.getImpl().run_SPAdes(self.ctx, params)[0]
+
+        report = self.wsClient.get_objects([{'ref': ret['report_ref']}])[0]
+        self.assertEqual('KBaseReport.Report', report['info'][2].split('-')[0])
+        self.assertEqual(1, len(report['data']['objects_created']))
+        self.assertEqual('Assembled contigs',
+                         report['data']['objects_created'][0]['description'])
+        self.assertIn('Assembled into ', report['data']['text_message'])
+        self.assertIn('contigs', report['data']['text_message'])
+
+        assembly_ref = report['data']['objects_created'][0]['ref']
+        assembly = self.wsClient.get_objects([{'ref': assembly_ref}])[0]
+        self.assertEqual('KBaseGenomeAnnotations.Assembly', assembly['info'][2].split('-')[0])
+        self.assertEqual(output_name, assembly['info'][1])

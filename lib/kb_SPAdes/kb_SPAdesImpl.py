@@ -56,9 +56,9 @@ A coverage cutoff is not specified.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "0.0.3"
+    VERSION = "0.0.6"
     GIT_URL = "https://github.com/jkbaumohl/kb_SPAdes"
-    GIT_COMMIT_HASH = "614a888d44b21561ac18519d15bf6db65c0cc4c2"
+    GIT_COMMIT_HASH = "3693895a5d0067b9f337890ebed7eede0fd3f262"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -70,6 +70,7 @@ A coverage cutoff is not specified.
     PARAM_IN_DNA_SOURCE = 'dna_source'
     PARAM_IN_SINGLE_CELL = 'single_cell'
     PARAM_IN_METAGENOME = 'metagenome'
+    PARAM_IN_PLASMID = 'plasmid'
 
     INVALID_WS_OBJ_NAME_RE = re.compile('[^\\w\\|._-]')
     INVALID_WS_NAME_RE = re.compile('[^\\w:._-]')
@@ -128,24 +129,66 @@ A coverage cutoff is not specified.
     def generate_spades_yaml(self, reads_data):
         left = []  # fwd in fr orientation
         right = []  # rev
+        single = [] # single end reads
+        pacbio = [] # pacbio CLR reads (for pacbio CCS use -s option.)
         interlaced = []
+        illumina_present = 0
+        iontorrent_present = 0
         for read in reads_data:
-            if 'rev_file' in read and read['rev_file']:
-                left.append(read['fwd_file'])
-                right.append(read['rev_file'])
+            seq_tech = read['seq_tech']
+            if seq_tech == "PacBio CLR":
+                pacbio.append(read['fwd_file'])
+            elif read['type'] == "paired":
+                if 'rev_file' in read and read['rev_file']:
+                    left.append(read['fwd_file'])
+                    right.append(read['rev_file'])
+                else:
+                    interlaced.append(read['fwd_file'])
+            elif read['type'] == "single":
+                single.append(read['fwd_file'])
+
+            if seq_tech == "IonTorrent":
+                iontorrent_present = 1
+            elif seq_tech == "Illumina":
+                illumina_present = 1
+
+        if (illumina_present == 1 and iontorrent_present == 1):
+            raise ValueError('Both IonTorrent and Illumina read libraries exist. ' +
+                             'SPAdes can not assemble them together.')
+
+        yml = []
+        yml_index_counter = 0
+        # Pacbio CLR ahs to be run with at least one single end or paired end library
+        other_reads_present_for_pacbio = 0
+        if left or interlaced:
+            yml.append({'type': 'paired-end',
+                        'orientation': 'fr'})
+            if left:
+                yml[yml_index_counter]['left reads'] = left
+                yml[yml_index_counter]['right reads'] = right
+            if interlaced:
+                yml[yml_index_counter]['interlaced reads'] = interlaced
+            yml_index_counter += 1
+            other_reads_present_for_pacbio = 1
+        if single:
+            yml.append({'type': "single"})
+            yml[yml_index_counter]['single reads'] = single
+            yml_index_counter += 1
+            other_reads_present_for_pacbio = 1
+        if pacbio:
+            if other_reads_present_for_pacbio == 1:
+                yml.append({'type': "pacbio"})
+                yml[yml_index_counter]['single reads'] = pacbio
+                yml_index_counter += 1
             else:
-                interlaced.append(read['fwd_file'])
-        yml = [{'type': 'paired-end',
-                'orientation': 'fr'}]
-        if left:
-            yml[0]['left reads'] = left
-            yml[0]['right reads'] = right
-        if interlaced:
-            yml[0]['interlaced reads'] = interlaced
+                # RAISE AN ERROR AS PACBIO REQUIRES AT LEAST
+                # ONE SINGLE OR PAIRED ENDS LIBRARY
+                raise ValueError('Per SPAdes requirements : If doing PacBio CLR reads, you must ' +
+                                 'also supply at least one paired end or single end reads library')
         yml_path = os.path.join(self.scratch, 'run.yaml')
         with open(yml_path, 'w') as yml_file:
             yaml.safe_dump(yml, yml_file)
-        return yml_path
+        return yml_path, iontorrent_present
 
     def exec_spades(self, dna_source, reads_data, phred_type):
         threads = psutil.cpu_count() * self.THREADS_PER_CORE
@@ -168,18 +211,40 @@ A coverage cutoff is not specified.
 
         cmd = ['spades.py', '--threads', str(threads),
                '--memory', str(mem), '-o', outdir, '--tmp-dir', tmpdir]
+
+        print("THE DNA SOURCE IS : " + str(dna_source))
         if dna_source == self.PARAM_IN_SINGLE_CELL:
             cmd += ['--sc']
+        if dna_source == self.PARAM_IN_PLASMID:
+            cmd += ['--plasmid']
+            # The plasmid assembly can only be run on a single library
+            if len(reads_data) > 1 :
+                raise ValueError('Plasmid assembly requires that one ' +
+                                 'and only one library as input. ' +
+                                 str(len(reads_data)) + ' libraries detected.')
         if dna_source == self.PARAM_IN_METAGENOME:
             cmd += ['--meta']
+            # The metagenome assembly can only be run on a single library
+            # The library must be paired end.
+            if len(reads_data) > 1 or reads_data[0]['type'] != 'paired':
+                error_msg = 'Metagenome assembly requires that one and ' + \
+                            'only one paired end library as input.'
+                if len(reads_data) > 1:
+                    error_msg += ' ' + str(len(reads_data)) + \
+                                 ' libraries detected.'
+                raise ValueError(error_msg)
         else:
             cmd += ['--careful']
         cmd += ['--phred-offset', phred_type]
 #        print("LENGTH OF READSDATA IN EXEC: " + str(len(reads_data)))
-        print("SPADES YAML: " + str(self.generate_spades_yaml(reads_data)))
-        cmd += ['--dataset', self.generate_spades_yaml(reads_data)]
+#        print("READS DATA: " + str(reads_data))
+#        print("SPADES YAML: " + str(self.generate_spades_yaml(reads_data)))
+        spades_yaml_path, iontorrent_present = self.generate_spades_yaml(reads_data)
+        if iontorrent_present == 1:
+            cmd += ['--iontorrent']
+        cmd += ['--dataset', spades_yaml_path]
         self.log('Running SPAdes command line:')
-#        print("SPADES CMD:" + str(cmd))
+        print("SPADES CMD:" + str(cmd))
         self.log(cmd)
 
         if self.DISABLE_SPADES_OUTPUT:
@@ -257,14 +322,6 @@ A coverage cutoff is not specified.
         for c in range(bins):
             report += '   ' + str(counts[c]) + '\t--\t' + str(edges[c]) +\
                 ' to ' + str(edges[c + 1]) + ' bp\n'
-#        report_cl = KBaseReport(self.callbackURL, service_ver='dev')
-#        reportObj = {
-#            'objects_created': [{'ref': assembly_ref,
-#                                 'description': 'Assembled contigs'}],
-#            'text_message': report
-#        }
-#        report_info = report_cl.create({'report': reportObj,
-#                                        'workspace_name': wsname})
         print('Running QUAST')
         kbq = kb_quast(self.callbackURL)
         quastret = kbq.run_QUAST({'files': [{'path': input_file_name,
@@ -307,6 +364,8 @@ A coverage cutoff is not specified.
             elif f['type'] == 'paired':
                 files_to_check.append(f['fwd'])
                 files_to_check.append(f['rev'])
+            elif f['type'] == 'single':
+                files_to_check.append(f['fwd'])
             # print("FILES TO CHECK:" + str(files_to_check))
             for file_path in files_to_check:
                 ea_stats_dict = eautils.calculate_fastq_stats({'read_library_path': file_path})
@@ -317,7 +376,7 @@ A coverage cutoff is not specified.
                     phred64_reads.add(obj_name)
                 else: 
                     raise ValueError(('Reads object {} ({}) phred type is not of the ' +
-                                      'expected value of 33 or 64. It had a phred type of' +
+                                      'expected value of 33 or 64. It had a phred type of ' +
                                       '{}').format(obj_name, rds, ea_stats_dict['phred_type']))
         return phred64_reads, phred33_reads
 
@@ -329,9 +388,9 @@ A coverage cutoff is not specified.
             rds = reads[ref]
             obj_name = reftoname[ref]
             obj_ref = rds['ref']
-            if rds['phred_type'] == 33:
+            if rds['phred_type'] == '33':
                 phred33_reads.add(obj_name)
-            elif rds['phred_type'] == 64:
+            elif rds['phred_type'] == '64':
                 phred64_reads.add(obj_name)
             else:
                 unknown_phred_reads.add(ref)
@@ -341,10 +400,6 @@ A coverage cutoff is not specified.
                     ('Reads object {} ({}) is marked as having outward ' +
                      'oriented reads, which SPAdes does not ' +
                      'support.').format(obj_name, obj_ref))
-
-            if rds['files']['type'] == 'single':
-                raise ValueError(('{} is a single end read library, which ' +
-                                  'is not currently supported.').format(obj_name))
 
             # ideally types would be firm enough that we could rely on the
             # metagenomic boolean. However KBaseAssembly doesn't have the field
@@ -410,10 +465,12 @@ A coverage cutoff is not specified.
                              params[self.PARAM_IN_CS_NAME])
         if self.PARAM_IN_DNA_SOURCE in params:
             s = params[self.PARAM_IN_DNA_SOURCE]
-            if s not in [self.PARAM_IN_SINGLE_CELL, self.PARAM_IN_METAGENOME]:
+#            print("FOUND THE DNA SOURCE: " + str(params[self.PARAM_IN_DNA_SOURCE]))
+            if s not in [self.PARAM_IN_SINGLE_CELL, self.PARAM_IN_METAGENOME, self.PARAM_IN_PLASMID]:
                 params[self.PARAM_IN_DNA_SOURCE] = None
         else:
             params[self.PARAM_IN_DNA_SOURCE] = None
+#            print("PARAMS ARE:" + str(params))
 
     #END_CLASS_HEADER
 
@@ -431,6 +488,7 @@ A coverage cutoff is not specified.
             os.makedirs(self.scratch)
         #END_CONSTRUCTOR
         pass
+
 
     def run_SPAdes(self, ctx, params):
         """
@@ -485,7 +543,7 @@ A coverage cutoff is not specified.
             obj_name = wsi[1]
             reftoname[ref] = wsi[7] + '/' + obj_name
 
-        readcli = ReadsUtils(self.callbackURL, token=ctx['token'], service_ver='dev')
+        readcli = ReadsUtils(self.callbackURL, token=ctx['token'])
 
         typeerr = ('Supported types: KBaseFile.SingleEndLibrary ' +
                    'KBaseFile.PairedEndLibrary ' +
@@ -516,10 +574,18 @@ A coverage cutoff is not specified.
         for ref in reads:
             reads_name = reftoname[ref]
             f = reads[ref]['files']
+#            print ("REF:" + str(ref))
+#            print ("READS REF:" + str(reads[ref]))
+            seq_tech = reads[ref]["sequencing_tech"]
             if f['type'] == 'interleaved':
-                reads_data.append({'fwd_file': f['fwd']})
+                reads_data.append({'fwd_file': f['fwd'], 'type':'paired',
+                                   'seq_tech': seq_tech})
             elif f['type'] == 'paired':
-                reads_data.append({'fwd_file': f['fwd'], 'rev_file': f['rev']})
+                reads_data.append({'fwd_file': f['fwd'], 'rev_file': f['rev'],
+                                   'type':'paired', 'seq_tech': seq_tech})
+            elif f['type'] == 'single':
+                reads_data.append({'fwd_file': f['fwd'], 'type':'single',
+                                   'seq_tech': seq_tech})
             else:
                 raise ValueError('Something is very wrong with read lib' + reads_name)
         spades_out = self.exec_spades(params[self.PARAM_IN_DNA_SOURCE],
@@ -549,7 +615,6 @@ A coverage cutoff is not specified.
                              'output is not type dict as required.')
         # return the results
         return [output]
-
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",
