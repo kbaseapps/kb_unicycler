@@ -69,7 +69,7 @@ A coverage cutoff is not specified.
     PARAM_IN_CS_NAME = 'output_contigset_name'
     PARAM_IN_DNA_SOURCE = 'dna_source'
     PARAM_IN_SINGLE_CELL = 'single_cell'
-    PARAM_IN_METAGENOME = 'metagenome'
+    PARAM_IN_METAGENOME = 'metagenomic'
     PARAM_IN_PLASMID = 'plasmid'
 
     INVALID_WS_OBJ_NAME_RE = re.compile('[^\\w\\|._-]')

@@ -440,20 +440,20 @@ class gaprice_SPAdesTest(unittest.TestCase):
                }],
              'md5': '08d0b92ce7c0a5e346b3077436edaa42',
              'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
-             }, contig_count=2, dna_source='metagenome')
+             }, contig_count=2, dna_source='metagenomic')
 
     def test_metagenome_multiple(self):
         self.run_error(['meta', 'meta2'],
                        'Metagenome assembly requires that one ' +
                        'and only one paired end library as input. ' +
                        '2 libraries detected.',
-                       dna_source='metagenome')
+                       dna_source='metagenomic')
 
     def test_metagenome_single_end(self):
         self.run_error(['meta_single_end'],
                        'Metagenome assembly requires that one ' +
                        'and only one paired end library as input.',
-                       dna_source='metagenome')
+                       dna_source='metagenomic')
 
     def test_plasmid_kbfile(self):
         self.run_success(
@@ -700,7 +700,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                }],
              'md5': '08d0b92ce7c0a5e346b3077436edaa42',
              'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
-             }, dna_source='metagenome')
+             }, dna_source='metagenomic')
 
     def test_no_workspace_param(self):
 
@@ -776,7 +776,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
             self.staged['intbasic']['ref'] +
             ') is marked as containing dna from a single genome but the ' +
             'assembly method was specified as metagenomic',
-            dna_source='metagenome')
+            dna_source='metagenomic')
 
     def test_inconsistent_metagenomics_2(self):
 
