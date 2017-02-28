@@ -56,7 +56,7 @@ A coverage cutoff is not specified.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "0.0.4"
+    VERSION = "0.0.6"
     GIT_URL = "https://github.com/jkbaumohl/kb_SPAdes"
     GIT_COMMIT_HASH = "3693895a5d0067b9f337890ebed7eede0fd3f262"
 
