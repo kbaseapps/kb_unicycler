@@ -317,9 +317,12 @@ class gaprice_SPAdesTest(unittest.TestCase):
         iontorrent_reads = {'file': 'data/IonTorrent_single.fastq.gz',
                             'name': '',
                             'type': ''}
-        plasmid_reads = {'file': 'data/pl1.fq.gz',
-                            'name': '',
-                            'type': ''}
+        plasmid1_reads = {'file': 'data/pl1.fq.gz',
+                          'name': '',
+                          'type': ''}
+        plasmid2_reads = {'file': 'data/pl2.fq.gz',
+                          'name': '',
+                          'type': ''}
         cls.upload_reads('frbasic', {}, fwd_reads, rev_reads=rev_reads)
         cls.upload_reads('intbasic', {'single_genome': 1}, int_reads)
         cls.upload_reads('intbasic64', {'single_genome': 1}, int64_reads)
@@ -341,7 +344,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
         cls.upload_assembly('intbasic_kbassy', {}, int_reads, kbase_assy=True)
         cls.upload_reads('single_end', {}, fwd_reads, single_end=True)
         cls.upload_reads('single_end2', {}, rev_reads, single_end=True)
-        cls.upload_reads('plasmid_reads', {'single_genome': 1}, plasmid_reads, single_end=True)
+        cls.upload_reads('plasmid_reads', {'single_genome': 1},
+                         plasmid1_reads, rev_reads=plasmid2_reads)
         shutil.copy2('data/small.forward.fq', 'data/small.forward.bad')
         bad_fn_reads = {'file': 'data/small.forward.bad',
                         'name': '',
