@@ -465,7 +465,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                'md5': '8a67351c7d6416039c6f613c31b10764'
                }],
              'md5': '08d0b92ce7c0a5e346b3077436edaa42',
-             'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
+             'fasta_md5': 'dd55c47f1c16657762222d0152683bc9'
              }, contig_count=1, dna_source='plasmid')
 
     def orig_test_plasmid_multiple(self):
