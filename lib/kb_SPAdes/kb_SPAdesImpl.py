@@ -236,8 +236,8 @@ A coverage cutoff is not specified.
         else:
             cmd += ['--careful']
         cmd += ['--phred-offset', phred_type]
-        print("LENGTH OF READSDATA IN EXEC: " + str(len(reads_data)))
-        print("READS DATA: " + str(reads_data))
+#        print("LENGTH OF READSDATA IN EXEC: " + str(len(reads_data)))
+#        print("READS DATA: " + str(reads_data))
 #        print("SPADES YAML: " + str(self.generate_spades_yaml(reads_data)))
         spades_yaml_path, iontorrent_present = self.generate_spades_yaml(reads_data)
         if iontorrent_present == 1:
@@ -465,12 +465,12 @@ A coverage cutoff is not specified.
                              params[self.PARAM_IN_CS_NAME])
         if self.PARAM_IN_DNA_SOURCE in params:
             s = params[self.PARAM_IN_DNA_SOURCE]
-            print("FOUND THE DNA SOURCE: " + str(params[self.PARAM_IN_DNA_SOURCE]))
+#            print("FOUND THE DNA SOURCE: " + str(params[self.PARAM_IN_DNA_SOURCE]))
             if s not in [self.PARAM_IN_SINGLE_CELL, self.PARAM_IN_METAGENOME, self.PARAM_IN_PLASMID]:
                 params[self.PARAM_IN_DNA_SOURCE] = None
         else:
             params[self.PARAM_IN_DNA_SOURCE] = None
-            print("PARAMS ARE:" + str(params))
+#            print("PARAMS ARE:" + str(params))
 
     #END_CLASS_HEADER
 
@@ -574,8 +574,8 @@ A coverage cutoff is not specified.
         for ref in reads:
             reads_name = reftoname[ref]
             f = reads[ref]['files']
-            print ("REF:" + str(ref))
-            print ("READS REF:" + str(reads[ref]))
+#            print ("REF:" + str(ref))
+#            print ("READS REF:" + str(reads[ref]))
             seq_tech = reads[ref]["sequencing_tech"]
             if f['type'] == 'interleaved':
                 reads_data.append({'fwd_file': f['fwd'], 'type':'paired',
