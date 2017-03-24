@@ -56,9 +56,9 @@ A coverage cutoff is not specified.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "0.0.6"
-    GIT_URL = "https://github.com/jkbaumohl/kb_SPAdes"
-    GIT_COMMIT_HASH = "3693895a5d0067b9f337890ebed7eede0fd3f262"
+    VERSION = "0.0.7"
+    GIT_URL = "https://github.com/rsutormin/kb_SPAdes"
+    GIT_COMMIT_HASH = "3699020a33c60989210f611ff984dd74473999aa"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
