@@ -20,7 +20,7 @@ from kb_SPAdes.authclient import KBaseAuth as _KBaseAuth
 
 DEPLOY = 'KB_DEPLOYMENT_CONFIG'
 SERVICE = 'KB_SERVICE_NAME'
-AUTH = 'auth-server-url'
+AUTH = 'auth-service-url'
 
 # Note that the error fields do not match the 2.0 JSONRPC spec
 
@@ -109,7 +109,11 @@ class JSONRPCServiceCustom(JSONRPCService):
             # Exception was raised inside the method.
             newerr = JSONServerError()
             newerr.trace = traceback.format_exc()
-            newerr.data = e.message
+            if isinstance(e.message, basestring):
+                newerr.data = e.message
+            else:
+                # Some exceptions embed other exceptions as the message
+                newerr.data = repr(e.message)
             raise newerr
         return result
 
@@ -332,7 +336,7 @@ class Application(object):
         self.rpc_service.add(impl_kb_SPAdes.run_SPAdes,
                              name='kb_SPAdes.run_SPAdes',
                              types=[dict])
-        self.method_authentication['kb_SPAdes.run_SPAdes'] = 'required' # noqa
+        self.method_authentication['kb_SPAdes.run_SPAdes'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_SPAdes.status,
                              name='kb_SPAdes.status',
                              types=[dict])
