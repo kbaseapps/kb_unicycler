@@ -48,7 +48,8 @@ class kb_SPAdes(object):
            "output_contigset_name" of String, parameter "read_libraries" of
            list of type "paired_end_lib" (The workspace object name of a
            PairedEndLibrary file, whether of the KBaseAssembly or KBaseFile
-           type.), parameter "dna_source" of String
+           type.), parameter "dna_source" of String, parameter
+           "min_contig_len" of Long
         :returns: instance of type "SPAdesOutput" (Output parameters for
            SPAdes run. string report_name - the name of the
            KBaseReport.Report workspace object. string report_ref - the
@@ -57,30 +58,6 @@ class kb_SPAdes(object):
         """
         return self._client.call_method(
             'kb_SPAdes.run_SPAdes',
-            [params], self._service_ver, context)
-
-    def run_metaSPAdes(self, params, context=None):
-        """
-        Run metaSPAdes on paired end libraries
-        :param params: instance of type "metaSPAdesParams" (Input parameters
-           for running metaSPAdes. string workspace_name - the name of the
-           workspace from which to take input and store output. string
-           output_contigset_name - the name of the output contigset
-           list<paired_end_lib> read_libraries - Illumina PairedEndLibrary
-           files to assemble.) -> structure: parameter "workspace_name" of
-           String, parameter "output_contigset_name" of String, parameter
-           "read_libraries" of list of type "paired_end_lib" (The workspace
-           object name of a PairedEndLibrary file, whether of the
-           KBaseAssembly or KBaseFile type.), parameter "min_contig_len" of
-           Long
-        :returns: instance of type "metaSPAdesOutput" (Output parameters for
-           metaSPAdes run. string report_name - the name of the
-           KBaseReport.Report workspace object. string report_ref - the
-           workspace reference of the report.) -> structure: parameter
-           "report_name" of String, parameter "report_ref" of String
-        """
-        return self._client.call_method(
-            'kb_SPAdes.run_metaSPAdes',
             [params], self._service_ver, context)
 
     def status(self, context=None):

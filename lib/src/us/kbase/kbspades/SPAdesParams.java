@@ -33,7 +33,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "workspace_name",
     "output_contigset_name",
     "read_libraries",
-    "dna_source"
+    "dna_source",
+    "min_contig_len"
 })
 public class SPAdesParams {
 
@@ -45,6 +46,8 @@ public class SPAdesParams {
     private List<String> readLibraries;
     @JsonProperty("dna_source")
     private java.lang.String dnaSource;
+    @JsonProperty("min_contig_len")
+    private Long minContigLen;
     private Map<java.lang.String, Object> additionalProperties = new HashMap<java.lang.String, Object>();
 
     @JsonProperty("workspace_name")
@@ -107,6 +110,21 @@ public class SPAdesParams {
         return this;
     }
 
+    @JsonProperty("min_contig_len")
+    public Long getMinContigLen() {
+        return minContigLen;
+    }
+
+    @JsonProperty("min_contig_len")
+    public void setMinContigLen(Long minContigLen) {
+        this.minContigLen = minContigLen;
+    }
+
+    public SPAdesParams withMinContigLen(Long minContigLen) {
+        this.minContigLen = minContigLen;
+        return this;
+    }
+
     @JsonAnyGetter
     public Map<java.lang.String, Object> getAdditionalProperties() {
         return this.additionalProperties;
@@ -119,7 +137,7 @@ public class SPAdesParams {
 
     @Override
     public java.lang.String toString() {
-        return ((((((((((("SPAdesParams"+" [workspaceName=")+ workspaceName)+", outputContigsetName=")+ outputContigsetName)+", readLibraries=")+ readLibraries)+", dnaSource=")+ dnaSource)+", additionalProperties=")+ additionalProperties)+"]");
+        return ((((((((((((("SPAdesParams"+" [workspaceName=")+ workspaceName)+", outputContigsetName=")+ outputContigsetName)+", readLibraries=")+ readLibraries)+", dnaSource=")+ dnaSource)+", minContigLen=")+ minContigLen)+", additionalProperties=")+ additionalProperties)+"]");
     }
 
 }
