@@ -8,8 +8,8 @@ service-language:
     python
 
 module-version:
-    0.0.7
+    0.0.8
 
 owners:
-    [gaprice, jkbaumohl, rsutormin]
+    [gaprice, jkbaumohl, rsutormin, dylan]
 

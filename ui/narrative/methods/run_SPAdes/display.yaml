@@ -43,6 +43,11 @@ parameters :
             Output ContigSet
         short-hint : |
             The name under which the resulting ContigSet will be saved in the Narrative
+    min_contig_len :
+        ui-name : |
+            Minimum Contig Length
+        short-hint : |
+            The shortest contig to accept in the resulting assembly object
 description : |
     <p>
     This is a KBase wrapper for the 
