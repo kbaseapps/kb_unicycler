@@ -37,6 +37,7 @@ module kb_SPAdes {
         string output_contigset_name;
         list<paired_end_lib> read_libraries;
         string dna_source;
+	int min_contig_len;
     } SPAdesParams;
     
     /* Output parameters for SPAdes run.
@@ -51,34 +52,5 @@ module kb_SPAdes {
     
     /* Run SPAdes on paired end libraries */
     funcdef run_SPAdes(SPAdesParams params) returns(SPAdesOutput output)
-        authentication required;
-
-
-    /* Input parameters for running metaSPAdes.
-        string workspace_name - the name of the workspace from which to take
-           input and store output.
-        string output_contigset_name - the name of the output contigset
-        list<paired_end_lib> read_libraries - Illumina PairedEndLibrary files
-            to assemble.
-    */
-    typedef structure {
-        string workspace_name;
-        string output_contigset_name;
-        list<paired_end_lib> read_libraries;
-	int min_contig_len;
-    } metaSPAdesParams;
-    
-    /* Output parameters for metaSPAdes run.
-        string report_name - the name of the KBaseReport.Report workspace
-            object.
-        string report_ref - the workspace reference of the report.
-    */
-    typedef structure {
-        string report_name;
-        string report_ref;
-    } metaSPAdesOutput;
-    
-    /* Run metaSPAdes on paired end libraries */
-    funcdef run_metaSPAdes(metaSPAdesParams params) returns(metaSPAdesOutput output)
         authentication required;
 };
