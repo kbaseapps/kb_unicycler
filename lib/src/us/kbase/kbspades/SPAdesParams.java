@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  *     to assemble.
  * string dna_source - the source of the DNA used for sequencing
  *     'single_cell': DNA amplified from a single cell via MDA
- *     'metagenome': Metagenomic data
  *     anything else: Standard DNA sample from multiple cells
  * </pre>
  * 
