@@ -39,10 +39,6 @@
                   "display": "single cell"
                 },
                 {
-                  "value": "metagenomic",
-                  "display": "metagenomic"
-                },
-                {
                   "value": "plasmid",
                   "display": "plasmid"
                 }

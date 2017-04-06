@@ -337,6 +337,10 @@ class Application(object):
                              name='kb_SPAdes.run_SPAdes',
                              types=[dict])
         self.method_authentication['kb_SPAdes.run_SPAdes'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_SPAdes.run_metaSPAdes,
+                             name='kb_SPAdes.run_metaSPAdes',
+                             types=[dict])
+        self.method_authentication['kb_SPAdes.run_metaSPAdes'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_SPAdes.status,
                              name='kb_SPAdes.status',
                              types=[dict])

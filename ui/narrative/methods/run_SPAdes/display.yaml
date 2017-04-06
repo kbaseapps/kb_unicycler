@@ -3,7 +3,7 @@
 #
 name: Assemble with SPAdes
 tooltip: |
-    Assemble metagenomic reads using the SPAdes assembler.
+    Assemble reads using the SPAdes assembler.
 screenshots: []
 
 icon: spades.png
@@ -37,7 +37,7 @@ parameters :
             DNA source
         short-hint : |
             The source of the sequenced DNA - either standard, single cell / 
-            MDA, metagenomic or plasmid.
+            MDA, or plasmid.
     output_contigset_name :
         ui-name : |
             Output ContigSet

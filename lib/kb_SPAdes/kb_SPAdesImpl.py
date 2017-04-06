@@ -57,8 +57,8 @@ A coverage cutoff is not specified.
     # the latter method is running.
     ######################################### noqa
     VERSION = "0.0.7"
-    GIT_URL = "https://github.com/rsutormin/kb_SPAdes"
-    GIT_COMMIT_HASH = "3699020a33c60989210f611ff984dd74473999aa"
+    GIT_URL = "https://github.com/dcchivian/kb_SPAdes"
+    GIT_COMMIT_HASH = "56d594701d63d0b21b8b3379348443d274d7edf4"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -500,13 +500,12 @@ A coverage cutoff is not specified.
            list<paired_end_lib> read_libraries - Illumina PairedEndLibrary
            files to assemble. string dna_source - the source of the DNA used
            for sequencing 'single_cell': DNA amplified from a single cell via
-           MDA 'metagenome': Metagenomic data anything else: Standard DNA
-           sample from multiple cells) -> structure: parameter
-           "workspace_name" of String, parameter "output_contigset_name" of
-           String, parameter "read_libraries" of list of type
-           "paired_end_lib" (The workspace object name of a PairedEndLibrary
-           file, whether of the KBaseAssembly or KBaseFile type.), parameter
-           "dna_source" of String
+           MDA anything else: Standard DNA sample from multiple cells) ->
+           structure: parameter "workspace_name" of String, parameter
+           "output_contigset_name" of String, parameter "read_libraries" of
+           list of type "paired_end_lib" (The workspace object name of a
+           PairedEndLibrary file, whether of the KBaseAssembly or KBaseFile
+           type.), parameter "dna_source" of String
         :returns: instance of type "SPAdesOutput" (Output parameters for
            SPAdes run. string report_name - the name of the
            KBaseReport.Report workspace object. string report_ref - the
@@ -612,6 +611,38 @@ A coverage cutoff is not specified.
         # At some point might do deeper type checking...
         if not isinstance(output, dict):
             raise ValueError('Method run_SPAdes return value ' +
+                             'output is not type dict as required.')
+        # return the results
+        return [output]
+
+    def run_metaSPAdes(self, ctx, params):
+        """
+        Run metaSPAdes on paired end libraries
+        :param params: instance of type "metaSPAdesParams" (Input parameters
+           for running metaSPAdes. string workspace_name - the name of the
+           workspace from which to take input and store output. string
+           output_contigset_name - the name of the output contigset
+           list<paired_end_lib> read_libraries - Illumina PairedEndLibrary
+           files to assemble.) -> structure: parameter "workspace_name" of
+           String, parameter "output_contigset_name" of String, parameter
+           "read_libraries" of list of type "paired_end_lib" (The workspace
+           object name of a PairedEndLibrary file, whether of the
+           KBaseAssembly or KBaseFile type.), parameter "min_contig_len" of
+           Long
+        :returns: instance of type "metaSPAdesOutput" (Output parameters for
+           metaSPAdes run. string report_name - the name of the
+           KBaseReport.Report workspace object. string report_ref - the
+           workspace reference of the report.) -> structure: parameter
+           "report_name" of String, parameter "report_ref" of String
+        """
+        # ctx is the context object
+        # return variables are: output
+        #BEGIN run_metaSPAdes
+        #END run_metaSPAdes
+
+        # At some point might do deeper type checking...
+        if not isinstance(output, dict):
+            raise ValueError('Method run_metaSPAdes return value ' +
                              'output is not type dict as required.')
         # return the results
         return [output]
