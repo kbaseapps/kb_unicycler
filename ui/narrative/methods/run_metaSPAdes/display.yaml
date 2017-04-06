@@ -6,7 +6,7 @@ tooltip: |
     Assemble metagenomic reads using the SPAdes assembler.
 screenshots: []
 
-icon: spades.png
+icon: metaspades-blue.png
 
 #
 # define a set of similar methods that might be useful to the user
