@@ -26,7 +26,7 @@
             "optional": false,
             "advanced": false,
             "allow_multiple": false,
-            "default_values": [""],
+            "default_values": ["standard"],
             "field_type" : "dropdown",
             "dropdown_options":{
             "options": [
@@ -56,6 +56,18 @@
                 "valid_ws_types" : [ "KBaseGenomeAnnotations.Assembly" ],
                 "is_output_name":true
             }
+        },
+        {
+            "id": "min_contig_len",
+            "optional": false,
+            "advanced": true,
+            "allow_multiple": false,
+            "default_values": [ "500" ],
+            "field_type": "text",
+            "text_options": {
+                "validate_as" : "int",
+		"min_int" : 200
+            }
         }
     ],
     "behavior": {
@@ -79,6 +91,10 @@
                 {
                     "input_parameter": "dna_source",
                     "target_property": "dna_source"
+                },
+                {
+                    "input_parameter": "min_contig_len",
+                    "target_property": "min_contig_len"
                 }
             ],
             "output_mapping": [
