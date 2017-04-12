@@ -37,7 +37,7 @@ module kb_SPAdes {
         string output_contigset_name;
         list<paired_end_lib> read_libraries;
         string dna_source;
-	int min_contig_len;
+        int min_contig_len;
     } SPAdesParams;
     
     /* Output parameters for SPAdes run.

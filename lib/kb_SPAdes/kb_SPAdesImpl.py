@@ -127,34 +127,6 @@ A coverage cutoff is not specified.
         return response.json()['data']
 
 
-    # filter contigs file by length
-    #
-    def filter_contigs_file(self, contigs_file, min_contig_len):
-        new_contigs_file = os.path.join(os.path.dirname(contigs_file), 'metaSPAdes_scaffolds.fna')
-        head = ''
-        seq = ''
-        with open(contigs_file, 'r') as file_R, \
-                open(new_contigs_file, 'w') as file_W:
-
-            for line in file_R:
-                if line.startswith('>'):
-                    if head != '':
-                        if len(seq) >= min_contig_len:
-                            file_W.write(head)
-                            file_W.write("\n".join(seq)+"\n")
-                    head = line
-                    seq = ''
-                else:
-                    seq += line.strip().replace(" ","")
-
-            if head != '':
-                if len(seq) >= min_contig_len:
-                    file_W.write(head)
-                    file_W.write("\n".join(seq)+"\n")
-
-        return new_contigs_file
-
-
     # spades is configured with yaml
     #
     def generate_spades_yaml(self, reads_data):
@@ -625,15 +597,15 @@ A coverage cutoff is not specified.
 
         # parse the output and save back to KBase
         output_contigs = os.path.join(spades_out, 'scaffolds.fasta')
-        if 'min_contig_len' in params and int(params['min_contig_len']) > 0:
-            self.log ("Filtering out contigs with len < min_contig_len: "+str(params['min_contig_len']))
-            output_contigs = self.filter_contigs_file (output_contigs, int(params['min_contig_len']))
+
+        min_contig_len = params['min_contig_len'] if 'min_contig_len' in params and params['min_contig_len'] > 0 else 0
 
         self.log('Uploading FASTA file to Assembly')
         assemblyUtil = AssemblyUtil(self.callbackURL, token=ctx['token'], service_ver='dev')
         assemblyUtil.save_assembly_from_fasta({'file': {'path': output_contigs},
                                                'workspace_name': wsname,
-                                               'assembly_name': params[self.PARAM_IN_CS_NAME]
+                                               'assembly_name': params[self.PARAM_IN_CS_NAME],
+                                               'min_contig_len': min_contig_len
                                                })
 
         report_name, report_ref = self.load_report(output_contigs, params, wsname)

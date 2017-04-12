@@ -700,7 +700,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                }],
              'md5': '08d0b92ce7c0a5e346b3077436edaa42',
              'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
-             }, dna_source='metagenomic')
+             }, min_contig_len=500, dna_source='metagenomic')
 
     def test_no_workspace_param(self):
 
@@ -923,7 +923,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.assertEqual(error, str(context.exception.message))
 
     def run_success(self, readnames, output_name, expected, contig_count=None,
-                    dna_source=None):
+                    min_contig_len=0, dna_source=None):
 
         test_name = inspect.stack()[1][3]
         print('\n**** starting expected success test: ' + test_name + ' *****')
@@ -941,7 +941,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         params = {'workspace_name': self.getWsName(),
                   'read_libraries': libs,
-                  'output_contigset_name': output_name
+                  'output_contigset_name': output_name,
+                  'min_contig_len': min_contig_len
                   }
 
         if not (dna_source is None):
