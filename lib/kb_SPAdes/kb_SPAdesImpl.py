@@ -598,7 +598,7 @@ A coverage cutoff is not specified.
         # parse the output and save back to KBase
         output_contigs = os.path.join(spades_out, 'scaffolds.fasta')
 
-        min_contig_len = params['min_contig_len'] if 'min_contig_len' in params and params['min_contig_len'] > 0 else 0
+        min_contig_len = params['min_config_len'] if params.get('min_config_len', 0) > 0 else 0
 
         self.log('Uploading FASTA file to Assembly')
         assemblyUtil = AssemblyUtil(self.callbackURL, token=ctx['token'], service_ver='dev')
