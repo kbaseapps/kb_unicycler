@@ -702,15 +702,15 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
              }, min_contig_len=500, dna_source='metagenomic')
 
+    def test_invalid_min_contig_len(self):
+
+        self.run_error(
+            ['foo'], 'min_contig_len must be of type int', wsname='fake', min_contig_len='not an int!')
+    
     def test_no_workspace_param(self):
 
         self.run_error(
             ['foo'], 'workspace_name parameter is required', wsname=None)
-
-    def test_no_workspace_name(self):
-
-        self.run_error(
-            ['foo'], 'workspace_name parameter is required', wsname='None')
 
     def test_bad_workspace_name(self):
 
@@ -893,7 +893,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
 # don't check ver or commit since they can change from run to run
 
     def run_error(self, readnames, error, wsname=('fake'), output_name='out',
-                  dna_source=None, exception=ValueError):
+                  dna_source=None, min_contig_len=0, exception=ValueError):
 
         test_name = inspect.stack()[1][3]
         print('\n***** starting expected fail test: ' + test_name + ' *****')
@@ -917,6 +917,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         if not (dna_source is None):
             params['dna_source'] = dna_source
+
+        params['min_contig_len'] = min_contig_len
 
         with self.assertRaises(exception) as context:
             self.getImpl().run_SPAdes(self.ctx, params)

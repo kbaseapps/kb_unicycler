@@ -28,11 +28,11 @@ module kb_SPAdes {
                      and store output.
     output_contigset_name - the name of the output contigset list<paired_end_lib>
                      read_libraries - Illumina PairedEndLibrary files to assemble.
-    dna_source - the source of the DNA used for sequencing 'single_cell': DNA
+    dna_source - (optional) the source of the DNA used for sequencing 'single_cell': DNA
                      amplified from a single cell via MDA anything else: Standard
-                     DNA sample from multiple cells
-    min_contig_len - an integer to filter out contigs with len < min_contig_len
-                     from the SPAdes output
+                     DNA sample from multiple cells. Default value is None.
+    min_contig_len - (optional) integer to filter out contigs with len < min_contig_len
+                     from the SPAdes output. Default value is 0 implying no filter.
 
     */
     typedef structure {

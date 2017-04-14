@@ -71,6 +71,7 @@ A coverage cutoff is not specified.
     PARAM_IN_SINGLE_CELL = 'single_cell'
     PARAM_IN_METAGENOME = 'metagenomic'
     PARAM_IN_PLASMID = 'plasmid'
+    PARAM_IN_MIN_CONTIG_LEN = 'min_contig_len'
 
     INVALID_WS_OBJ_NAME_RE = re.compile('[^\\w\\|._-]')
     INVALID_WS_NAME_RE = re.compile('[^\\w:._-]')
@@ -474,6 +475,10 @@ A coverage cutoff is not specified.
         else:
             params[self.PARAM_IN_DNA_SOURCE] = None
 #            print("PARAMS ARE:" + str(params))
+
+        if self.PARAM_IN_MIN_CONTIG_LEN in params:
+            if not isinstance(params[self.PARAM_IN_MIN_CONTIG_LEN], int):
+                raise ValueError('min_contig_len must be of type int')
 
     #END_CLASS_HEADER
 
