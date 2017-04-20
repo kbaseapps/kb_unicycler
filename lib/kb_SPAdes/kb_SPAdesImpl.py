@@ -5,7 +5,7 @@ from __future__ import print_function
 import os
 import re
 import uuid
-from pprint import pformat
+from pprint import pformat, pprint
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 import requests
 import json
@@ -486,6 +486,7 @@ A coverage cutoff is not specified.
     # be found
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
+        self.cfg = config
         self.callbackURL = os.environ['SDK_CALLBACK_URL']
         self.log('Callback URL: ' + self.callbackURL)
         self.workspaceURL = config[self.URL_WS]
@@ -586,7 +587,7 @@ A coverage cutoff is not specified.
         # parse the output and save back to KBase
         output_contigs = os.path.join(spades_out, 'scaffolds.fasta')
 
-        min_contig_len = params['min_config_len'] if params.get('min_config_len', 0) > 0 else 0
+        min_contig_len = params['min_contig_len'] if params.get('min_contig_len', 0) > 0 else 0
 
         self.log('Uploading FASTA file to Assembly')
         assemblyUtil = AssemblyUtil(self.callbackURL, token=ctx['token'], service_ver='dev')
