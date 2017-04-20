@@ -71,7 +71,7 @@ A coverage cutoff is not specified.
     PARAM_IN_SINGLE_CELL = 'single_cell'
     PARAM_IN_METAGENOME = 'metagenomic'
     PARAM_IN_PLASMID = 'plasmid'
-    PARAM_IN_MIN_CONTIG_LEN = 'min_contig_len'
+    PARAM_IN_MIN_CONTIG_LENGTH = 'min_contig_length'
 
     INVALID_WS_OBJ_NAME_RE = re.compile('[^\\w\\|._-]')
     INVALID_WS_NAME_RE = re.compile('[^\\w:._-]')
@@ -476,9 +476,9 @@ A coverage cutoff is not specified.
             params[self.PARAM_IN_DNA_SOURCE] = None
 #            print("PARAMS ARE:" + str(params))
 
-        if self.PARAM_IN_MIN_CONTIG_LEN in params:
-            if not isinstance(params[self.PARAM_IN_MIN_CONTIG_LEN], int):
-                raise ValueError('min_contig_len must be of type int')
+        if self.PARAM_IN_MIN_CONTIG_LENGTH in params:
+            if not isinstance(params[self.PARAM_IN_MIN_CONTIG_LENGTH], int):
+                raise ValueError('min_contig_length must be of type int')
 
     #END_CLASS_HEADER
 
@@ -587,17 +587,29 @@ A coverage cutoff is not specified.
         # parse the output and save back to KBase
         output_contigs = os.path.join(spades_out, 'scaffolds.fasta')
 
-        min_contig_len = params['min_contig_len'] if params.get('min_contig_len', 0) > 0 else 0
-
         self.log('Uploading FASTA file to Assembly')
-        assemblyUtil = AssemblyUtil(self.callbackURL, token=ctx['token'], service_ver='dev')
-        assemblyUtil.save_assembly_from_fasta({'file': {'path': output_contigs},
-                                               'workspace_name': wsname,
-                                               'assembly_name': params[self.PARAM_IN_CS_NAME],
-                                               'min_contig_len': min_contig_len
-                                               })
 
-        report_name, report_ref = self.load_report(output_contigs, params, wsname)
+        assemblyUtil = AssemblyUtil(self.callbackURL, token=ctx['token'], service_ver='release')
+
+        if params.get('min_contig_length', 0) > 0:
+            assemblyUtil.save_assembly_from_fasta(
+                {'file': {'path': output_contigs},
+                 'workspace_name': wsname,
+                 'assembly_name': params[self.PARAM_IN_CS_NAME],
+                 'min_contig_length': params['min_contig_length']
+                 })
+            # load report from scaffolds.fasta.filtered.fa
+            report_name, report_ref = self.load_report(
+                output_contigs+'.filtered.fa', params, wsname)
+        else:
+            assemblyUtil.save_assembly_from_fasta(
+                {'file': {'path': output_contigs},
+                 'workspace_name': wsname,
+                 'assembly_name': params[self.PARAM_IN_CS_NAME]
+                 })
+            # load report from scaffolds.fasta
+            report_name, report_ref = self.load_report(
+                output_contigs, params, wsname)
 
         output = {'report_name': report_name,
                   'report_ref': report_ref

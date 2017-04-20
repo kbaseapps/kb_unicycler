@@ -694,15 +694,10 @@ class gaprice_SPAdesTest(unittest.TestCase):
                'length': 64822,
                'id': 'NODE_1_length_64822_cov_8.99795',
                'md5': '8a67351c7d6416039c6f613c31b10764'
-               },
-              {'name': 'NODE_2_length_62656_cov_8.64555',
-               'length': 62656,
-               'id': 'NODE_2_length_62656_cov_8.64555',
-               'md5': '8e7483c2223234aeff0c78f70b2e068a'
                }],
-             'md5': '08d0b92ce7c0a5e346b3077436edaa42',
-             'fasta_md5': 'ca42754da16f76159db91ef986f4d276'
-             }, min_contig_len=500, dna_source='metagenomic')
+             'md5': '7bebd932338eca9331921dc605791aea',
+             'fasta_md5': '8da1994279e071c9dd2b2cef57c7f092'
+             }, min_contig_length=63000, dna_source='metagenomic')
 
     def test_invalid_min_contig_len(self):
 
@@ -927,7 +922,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         self.assertEqual(error, str(context.exception.message))
 
     def run_success(self, readnames, output_name, expected, contig_count=None,
-                    min_contig_len=0, dna_source=None):
+                    min_contig_length=0, dna_source=None):
 
         test_name = inspect.stack()[1][3]
         print('\n**** starting expected success test: ' + test_name + ' *****')
@@ -946,7 +941,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
         params = {'workspace_name': self.getWsName(),
                   'read_libraries': libs,
                   'output_contigset_name': output_name,
-                  'min_contig_len': min_contig_len
+                  'min_contig_length': min_contig_length
                   }
 
         if not (dna_source is None):
@@ -977,7 +972,6 @@ class gaprice_SPAdesTest(unittest.TestCase):
         assembly_ref = report['data']['objects_created'][0]['ref']
         assembly = self.wsClient.get_objects([{'ref': assembly_ref}])[0]
         # print("ASSEMBLY OBJECT:")
-        # pprint(assembly)
         self.assertEqual('KBaseGenomeAnnotations.Assembly', assembly['info'][2].split('-')[0])
         self.assertEqual(1, len(assembly['provenance']))
         # PERHAPS ADD THESE TESTS BACK IN THE FUTURE, BUT AssemblyUtils and this
