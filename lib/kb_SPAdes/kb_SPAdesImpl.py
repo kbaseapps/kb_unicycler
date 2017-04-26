@@ -5,7 +5,7 @@ from __future__ import print_function
 import os
 import re
 import uuid
-from pprint import pformat
+from pprint import pformat, pprint
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 import requests
 import json
@@ -71,6 +71,7 @@ A coverage cutoff is not specified.
     PARAM_IN_SINGLE_CELL = 'single_cell'
     PARAM_IN_METAGENOME = 'metagenomic'
     PARAM_IN_PLASMID = 'plasmid'
+    PARAM_IN_MIN_CONTIG_LENGTH = 'min_contig_length'
 
     INVALID_WS_OBJ_NAME_RE = re.compile('[^\\w\\|._-]')
     INVALID_WS_NAME_RE = re.compile('[^\\w:._-]')
@@ -125,34 +126,6 @@ A coverage cutoff is not specified.
             response, ('Error trying to upload contig FASTA file {} to Shock: '
                        ).format(file_path))
         return response.json()['data']
-
-
-    # filter contigs file by length
-    #
-    def filter_contigs_file(self, contigs_file, min_contig_len):
-        new_contigs_file = os.path.join(os.path.dirname(contigs_file), 'metaSPAdes_scaffolds.fna')
-        head = ''
-        seq = ''
-        with open(contigs_file, 'r') as file_R, \
-                open(new_contigs_file, 'w') as file_W:
-
-            for line in file_R:
-                if line.startswith('>'):
-                    if head != '':
-                        if len(seq) >= min_contig_len:
-                            file_W.write(head)
-                            file_W.write("\n".join(seq)+"\n")
-                    head = line
-                    seq = ''
-                else:
-                    seq += line.strip().replace(" ","")
-
-            if head != '':
-                if len(seq) >= min_contig_len:
-                    file_W.write(head)
-                    file_W.write("\n".join(seq)+"\n")
-
-        return new_contigs_file
 
 
     # spades is configured with yaml
@@ -503,12 +476,17 @@ A coverage cutoff is not specified.
             params[self.PARAM_IN_DNA_SOURCE] = None
 #            print("PARAMS ARE:" + str(params))
 
+        if self.PARAM_IN_MIN_CONTIG_LENGTH in params:
+            if not isinstance(params[self.PARAM_IN_MIN_CONTIG_LENGTH], int):
+                raise ValueError('min_contig_length must be of type int')
+
     #END_CLASS_HEADER
 
     # config contains contents of config file in a hash or None if it couldn't
     # be found
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
+        self.cfg = config
         self.callbackURL = os.environ['SDK_CALLBACK_URL']
         self.log('Callback URL: ' + self.callbackURL)
         self.workspaceURL = config[self.URL_WS]
@@ -524,25 +502,8 @@ A coverage cutoff is not specified.
     def run_SPAdes(self, ctx, params):
         """
         Run SPAdes on paired end libraries
-        :param params: instance of type "SPAdesParams" (Input parameters for
-           running SPAdes. string workspace_name - the name of the workspace
-           from which to take input and store output. string
-           output_contigset_name - the name of the output contigset
-           list<paired_end_lib> read_libraries - Illumina PairedEndLibrary
-           files to assemble. string dna_source - the source of the DNA used
-           for sequencing 'single_cell': DNA amplified from a single cell via
-           MDA anything else: Standard DNA sample from multiple cells) ->
-           structure: parameter "workspace_name" of String, parameter
-           "output_contigset_name" of String, parameter "read_libraries" of
-           list of type "paired_end_lib" (The workspace object name of a
-           PairedEndLibrary file, whether of the KBaseAssembly or KBaseFile
-           type.), parameter "dna_source" of String, parameter
-           "min_contig_len" of Long
-        :returns: instance of type "SPAdesOutput" (Output parameters for
-           SPAdes run. string report_name - the name of the
-           KBaseReport.Report workspace object. string report_ref - the
-           workspace reference of the report.) -> structure: parameter
-           "report_name" of String, parameter "report_ref" of String
+        :param params: (See kb_SPAdes.spec for details)
+        :returns: (See kb_SPAdes.spec for details)
         """
         # ctx is the context object
         # return variables are: output
@@ -625,18 +586,30 @@ A coverage cutoff is not specified.
 
         # parse the output and save back to KBase
         output_contigs = os.path.join(spades_out, 'scaffolds.fasta')
-        if 'min_contig_len' in params and int(params['min_contig_len']) > 0:
-            self.log ("Filtering out contigs with len < min_contig_len: "+str(params['min_contig_len']))
-            output_contigs = self.filter_contigs_file (output_contigs, int(params['min_contig_len']))
 
         self.log('Uploading FASTA file to Assembly')
-        assemblyUtil = AssemblyUtil(self.callbackURL, token=ctx['token'], service_ver='dev')
-        assemblyUtil.save_assembly_from_fasta({'file': {'path': output_contigs},
-                                               'workspace_name': wsname,
-                                               'assembly_name': params[self.PARAM_IN_CS_NAME]
-                                               })
 
-        report_name, report_ref = self.load_report(output_contigs, params, wsname)
+        assemblyUtil = AssemblyUtil(self.callbackURL, token=ctx['token'], service_ver='release')
+
+        if params.get('min_contig_length', 0) > 0:
+            assemblyUtil.save_assembly_from_fasta(
+                {'file': {'path': output_contigs},
+                 'workspace_name': wsname,
+                 'assembly_name': params[self.PARAM_IN_CS_NAME],
+                 'min_contig_length': params['min_contig_length']
+                 })
+            # load report from scaffolds.fasta.filtered.fa
+            report_name, report_ref = self.load_report(
+                output_contigs+'.filtered.fa', params, wsname)
+        else:
+            assemblyUtil.save_assembly_from_fasta(
+                {'file': {'path': output_contigs},
+                 'workspace_name': wsname,
+                 'assembly_name': params[self.PARAM_IN_CS_NAME]
+                 })
+            # load report from scaffolds.fasta
+            report_name, report_ref = self.load_report(
+                output_contigs, params, wsname)
 
         output = {'report_name': report_name,
                   'report_ref': report_ref

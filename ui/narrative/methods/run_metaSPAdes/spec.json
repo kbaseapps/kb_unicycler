@@ -58,7 +58,8 @@
                 },
                 {
                     "input_parameter": "read_libraries",
-                    "target_property": "read_libraries"
+                    "target_property": "read_libraries",
+                    "target_type_transform": "list<ref>"
                 },
                 {
                     "input_parameter": "output_contigset_name",
