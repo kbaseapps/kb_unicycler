@@ -5,8 +5,8 @@ MAINTAINER KBase Developer
 # Insert apt-get instructions here to install
 # any required dependencies for your module.
 
-RUN apt-get update
-
+# RUN apt-get update
+RUN pip install --upgrade pip
 
 RUN cd /opt \
     && wget http://spades.bioinf.spbau.ru/release3.10.0/SPAdes-3.10.0-Linux.tar.gz \
