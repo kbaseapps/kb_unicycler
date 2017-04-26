@@ -39,7 +39,7 @@ class kb_SPAdes:
     kb_SPAdes
 
     Module Description:
-    A KBase module: gaprice_SPAdes
+    A KBase module: kb_SPAdes
 Simple wrapper for the SPAdes assembler.
 http://bioinf.spbau.ru/spades
 
@@ -409,20 +409,23 @@ A coverage cutoff is not specified.
             # metagenomic boolean. However KBaseAssembly doesn't have the field
             # and it's optional anyway. Ideally fix those issues and then set
             # the --meta command line flag automatically based on the type
-            if (rds['single_genome'] == self.TRUE and
-                    params[self.PARAM_IN_DNA_SOURCE] ==
-                    self.PARAM_IN_METAGENOME):
-                raise ValueError(
-                    ('Reads object {} ({}) is marked as containing dna from ' +
-                     'a single genome but the assembly method was specified ' +
-                     'as metagenomic').format(obj_name, obj_ref))
-            if (rds['single_genome'] == self.FALSE and
-                    params[self.PARAM_IN_DNA_SOURCE] !=
-                    self.PARAM_IN_METAGENOME):
-                raise ValueError(
-                    ('Reads object {} ({}) is marked as containing ' +
-                     'metagenomic data but the assembly method was not ' +
-                     'specified as metagenomic').format(obj_name, obj_ref))
+
+            # Dylan: removing these requirements because too much work for user to go all the way back and reimport reads with "single_genome" flag set opposite.  Additionally, now that "metagenomic" assembly is now an explicit App instead of an option, this check is far less necessary
+
+#            if (rds['single_genome'] == self.TRUE and
+#                    params[self.PARAM_IN_DNA_SOURCE] ==
+#                    self.PARAM_IN_METAGENOME):
+#                raise ValueError(
+#                    ('Reads object {} ({}) is marked as containing dna from ' +
+#                     'a single genome but the assembly method was specified ' +
+#                     'as metagenomic').format(obj_name, obj_ref))
+#            if (rds['single_genome'] == self.FALSE and
+#                    params[self.PARAM_IN_DNA_SOURCE] !=
+#                    self.PARAM_IN_METAGENOME):
+#                raise ValueError(
+#                    ('Reads object {} ({}) is marked as containing ' +
+#                     'metagenomic data but the assembly method was not ' +
+#                     'specified as metagenomic').format(obj_name, obj_ref))
 
         # IF UNKNOWN TYPE NEED TO DETERMINE PHRED TYPE USING EAUTILS
         if len(unknown_phred_reads) > 0:
