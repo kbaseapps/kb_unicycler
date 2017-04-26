@@ -419,13 +419,13 @@ A coverage cutoff is not specified.
 #                    ('Reads object {} ({}) is marked as containing dna from ' +
 #                     'a single genome but the assembly method was specified ' +
 #                     'as metagenomic').format(obj_name, obj_ref))
-#            if (rds['single_genome'] == self.FALSE and
-#                    params[self.PARAM_IN_DNA_SOURCE] !=
-#                    self.PARAM_IN_METAGENOME):
-#                raise ValueError(
-#                    ('Reads object {} ({}) is marked as containing ' +
-#                     'metagenomic data but the assembly method was not ' +
-#                     'specified as metagenomic').format(obj_name, obj_ref))
+            if (rds['single_genome'] == self.FALSE and
+                    params[self.PARAM_IN_DNA_SOURCE] !=
+                    self.PARAM_IN_METAGENOME):
+                raise ValueError(
+                    ('Reads object {} ({}) is marked as containing ' +
+                     'metagenomic data but the assembly method was not ' +
+                     'specified as metagenomic').format(obj_name, obj_ref))
 
         # IF UNKNOWN TYPE NEED TO DETERMINE PHRED TYPE USING EAUTILS
         if len(unknown_phred_reads) > 0:
