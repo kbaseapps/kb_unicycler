@@ -15,9 +15,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * <p>Original spec-file type: SPAdesOutput</p>
  * <pre>
  * Output parameters for SPAdes run.
- * string report_name - the name of the KBaseReport.Report workspace
- *     object.
- * string report_ref - the workspace reference of the report.
+ *     report_name - the name of the KBaseReport.Report workspace object.
+ *     report_ref - the workspace reference of the report.
  * </pre>
  * 
  */
