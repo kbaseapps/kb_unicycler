@@ -79,6 +79,8 @@ A coverage cutoff is not specified.
     THREADS_PER_CORE = 3
     MEMORY_OFFSET_GB = 1  # 1GB
     MIN_MEMORY_GB = 5
+    MAX_MEMORY_GB_SPADES = 100  # 100GB
+    MAX_MEMORY_GB_META_SPADES = 500  # 500GB
     GB = 1000000000
 
     URL_WS = 'workspace-url'
@@ -205,6 +207,13 @@ A coverage cutoff is not specified.
                 ' not run without at least ' +
                 str(self.MIN_MEMORY_GB + self.MEMORY_OFFSET_GB) +
                 ' gigabytes available')
+
+        if dna_source == self.PARAM_IN_METAGENOME:
+            max_mem = self.MAX_MEMORY_GB_META_SPADES
+        else:
+            max_mem = self.MAX_MEMORY_GB_SPADES
+
+        if mem > max_mem: mem = max_mem
 
         outdir = os.path.join(self.scratch, 'spades_output_dir')
         if not os.path.exists(outdir):
