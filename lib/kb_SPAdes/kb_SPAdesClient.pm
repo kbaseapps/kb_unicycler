@@ -134,7 +134,7 @@ SPAdesParams is a reference to a hash where the following keys are defined:
 	output_contigset_name has a value which is a string
 	read_libraries has a value which is a reference to a list where each element is a kb_SPAdes.paired_end_lib
 	dna_source has a value which is a string
-	min_contig_len has a value which is an int
+	min_contig_length has a value which is an int
 paired_end_lib is a string
 SPAdesOutput is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
@@ -153,7 +153,7 @@ SPAdesParams is a reference to a hash where the following keys are defined:
 	output_contigset_name has a value which is a string
 	read_libraries has a value which is a reference to a list where each element is a kb_SPAdes.paired_end_lib
 	dna_source has a value which is a string
-	min_contig_len has a value which is an int
+	min_contig_length has a value which is an int
 paired_end_lib is a string
 SPAdesOutput is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
@@ -377,14 +377,16 @@ a string
 =item Description
 
 Input parameters for running SPAdes.
-string workspace_name - the name of the workspace from which to take
-   input and store output.
-string output_contigset_name - the name of the output contigset
-list<paired_end_lib> read_libraries - Illumina PairedEndLibrary files
-    to assemble.
-string dna_source - the source of the DNA used for sequencing
-    'single_cell': DNA amplified from a single cell via MDA
-    anything else: Standard DNA sample from multiple cells
+
+    workspace_name - the name of the workspace from which to take input
+                     and store output.
+    output_contigset_name - the name of the output contigset list<paired_end_lib>
+                     read_libraries - Illumina PairedEndLibrary files to assemble.
+    dna_source - (optional) the source of the DNA used for sequencing 'single_cell': DNA
+                     amplified from a single cell via MDA anything else: Standard
+                     DNA sample from multiple cells. Default value is None.
+    min_contig_length - (optional) integer to filter out contigs with length < min_contig_length
+                     from the SPAdes output. Default value is 0 implying no filter.
 
 
 =item Definition
@@ -397,7 +399,7 @@ workspace_name has a value which is a string
 output_contigset_name has a value which is a string
 read_libraries has a value which is a reference to a list where each element is a kb_SPAdes.paired_end_lib
 dna_source has a value which is a string
-min_contig_len has a value which is an int
+min_contig_length has a value which is an int
 
 </pre>
 
@@ -410,7 +412,7 @@ workspace_name has a value which is a string
 output_contigset_name has a value which is a string
 read_libraries has a value which is a reference to a list where each element is a kb_SPAdes.paired_end_lib
 dna_source has a value which is a string
-min_contig_len has a value which is an int
+min_contig_length has a value which is an int
 
 
 =end text
@@ -428,9 +430,9 @@ min_contig_len has a value which is an int
 =item Description
 
 Output parameters for SPAdes run.
-string report_name - the name of the KBaseReport.Report workspace
-    object.
-string report_ref - the workspace reference of the report.
+
+    report_name - the name of the KBaseReport.Report workspace object.
+    report_ref - the workspace reference of the report.
 
 
 =item Definition

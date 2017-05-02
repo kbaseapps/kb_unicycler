@@ -58,7 +58,7 @@
             }
         },
         {
-            "id": "min_contig_len",
+            "id": "min_contig_length",
             "optional": false,
             "advanced": true,
             "allow_multiple": false,
@@ -93,8 +93,8 @@
                     "target_property": "dna_source"
                 },
                 {
-                    "input_parameter": "min_contig_len",
-                    "target_property": "min_contig_len"
+                    "input_parameter": "min_contig_length",
+                    "target_property": "min_contig_length"
                 }
             ],
             "output_mapping": [

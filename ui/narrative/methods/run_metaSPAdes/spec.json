@@ -34,7 +34,7 @@
             }
         },
         {
-            "id": "min_contig_len",
+            "id": "min_contig_length",
             "optional": false,
             "advanced": true,
             "allow_multiple": false,
@@ -66,8 +66,8 @@
                     "target_property": "output_contigset_name"
                 },
                 {
-                    "input_parameter": "min_contig_len",
-                    "target_property": "min_contig_len"
+                    "input_parameter": "min_contig_length",
+                    "target_property": "min_contig_length"
                 },
                 {
                     "constant_value": "metagenomic",

@@ -31,7 +31,7 @@ module kb_SPAdes {
     dna_source - (optional) the source of the DNA used for sequencing 'single_cell': DNA
                      amplified from a single cell via MDA anything else: Standard
                      DNA sample from multiple cells. Default value is None.
-    min_contig_len - (optional) integer to filter out contigs with len < min_contig_len
+    min_contig_length - (optional) integer to filter out contigs with length < min_contig_length
                      from the SPAdes output. Default value is 0 implying no filter.
 
     */
@@ -40,7 +40,7 @@ module kb_SPAdes {
         string output_contigset_name;
         list<paired_end_lib> read_libraries;
         string dna_source;
-        int min_contig_len;
+        int min_contig_length;
     } SPAdesParams;
 
 
