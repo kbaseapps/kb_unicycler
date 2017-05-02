@@ -56,9 +56,9 @@ A coverage cutoff is not specified.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "0.0.8"
-    GIT_URL = "https://github.com/dcchivian/kb_SPAdes"
-    GIT_COMMIT_HASH = "4c784fdebd820ad751423b61772539749aeb79cc"
+    VERSION = "0.0.9"
+    GIT_URL = "https://github.com/kbaseapps/kb_SPAdes.git"
+    GIT_COMMIT_HASH = "b0c01d8e21a27afc36f3492eb738ef07e634f99c"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -502,8 +502,27 @@ A coverage cutoff is not specified.
     def run_SPAdes(self, ctx, params):
         """
         Run SPAdes on paired end libraries
-        :param params: (See kb_SPAdes.spec for details)
-        :returns: (See kb_SPAdes.spec for details)
+        :param params: instance of type "SPAdesParams" (Input parameters for
+           running SPAdes. workspace_name - the name of the workspace from
+           which to take input and store output. output_contigset_name - the
+           name of the output contigset list<paired_end_lib> read_libraries -
+           Illumina PairedEndLibrary files to assemble. dna_source -
+           (optional) the source of the DNA used for sequencing
+           'single_cell': DNA amplified from a single cell via MDA anything
+           else: Standard DNA sample from multiple cells. Default value is
+           None. min_contig_length - (optional) integer to filter out contigs
+           with length < min_contig_length from the SPAdes output. Default
+           value is 0 implying no filter.) -> structure: parameter
+           "workspace_name" of String, parameter "output_contigset_name" of
+           String, parameter "read_libraries" of list of type
+           "paired_end_lib" (The workspace object name of a PairedEndLibrary
+           file, whether of the KBaseAssembly or KBaseFile type.), parameter
+           "dna_source" of String, parameter "min_contig_length" of Long
+        :returns: instance of type "SPAdesOutput" (Output parameters for
+           SPAdes run. report_name - the name of the KBaseReport.Report
+           workspace object. report_ref - the workspace reference of the
+           report.) -> structure: parameter "report_name" of String,
+           parameter "report_ref" of String
         """
         # ctx is the context object
         # return variables are: output
