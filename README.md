@@ -1,4 +1,4 @@
-# gaprice_SPAdes
+# kb_SPAdes
 ---
 
 Wrapper for the SPAdes assembler.
