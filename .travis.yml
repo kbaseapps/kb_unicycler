@@ -44,7 +44,6 @@ install:
     - docker images
     - export PATH=$(pwd)/bin:$PATH
     - cd ../
-    #IMPORTANT change clone to sjyoo and finally to kbase after pull requests
     - git clone https://github.com/kbaseapps/kb_SPAdes.git
     - cd kb_SPAdes
     # run the kb-sdk test command once to build test_local dir and populate the .ignore files
