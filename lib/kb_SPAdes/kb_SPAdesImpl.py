@@ -197,7 +197,7 @@ A coverage cutoff is not specified.
         return yml_path, iontorrent_present
 
     def exec_spades(self, dna_source, reads_data, phred_type):
-        threads = max(self.MAX_THREADS, psutil.cpu_count() * self.THREADS_PER_CORE)
+        threads = min(self.MAX_THREADS, psutil.cpu_count() * self.THREADS_PER_CORE)
         mem = (psutil.virtual_memory().available / self.GB -
                self.MEMORY_OFFSET_GB)
         if mem < self.MIN_MEMORY_GB:
