@@ -80,8 +80,8 @@ A coverage cutoff is not specified.
     MAX_THREADS = 64  # per email thread with Anton Korobeynikov
     MEMORY_OFFSET_GB = 1  # 1GB
     MIN_MEMORY_GB = 5
-    MAX_MEMORY_GB_SPADES = 100  # 100GB
-    MAX_MEMORY_GB_META_SPADES = 500  # 500GB
+    MAX_MEMORY_GB_SPADES = 256  # 100GB
+    MAX_MEMORY_GB_META_SPADES = 1000  # 500GB
     GB = 1000000000
 
     URL_WS = 'workspace-url'
