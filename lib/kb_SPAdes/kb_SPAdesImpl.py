@@ -77,6 +77,7 @@ A coverage cutoff is not specified.
     INVALID_WS_NAME_RE = re.compile('[^\\w:._-]')
 
     THREADS_PER_CORE = 3
+    MAX_THREADS = 64  # per email thread with Anton Korobeynikov
     MEMORY_OFFSET_GB = 1  # 1GB
     MIN_MEMORY_GB = 5
     MAX_MEMORY_GB_SPADES = 100  # 100GB
@@ -197,7 +198,7 @@ A coverage cutoff is not specified.
         return yml_path, iontorrent_present
 
     def exec_spades(self, dna_source, reads_data, phred_type):
-        threads = psutil.cpu_count() * self.THREADS_PER_CORE
+        threads = max(self.MAX_THREADS, psutil.cpu_count() * self.THREADS_PER_CORE)
         mem = (psutil.virtual_memory().available / self.GB -
                self.MEMORY_OFFSET_GB)
         if mem < self.MIN_MEMORY_GB:
@@ -387,7 +388,7 @@ A coverage cutoff is not specified.
                     phred33_reads.add(obj_name)
                 elif ea_stats_dict['phred_type'] == '64':
                     phred64_reads.add(obj_name)
-                else: 
+                else:
                     raise ValueError(('Reads object {} ({}) phred type is not of the ' +
                                       'expected value of 33 or 64. It had a phred type of ' +
                                       '{}').format(obj_name, rds, ea_stats_dict['phred_type']))
