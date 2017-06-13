@@ -5,7 +5,7 @@ from __future__ import print_function
 import os
 import re
 import uuid
-from pprint import pformat, pprint
+from pprint import pformat  # , pprint
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 import requests
 import json
@@ -78,10 +78,11 @@ A coverage cutoff is not specified.
 
     THREADS_PER_CORE = 3
     MAX_THREADS = 64  # per email thread with Anton Korobeynikov
+    MAX_THREADS_META = 128  # Increase threads for metagenomic assemblies
     MEMORY_OFFSET_GB = 1  # 1GB
     MIN_MEMORY_GB = 5
-    MAX_MEMORY_GB_SPADES = 256  # 100GB
-    MAX_MEMORY_GB_META_SPADES = 1000  # 500GB
+    MAX_MEMORY_GB_SPADES = 500
+    MAX_MEMORY_GB_META_SPADES = 1000
     GB = 1000000000
 
     URL_WS = 'workspace-url'
@@ -197,7 +198,6 @@ A coverage cutoff is not specified.
         return yml_path, iontorrent_present
 
     def exec_spades(self, dna_source, reads_data, phred_type):
-        threads = min(self.MAX_THREADS, psutil.cpu_count() * self.THREADS_PER_CORE)
         mem = (psutil.virtual_memory().available / self.GB -
                self.MEMORY_OFFSET_GB)
         if mem < self.MIN_MEMORY_GB:
@@ -210,8 +210,12 @@ A coverage cutoff is not specified.
 
         if dna_source == self.PARAM_IN_METAGENOME:
             max_mem = self.MAX_MEMORY_GB_META_SPADES
+            max_threads = self.MAX_THREADS_META
         else:
             max_mem = self.MAX_MEMORY_GB_SPADES
+            max_threads = self.MAX_THREADS
+
+        threads = min(max_threads, psutil.cpu_count() * self.THREADS_PER_CORE)
 
         if mem > max_mem:
             mem = max_mem
