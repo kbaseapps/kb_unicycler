@@ -5,7 +5,7 @@ from __future__ import print_function
 import os
 import re
 import uuid
-from pprint import pformat, pprint
+from pprint import pformat  # , pprint
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 import requests
 import json
@@ -20,9 +20,9 @@ from ReadsUtils.ReadsUtilsClient import ReadsUtils  # @IgnorePep8
 from ReadsUtils.baseclient import ServerError
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from KBaseReport.KBaseReportClient import KBaseReport
-from KBaseReport.baseclient import ServerError as _RepError
+# from KBaseReport.baseclient import ServerError as _RepError
 from kb_quast.kb_quastClient import kb_quast
-from kb_quast.baseclient import ServerError as QUASTError
+# from kb_quast.baseclient import ServerError as QUASTError
 from kb_ea_utils.kb_ea_utilsClient import kb_ea_utils
 import time
 
@@ -44,7 +44,7 @@ Simple wrapper for the SPAdes assembler.
 http://bioinf.spbau.ru/spades
 
 Always runs in careful mode.
-Runs 3 threads / CPU.
+Runs 3 threads / CPU (maximum of 64).
 Maximum memory use is set to available memory - 1G.
 Autodetection is used for the PHRED quality offset and k-mer sizes.
 A coverage cutoff is not specified.
@@ -77,10 +77,12 @@ A coverage cutoff is not specified.
     INVALID_WS_NAME_RE = re.compile('[^\\w:._-]')
 
     THREADS_PER_CORE = 3
+    MAX_THREADS = 64  # per email thread with Anton Korobeynikov
+    MAX_THREADS_META = 128  # Increase threads for metagenomic assemblies
     MEMORY_OFFSET_GB = 1  # 1GB
     MIN_MEMORY_GB = 5
-    MAX_MEMORY_GB_SPADES = 100  # 100GB
-    MAX_MEMORY_GB_META_SPADES = 500  # 500GB
+    MAX_MEMORY_GB_SPADES = 500
+    MAX_MEMORY_GB_META_SPADES = 1000
     GB = 1000000000
 
     URL_WS = 'workspace-url'
@@ -129,14 +131,13 @@ A coverage cutoff is not specified.
                        ).format(file_path))
         return response.json()['data']
 
-
     # spades is configured with yaml
     #
     def generate_spades_yaml(self, reads_data):
         left = []  # fwd in fr orientation
         right = []  # rev
-        single = [] # single end reads
-        pacbio = [] # pacbio CLR reads (for pacbio CCS use -s option.)
+        single = []  # single end reads
+        pacbio = []  # pacbio CLR reads (for pacbio CCS use -s option.)
         interlaced = []
         illumina_present = 0
         iontorrent_present = 0
@@ -197,7 +198,6 @@ A coverage cutoff is not specified.
         return yml_path, iontorrent_present
 
     def exec_spades(self, dna_source, reads_data, phred_type):
-        threads = psutil.cpu_count() * self.THREADS_PER_CORE
         mem = (psutil.virtual_memory().available / self.GB -
                self.MEMORY_OFFSET_GB)
         if mem < self.MIN_MEMORY_GB:
@@ -210,10 +210,15 @@ A coverage cutoff is not specified.
 
         if dna_source == self.PARAM_IN_METAGENOME:
             max_mem = self.MAX_MEMORY_GB_META_SPADES
+            max_threads = self.MAX_THREADS_META
         else:
             max_mem = self.MAX_MEMORY_GB_SPADES
+            max_threads = self.MAX_THREADS
 
-        if mem > max_mem: mem = max_mem
+        threads = min(max_threads, psutil.cpu_count() * self.THREADS_PER_CORE)
+
+        if mem > max_mem:
+            mem = max_mem
 
         outdir = os.path.join(self.scratch, 'spades_output_dir')
         if not os.path.exists(outdir):
@@ -231,7 +236,7 @@ A coverage cutoff is not specified.
         if dna_source == self.PARAM_IN_PLASMID:
             cmd += ['--plasmid']
             # The plasmid assembly can only be run on a single library
-            if len(reads_data) > 1 :
+            if len(reads_data) > 1:
                 raise ValueError('Plasmid assembly requires that one ' +
                                  'and only one library as input. ' +
                                  str(len(reads_data)) + ' libraries detected.')
@@ -341,17 +346,16 @@ A coverage cutoff is not specified.
                                              'label': params[self.PARAM_IN_CS_NAME]}]})
         print('Saving report')
         kbr = KBaseReport(self.callbackURL)
-        report_info = kbr.create_extended_report(
-            {'message': report,
-             'objects_created': [{'ref': assembly_ref, 'description': 'Assembled contigs'}],
-             'direct_html_link_index': 0,
-             'html_links': [{'shock_id': quastret['shock_id'],
-                             'name': 'report.html',
-                             'label': 'QUAST report'}
-                            ],
-             'report_object_name': 'kb_megahit_report_' + str(uuid.uuid4()),
-             'workspace_name': params['workspace_name']
-            })
+        report_info = kbr.create_extended_report({
+            'message': report,
+            'objects_created': [{'ref': assembly_ref, 'description': 'Assembled contigs'}],
+            'direct_html_link_index': 0,
+            'html_links': [{'shock_id': quastret['shock_id'],
+                            'name': 'report.html',
+                            'label': 'QUAST report'}],
+            'report_object_name': 'kb_megahit_report_' + str(uuid.uuid4()),
+            'workspace_name': params['workspace_name']
+        })
         reportName = report_info['name']
         reportRef = report_info['ref']
         return reportName, reportRef
@@ -387,7 +391,7 @@ A coverage cutoff is not specified.
                     phred33_reads.add(obj_name)
                 elif ea_stats_dict['phred_type'] == '64':
                     phred64_reads.add(obj_name)
-                else: 
+                else:
                     raise ValueError(('Reads object {} ({}) phred type is not of the ' +
                                       'expected value of 33 or 64. It had a phred type of ' +
                                       '{}').format(obj_name, rds, ea_stats_dict['phred_type']))
@@ -419,7 +423,10 @@ A coverage cutoff is not specified.
             # and it's optional anyway. Ideally fix those issues and then set
             # the --meta command line flag automatically based on the type
 
-            # Dylan: removing these requirements because too much work for user to go all the way back and reimport reads with "single_genome" flag set opposite.  Additionally, now that "metagenomic" assembly is now an explicit App instead of an option, this check is far less necessary
+            # Dylan: removing these requirements because too much work for user to go all the way
+            # back and reimport reads with "single_genome" flag set opposite.  Additionally, now
+            # that "metagenomic" assembly is now an explicit App instead of an option, this check
+            #  is far less necessary
 
 #            if (rds['single_genome'] == self.TRUE and
 #                    params[self.PARAM_IN_DNA_SOURCE] ==
@@ -444,11 +451,11 @@ A coverage cutoff is not specified.
         # IF THERE ARE READS OF BOTH PHRED 33 and 64, throw an error
         if (len(phred64_reads) > 0) and (len(phred33_reads) > 0):
             raise ValueError(
-                    ('The set of Reads objects passed in have reads that have different ' +
-                     'phred type scores. SPAdes does not support assemblies of ' +
-                     'reads with different phred type scores.\nThe following read objects ' +
-                     'have phred 33 scores : {}.\nThe following read objects have phred 64 ' +
-                     'scores : {}').format(", ".join(phred33_reads), ", ".join(phred64_reads)))
+                ('The set of Reads objects passed in have reads that have different ' +
+                 'phred type scores. SPAdes does not support assemblies of ' +
+                 'reads with different phred type scores.\nThe following read objects ' +
+                 'have phred 33 scores : {}.\nThe following read objects have phred 64 ' +
+                 'scores : {}').format(", ".join(phred33_reads), ", ".join(phred64_reads)))
         elif len(phred64_reads) > 0:
             return '64'
         elif len(phred33_reads) > 0:
@@ -482,7 +489,9 @@ A coverage cutoff is not specified.
         if self.PARAM_IN_DNA_SOURCE in params:
             s = params[self.PARAM_IN_DNA_SOURCE]
 #            print("FOUND THE DNA SOURCE: " + str(params[self.PARAM_IN_DNA_SOURCE]))
-            if s not in [self.PARAM_IN_SINGLE_CELL, self.PARAM_IN_METAGENOME, self.PARAM_IN_PLASMID]:
+            if s not in [self.PARAM_IN_SINGLE_CELL,
+                         self.PARAM_IN_METAGENOME,
+                         self.PARAM_IN_PLASMID]:
                 params[self.PARAM_IN_DNA_SOURCE] = None
         else:
             params[self.PARAM_IN_DNA_SOURCE] = None
@@ -509,7 +518,6 @@ A coverage cutoff is not specified.
             os.makedirs(self.scratch)
         #END_CONSTRUCTOR
         pass
-
 
     def run_SPAdes(self, ctx, params):
         """
@@ -601,13 +609,13 @@ A coverage cutoff is not specified.
 #            print ("READS REF:" + str(reads[ref]))
             seq_tech = reads[ref]["sequencing_tech"]
             if f['type'] == 'interleaved':
-                reads_data.append({'fwd_file': f['fwd'], 'type':'paired',
+                reads_data.append({'fwd_file': f['fwd'], 'type': 'paired',
                                    'seq_tech': seq_tech})
             elif f['type'] == 'paired':
                 reads_data.append({'fwd_file': f['fwd'], 'rev_file': f['rev'],
-                                   'type':'paired', 'seq_tech': seq_tech})
+                                   'type': 'paired', 'seq_tech': seq_tech})
             elif f['type'] == 'single':
-                reads_data.append({'fwd_file': f['fwd'], 'type':'single',
+                reads_data.append({'fwd_file': f['fwd'], 'type': 'single',
                                    'seq_tech': seq_tech})
             else:
                 raise ValueError('Something is very wrong with read lib' + reads_name)
@@ -631,7 +639,7 @@ A coverage cutoff is not specified.
                  })
             # load report from scaffolds.fasta.filtered.fa
             report_name, report_ref = self.load_report(
-                output_contigs+'.filtered.fa', params, wsname)
+                output_contigs + '.filtered.fa', params, wsname)
         else:
             assemblyUtil.save_assembly_from_fasta(
                 {'file': {'path': output_contigs},
@@ -653,6 +661,7 @@ A coverage cutoff is not specified.
                              'output is not type dict as required.')
         # return the results
         return [output]
+
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",
