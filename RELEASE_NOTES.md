@@ -6,3 +6,9 @@ __Changes__
 - Removed requirement for 'single_genome' flag not set for metagenomic assembly
 - Added travis CI
 
+
+
+### Version 1.0.0
+__Changes__
+- updated metaSPAdes() min_contig_length parameter to required and changed default values to min:300bp default: 2Kbp
+

@@ -1,5 +1,5 @@
 {
-    "ver": "0.0.1",
+    "ver": "1.0.0",
     "authors": [
         "gaprice", "dylan"
     ],
@@ -36,13 +36,13 @@
         {
             "id": "min_contig_length",
             "optional": false,
-            "advanced": true,
+            "advanced": false,
             "allow_multiple": false,
-            "default_values": [ "500" ],
+            "default_values": [ "2000" ],
             "field_type": "text",
             "text_options": {
                 "validate_as" : "int",
-		"min_int" : 200
+		"min_int" : 300
             }
         }
     ],
