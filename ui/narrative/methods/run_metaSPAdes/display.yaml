@@ -1,7 +1,7 @@
 #
 # define display information
 #
-name: Assemble with metaSPAdes - v3.10.0
+name: Assemble with metaSPAdes - v3.11.1
 tooltip: |
     Assemble metagenomic reads using the SPAdes assembler.
 screenshots: []
@@ -71,7 +71,7 @@ description : |
     If you need support for command line options not exposed in the wrapper
     please contact KBase Help.
     </p>
-    <p>SPAdes version: 3.10.0</p>
+    <p>SPAdes version: 3.11.1</p>
     
 publications :
     -
