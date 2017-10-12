@@ -699,10 +699,10 @@ class gaprice_SPAdesTest(unittest.TestCase):
              'fasta_md5': '8da1994279e071c9dd2b2cef57c7f092'
              }, min_contig_length=63000, dna_source='metagenomic')
 
-    def test_invalid_min_contig_len(self):
+    def test_invalid_min_contig_length(self):
 
         self.run_error(
-            ['foo'], 'min_contig_len must be of type int', wsname='fake', min_contig_len='not an int!')
+            ['foo'], 'min_contig_length must be of type int', wsname='fake', min_contig_length='not an int!')
     
     def test_no_workspace_param(self):
 
