@@ -51,7 +51,7 @@ parameters :
 description : |
     <p>
     This is a KBase wrapper for the 
-    <a href="http://bioinf.spbau.ru/spades" target="_blank">SPAdes</a> 
+    <a href="http://bioinf.spbau.ru/spades" target="_blank">SPAdes 3.11.1</a> 
     genomic reads assembler.
     </p>
     
