@@ -496,7 +496,6 @@ A coverage cutoff is not specified.
         else:
             params[self.PARAM_IN_DNA_SOURCE] = None
 #            print("PARAMS ARE:" + str(params))
-
         if self.PARAM_IN_MIN_CONTIG_LENGTH in params:
             if not isinstance(params[self.PARAM_IN_MIN_CONTIG_LENGTH], int):
                 raise ValueError('min_contig_length must be of type int')
@@ -629,6 +628,8 @@ A coverage cutoff is not specified.
         self.log('Uploading FASTA file to Assembly')
 
         assemblyUtil = AssemblyUtil(self.callbackURL, token=ctx['token'], service_ver='release')
+
+
 
         if params.get('min_contig_length', 0) > 0:
             assemblyUtil.save_assembly_from_fasta(
