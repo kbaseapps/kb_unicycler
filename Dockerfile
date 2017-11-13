@@ -9,9 +9,9 @@ MAINTAINER KBase Developer
 RUN pip install --upgrade pip
 
 RUN cd /opt \
-    && wget http://spades.bioinf.spbau.ru/release3.10.0/SPAdes-3.10.0-Linux.tar.gz \
-    && tar -xvzf SPAdes-3.10.0-Linux.tar.gz \
-    && rm SPAdes-3.10.0-Linux.tar.gz \
+    && wget http://spades.bioinf.spbau.ru/release3.11.1/SPAdes-3.11.1-Linux.tar.gz \
+    && tar -xvzf SPAdes-3.11.1-Linux.tar.gz \
+    && rm SPAdes-3.11.1-Linux.tar.gz \
     && pip install psutil \
     && pip install pyyaml
 
@@ -26,7 +26,7 @@ RUN pip install requests --upgrade \
     && pip install ipython \
     && apt-get install nano
 
-ENV PATH $PATH:/opt/SPAdes-3.10.0-Linux/bin
+ENV PATH $PATH:/opt/SPAdes-3.11.1-Linux/bin
 
 # -----------------------------------------
 

@@ -12,3 +12,6 @@ __Changes__
 __Changes__
 - updated metaSPAdes() min_contig_length parameter to required and changed default values to min:300bp default: 2Kbp
 
+### Version 1.1.0
+__Changes__
+- updated version of SPAdes to 3.11.1
