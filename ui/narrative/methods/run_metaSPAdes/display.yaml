@@ -42,6 +42,16 @@ parameters :
             Minimum Contig Length
         short-hint : |
             The shortest contig to accept in the resulting assembly object
+    kmer_sizes :
+        ui-name : |
+            k-mer Sizes
+        short-hint : |
+            k-mer sizes (all values must be odd, less than 128 and listed in ascending order)
+    skip_error_correction :
+        ui-name : |
+            Assembly only (No Error Correction)
+        short-hint : |
+            Assembly only (No Error Correction)
 
 description : |
     <p>
