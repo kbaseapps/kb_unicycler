@@ -41,6 +41,8 @@ module kb_SPAdes {
         list<paired_end_lib> read_libraries;
         string dna_source;
         int min_contig_length;
+        list<int> kmer_sizes;
+        bool skip_error_correction;
     } SPAdesParams;
 
 

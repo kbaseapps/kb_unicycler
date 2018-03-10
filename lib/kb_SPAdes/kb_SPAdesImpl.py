@@ -72,6 +72,8 @@ A coverage cutoff is not specified.
     PARAM_IN_METAGENOME = 'metagenomic'
     PARAM_IN_PLASMID = 'plasmid'
     PARAM_IN_MIN_CONTIG_LENGTH = 'min_contig_length'
+    PARAM_IN_KMER_SIZES = 'kmer_sizes'
+    PARAM_IN_SKIP_ERR_CORRECT = 'skip_error_correction'
 
     INVALID_WS_OBJ_NAME_RE = re.compile('[^\\w\\|._-]')
     INVALID_WS_NAME_RE = re.compile('[^\\w:._-]')
@@ -499,6 +501,11 @@ A coverage cutoff is not specified.
         if self.PARAM_IN_MIN_CONTIG_LENGTH in params:
             if not isinstance(params[self.PARAM_IN_MIN_CONTIG_LENGTH], int):
                 raise ValueError('min_contig_length must be of type int')
+        if self.PARAM_IN_KMER_SIZES in params:
+            for size in params[self.PARAM_IN_KMER_SIZES]:
+                print("KMER SIZE: " + str(size))
+        if self.PARAM_IN_SKIP_ERR_CORRECT in params:
+            print("SKIP ERR CORRECTION: " + str(params(self.PARAM_IN_SKIP_ERR_CORRECT)))
 
     #END_CLASS_HEADER
 

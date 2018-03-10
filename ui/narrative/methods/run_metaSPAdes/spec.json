@@ -44,6 +44,29 @@
                 "validate_as" : "int",
 		"min_int" : 300
             }
+        },
+        {
+            "id": "kmer_sizes",
+            "optional": true,
+            "advanced": true,
+            "allow_multiple": true,
+            "default_values": [ "33", "55", "77", "99", "127" ],
+            "field_type": "text",
+            "text_options": {
+                "validate_as" : "int"
+            }
+        },
+        {
+            "id": "skip_error_correction",
+            "optional": true,
+            "advanced": true,
+            "allow_multiple": false,
+            "default_values": [ "0" ],
+			"field_type": "checkbox",
+			"checkbox_options": {
+				"checked_value": "1",
+				"unchecked_value": "0"
+			}
         }
     ],
     "behavior": {
@@ -68,6 +91,14 @@
                 {
                     "input_parameter": "min_contig_length",
                     "target_property": "min_contig_length"
+                },
+                {
+                    "input_parameter": "kmer_sizes",
+                    "target_property": "kmer_sizes"
+                },
+                {
+                    "input_parameter": "skip_error_correction",
+                    "target_property": "skip_error_correction"
                 },
                 {
                     "constant_value": "metagenomic",
