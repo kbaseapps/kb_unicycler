@@ -15,7 +15,7 @@ RUN cd /opt \
     && pip install psutil \
     && pip install pyyaml
 
-RUN sudo apt-get install python-dev libffi-dev libssl-dev
+RUN apt-get -y update && apt-get install -y python-dev libffi-dev libssl-dev
 RUN pip install cffi --upgrade
 RUN pip install pyopenssl --upgrade
 RUN pip install ndg-httpsclient --upgrade
