@@ -508,9 +508,6 @@ A coverage cutoff is not specified.
                 raise ValueError('min_contig_length must be of type int')
         if self.PARAM_IN_KMER_SIZES in params and params[self.PARAM_IN_KMER_SIZES] is not None:
             print("KMER_SIZES: " + ",".join(str(num) for num in params[self.PARAM_IN_KMER_SIZES]))
-            if len(params[self.PARAM_IN_KMER_SIZES]) < 3:
-                raise ValueError('Insufficient number of k-mer sizes: Expected atleast 3 values: ' +
-                                 ",".join(str(num) for num in params[self.PARAM_IN_KMER_SIZES]))
         if self.PARAM_IN_SKIP_ERR_CORRECT in params and params[self.PARAM_IN_SKIP_ERR_CORRECT] is not None:
             print("SKIP ERR CORRECTION: " + str(params[self.PARAM_IN_SKIP_ERR_CORRECT]))
 

@@ -492,21 +492,15 @@ class gaprice_SPAdesTest(unittest.TestCase):
     def test_meta_kmer_sizes(self):
 
         self.run_success(
-            ['frbasic'], 'frbasic_out',
+            ['frbasic'], 'frbasic_meta_out',
             contig_count=2, dna_source='metagenomic',
             kmer_sizes=[33, 55, 77, 99, 127])
-
-    def test_invalid_kmer_sizes(self):
-
-        self.run_error(
-            ['frbasic'], 'Insufficient number of k-mer sizes: Expected atleast 3 values: 33',
-            kmer_sizes=[33])
 
     def test_invalid_min_contig_length(self):
 
         self.run_error(
             ['frbasic'], 'min_contig_length must be of type int', min_contig_length='not an int!')
-    
+
     def test_no_workspace_param(self):
 
         self.run_error(
