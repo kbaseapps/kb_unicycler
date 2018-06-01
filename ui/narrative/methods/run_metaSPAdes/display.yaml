@@ -57,7 +57,7 @@ parameters :
 description : |
     <p>
     This is a KBase wrapper for the
-    <a href="http://cab.spbu.ru/software/spades/" target="_blank">metaSPAdes</a> 
+    <a href="http://cab.spbu.ru/software/spades/" target="_blank">metaSPAdes</a>
     genomic reads assembler.
     </p>
 
@@ -82,7 +82,7 @@ description : |
     If you need support for command line options not exposed in the wrapper
     please contact KBase Help.
     </p>
-    <p>SPAdes version: 3.11.1</p>
+    <p>SPAdes version: 3.12.0</p>
 
 publications :
     -
