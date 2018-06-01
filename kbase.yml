@@ -2,7 +2,7 @@ module-name:
     kb_SPAdes
 
 module-description:
-    SPAdes wrapper - http://bioinf.spbau.ru/spades - Running SPAdes 3.11.1
+    SPAdes wrapper - http://cab.spbu.ru/software/spades/ - Running SPAdes 3.12.0
 
 service-language:
     python
@@ -12,5 +12,3 @@ module-version:
 
 owners:
     [gaprice, jkbaumohl, rsutormin, dylan, arfath, sychan, psdehal, umaganapathyswork]
-
-

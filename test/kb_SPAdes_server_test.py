@@ -419,7 +419,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
 
         self.run_success(
             ['intbasic_kbassy'], 'intbasic_kbassy_out',
-            contig_count=1479, dna_source='')
+            contig_count=1476, dna_source='')
 
     def test_multiple(self):
         self.run_success(
@@ -482,7 +482,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
                         'The following read objects have phred 64 scores : ' +
                         '{}/intbasic64').format(self.getWsName(), self.getWsName()),
                        exception=ValueError)
-    
+
     def test_single_cell(self):
 
         self.run_success(
@@ -800,13 +800,13 @@ class gaprice_SPAdesTest(unittest.TestCase):
         header = {"Authorization": "Oauth {0}".format(self.token)}
         fasta_node = requests.get(self.shockURL + '/node/' + assembly_fasta_node,
                                   headers=header, allow_redirects=True).json()
-        
+
         if not (contig_count is None):
           self.assertEqual(contig_count, len(assembly['data']['contigs']))
 
         self.assertEqual(output_name, assembly['data']['assembly_id'])
         # self.assertEqual(output_name, assembly['data']['name']) #name key doesnt seem to exist
-        
+
         if not (expected is None):
           self.assertEqual(expected['fasta_md5'],
                          fasta_node['data']['file']['checksum']['md5'])

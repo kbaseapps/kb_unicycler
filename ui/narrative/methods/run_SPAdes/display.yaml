@@ -1,7 +1,7 @@
 #
 # define display information
 #
-name: Assemble with SPAdes - v3.11.1
+name: Assemble with SPAdes - v3.12.0
 tooltip: |
     Assemble reads using the SPAdes assembler.
 screenshots: []
@@ -36,7 +36,7 @@ parameters :
         ui-name : |
             DNA source
         short-hint : |
-            The source of the sequenced DNA - either standard, single cell / 
+            The source of the sequenced DNA - either standard, single cell /
             MDA, or plasmid.
     output_contigset_name :
         ui-name : |
@@ -61,13 +61,13 @@ parameters :
             Assembly only (No Error Correction)
 description : |
     <p>
-    This is a KBase wrapper for the 
-    <a href="http://bioinf.spbau.ru/spades" target="_blank">SPAdes 3.11.1</a> 
+    This is a KBase wrapper for the
+    <a href="http://cab.spbu.ru/software/spades/" target="_blank">SPAdes 3.12.0</a>
     genomic reads assembler.
     </p>
-    
+
     <p>
-    SPAdes is designed for assembling reads. 
+    SPAdes is designed for assembling reads.
     We strongly recommend not to use it for large and medium-size eukaryotic genomes.
     </p>
 
@@ -88,8 +88,8 @@ description : |
     If you need support for command line options not exposed in the wrapper
     please contact KBase Help.
     </p>
-    <p>SPAdes version: 3.11.1</p>
-    
+    <p>SPAdes version: 3.12.0</p>
+
 publications :
     -
         display-text: |
