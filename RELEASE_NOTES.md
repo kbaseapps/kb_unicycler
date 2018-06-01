@@ -1,3 +1,9 @@
+### Version 1.1.3
+__Changes__
+- updated to SPAdes 3.12.0
+### Version 1.1.2
+__Changes__
+- added advanced parameters to set list of Kmer sizes and option to skip read error correction
 ### Version 1.1.1
 __Changes__
 - changed contact from email to url
@@ -12,7 +18,7 @@ __Changes__
 
 ### Version 0.0.9
 __Changes__
-- Added min_contig_length parameter for metaSPAdes 
+- Added min_contig_length parameter for metaSPAdes
 - Limited MetaSPAdes narrative UI to accept only one reads input
 - Limit SPAdes and MetaSPAdes memory usage to 100GB and 500GB respectively.
 - Removed requirement for 'single_genome' flag not set for metagenomic assembly
