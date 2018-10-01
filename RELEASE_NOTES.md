@@ -1,9 +1,15 @@
+### Version 1.3.4
+__Changes__
+- added citations in PLOS format
+
 ### Version 1.1.3
 __Changes__
 - updated to SPAdes 3.12.0
+
 ### Version 1.1.2
 __Changes__
 - added advanced parameters to set list of Kmer sizes and option to skip read error correction
+
 ### Version 1.1.1
 __Changes__
 - changed contact from email to url
