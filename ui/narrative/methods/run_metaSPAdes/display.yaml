@@ -87,6 +87,6 @@ description : |
 publications :
     -
         display-text: |
-            S. Nurk, A. Bankevich, D. Antipov, A. A. Gurevich, A. Korobeynikov, A. Lapidus, A. D. Prjibelsky, A. Pyshkin, A. Sirotkin, Y. Sirotkin, R. Stepanauskas, J. S. McLean, R. Lasken, S. R. Clingenpeel, T. Woyke, G. Tesler, M. A. Alekseyev, and P. A. Pevzner. Assembling Single-Cell Genomes and Mini-Metagenomes From Chimeric MDA Products. Journal of Computational Biology 20(10) (2013), 714-737. doi:10.1089/cmb.2013.0084
+             Nurk S, Bankevich A, Antipov D, Gurevich AA, Korobeynikov A, Lapidus A, et al. Assembling single-cell genomes and mini-metagenomes from chimeric MDA products. J Comput Biol. 2013;20: 714–737. doi:10.1089/cmb.2013.0084
         link: http://www.ncbi.nlm.nih.gov/pubmed/24093227
         pmid: 24093227
