@@ -18,11 +18,11 @@ RUN pip install --upgrade pip \
     && pip install pyasn1 --upgrade
 
 RUN cd /opt \
-    && wget http://cab.spbu.ru/files/release3.12.0/SPAdes-3.12.0-Linux.tar.gz \
-    && tar -xvzf SPAdes-3.12.0-Linux.tar.gz \
-    && rm SPAdes-3.12.0-Linux.tar.gz
+    && wget http://cab.spbu.ru/files/release3.13.0/SPAdes-3.13.0-Linux.tar.gz \
+    && tar -xvzf SPAdes-3.13.0-Linux.tar.gz \
+    && rm SPAdes-3.13.0-Linux.tar.gz
 
-ENV PATH $PATH:/opt/SPAdes-3.12.0-Linux/bin
+ENV PATH $PATH:/opt/SPAdes-3.13.0-Linux/bin
 
 # -----------------------------------------
 
