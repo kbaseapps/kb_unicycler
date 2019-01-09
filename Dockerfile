@@ -10,6 +10,7 @@ RUN pip install --upgrade pip \
     && pip install 'requests[security]' --upgrade \
     && pip install psutil \
     && pip install pyyaml \
+    && pip install regex \
     && apt-get -y update \
     && apt-get install -y python-dev libffi-dev libssl-dev \
     && pip install cffi --upgrade \
@@ -17,12 +18,14 @@ RUN pip install --upgrade pip \
     && pip install ndg-httpsclient --upgrade \
     && pip install pyasn1 --upgrade
 
-RUN cd /opt \
-    && wget http://cab.spbu.ru/files/release3.13.0/SPAdes-3.13.0-Linux.tar.gz \
-    && tar -xvzf SPAdes-3.13.0-Linux.tar.gz \
-    && rm SPAdes-3.13.0-Linux.tar.gz
+ENV SPADES_VERSION='3.13.0'
 
-ENV PATH $PATH:/opt/SPAdes-3.13.0-Linux/bin
+RUN cd /opt \
+    && wget http://cab.spbu.ru/files/release${SPADES_VERSION}/SPAdes-${SPADES_VERSION}-Linux.tar.gz \
+    && tar -xvzf SPAdes-${SPADES_VERSION}-Linux.tar.gz \
+    && rm SPAdes-${SPADES_VERSION}-Linux.tar.gz
+
+ENV PATH $PATH:/opt/SPAdes-${SPADES_VERSION}-Linux/bin
 
 # -----------------------------------------
 

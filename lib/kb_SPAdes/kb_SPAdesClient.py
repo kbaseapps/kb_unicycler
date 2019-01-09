@@ -39,19 +39,27 @@ class kb_SPAdes(object):
         :param params: instance of type "SPAdesParams" (Input parameters for
            running SPAdes. workspace_name - the name of the workspace from
            which to take input and store output. output_contigset_name - the
-           name of the output contigset list<paired_end_lib> read_libraries -
-           Illumina PairedEndLibrary files to assemble. dna_source -
+           name of the output contigset read_libraries - a list of Illumina
+           PairedEndLibrary files in FASTQ or BAM format. dna_source -
            (optional) the source of the DNA used for sequencing
            'single_cell': DNA amplified from a single cell via MDA anything
            else: Standard DNA sample from multiple cells. Default value is
            None. min_contig_length - (optional) integer to filter out contigs
            with length < min_contig_length from the SPAdes output. Default
-           value is 0 implying no filter.) -> structure: parameter
+           value is 0 implying no filter. kmer_sizes - (optional) K-mer
+           sizes, Default values: 33, 55, 77, 99, 127 (all values must be
+           odd, less than 128 and listed in ascending order) In the absence
+           of these values, K values are automatically selected.
+           skip_error_correction - (optional) Assembly only (No error
+           correction). By default this is disabled.) -> structure: parameter
            "workspace_name" of String, parameter "output_contigset_name" of
            String, parameter "read_libraries" of list of type
            "paired_end_lib" (The workspace object name of a PairedEndLibrary
            file, whether of the KBaseAssembly or KBaseFile type.), parameter
-           "dna_source" of String, parameter "min_contig_length" of Long
+           "dna_source" of String, parameter "min_contig_length" of Long,
+           parameter "kmer_sizes" of list of Long, parameter
+           "skip_error_correction" of type "bool" (A boolean. 0 = false,
+           anything else = true.)
         :returns: instance of type "SPAdesOutput" (Output parameters for
            SPAdes run. report_name - the name of the KBaseReport.Report
            workspace object. report_ref - the workspace reference of the
@@ -60,6 +68,119 @@ class kb_SPAdes(object):
         """
         return self._client.call_method(
             'kb_SPAdes.run_SPAdes',
+            [params], self._service_ver, context)
+
+    def run_HybridSPAdes(self, params, context=None):
+        """
+        Run HybridSPAdes on paired end libraries with PacBio CLR and Oxford Nanopore reads
+        :param params: instance of type "HybridSPAdesParams" (------To run
+           SPAdes 3.13.0 you need at least one library of the following
+           types:------ 1) Illumina paired-end/high-quality
+           mate-pairs/unpaired reads 2) IonTorrent paired-end/high-quality
+           mate-pairs/unpaired reads 3) PacBio CCS reads workspace_name - the
+           name of the workspace from which to take input and store output.
+           output_contigset_name - the name of the output contigset
+           single_reads - a list of Illumina/IonTorrent single reads or
+           unpaired reads from paired library pairedEnd_reads - a list of
+           Illumina/IonTorrent PairedEndLibrary reads mate_pair_reads - a
+           list of Illumina/IonTorrent Mate Pair or unpaired reads
+           pacbio_reads - a list of PacBio CLR reads nanopore_reads - a list
+           of Oxford Nanopore reads dna_source - the source of the DNA used
+           for sequencing 'single_cell': DNA amplified from a single cell via
+           MDA anything else: Standard DNA sample from multiple cells.
+           Default value is None. min_contig_length - an integer to filter
+           out contigs with length < min_contig_length from the SPAdes
+           output. Default value is 0 implying no filter. kmer_sizes - K-mer
+           sizes, Default values: 33, 55, 77, 99, 127 (all values must be
+           odd, less than 128 and listed in ascending order) In the absence
+           of these values, K values are automatically selected.
+           skip_error_correction - Assembly only (No error correction). By
+           default this is disabled. @optional pacbio_reads @optional
+           nanopore_reads @optional dna_source @optional min_contig_length
+           @optional kmer_sizes @optional skip_error_correction) ->
+           structure: parameter "workspace_name" of String, parameter
+           "output_contigset_name" of String, parameter "single_reads" of
+           list of type "ReadsParams" (parameter groups--define attributes
+           for specifying inputs with YAML data set file (advanced) The
+           following attributes are available: - orientation ("fr", "rf",
+           "ff") - type ("paired-end", "mate-pairs", "hq-mate-pairs",
+           "single", "pacbio", "nanopore", "sanger", "trusted-contigs",
+           "untrusted-contigs") - interlaced reads (comma-separated list of
+           files with interlaced reads) - left reads (comma-separated list of
+           files with left reads) - right reads (comma-separated list of
+           files with right reads) - single reads (comma-separated list of
+           files with single reads or unpaired reads from paired library) -
+           merged reads (comma-separated list of files with merged reads)) ->
+           structure: parameter "lib_ref" of type "obj_ref" (An X/Y/Z style
+           KBase object reference), parameter "orientation" of String,
+           parameter "lib_type" of String, parameter "pairedEnd_reads" of
+           list of type "ReadsParams" (parameter groups--define attributes
+           for specifying inputs with YAML data set file (advanced) The
+           following attributes are available: - orientation ("fr", "rf",
+           "ff") - type ("paired-end", "mate-pairs", "hq-mate-pairs",
+           "single", "pacbio", "nanopore", "sanger", "trusted-contigs",
+           "untrusted-contigs") - interlaced reads (comma-separated list of
+           files with interlaced reads) - left reads (comma-separated list of
+           files with left reads) - right reads (comma-separated list of
+           files with right reads) - single reads (comma-separated list of
+           files with single reads or unpaired reads from paired library) -
+           merged reads (comma-separated list of files with merged reads)) ->
+           structure: parameter "lib_ref" of type "obj_ref" (An X/Y/Z style
+           KBase object reference), parameter "orientation" of String,
+           parameter "lib_type" of String, parameter "mate_pair_reads" of
+           list of type "ReadsParams" (parameter groups--define attributes
+           for specifying inputs with YAML data set file (advanced) The
+           following attributes are available: - orientation ("fr", "rf",
+           "ff") - type ("paired-end", "mate-pairs", "hq-mate-pairs",
+           "single", "pacbio", "nanopore", "sanger", "trusted-contigs",
+           "untrusted-contigs") - interlaced reads (comma-separated list of
+           files with interlaced reads) - left reads (comma-separated list of
+           files with left reads) - right reads (comma-separated list of
+           files with right reads) - single reads (comma-separated list of
+           files with single reads or unpaired reads from paired library) -
+           merged reads (comma-separated list of files with merged reads)) ->
+           structure: parameter "lib_ref" of type "obj_ref" (An X/Y/Z style
+           KBase object reference), parameter "orientation" of String,
+           parameter "lib_type" of String, parameter "pacbio_reads" of list
+           of type "ReadsParams" (parameter groups--define attributes for
+           specifying inputs with YAML data set file (advanced) The following
+           attributes are available: - orientation ("fr", "rf", "ff") - type
+           ("paired-end", "mate-pairs", "hq-mate-pairs", "single", "pacbio",
+           "nanopore", "sanger", "trusted-contigs", "untrusted-contigs") -
+           interlaced reads (comma-separated list of files with interlaced
+           reads) - left reads (comma-separated list of files with left
+           reads) - right reads (comma-separated list of files with right
+           reads) - single reads (comma-separated list of files with single
+           reads or unpaired reads from paired library) - merged reads
+           (comma-separated list of files with merged reads)) -> structure:
+           parameter "lib_ref" of type "obj_ref" (An X/Y/Z style KBase object
+           reference), parameter "orientation" of String, parameter
+           "lib_type" of String, parameter "nanopore_reads" of list of type
+           "ReadsParams" (parameter groups--define attributes for specifying
+           inputs with YAML data set file (advanced) The following attributes
+           are available: - orientation ("fr", "rf", "ff") - type
+           ("paired-end", "mate-pairs", "hq-mate-pairs", "single", "pacbio",
+           "nanopore", "sanger", "trusted-contigs", "untrusted-contigs") -
+           interlaced reads (comma-separated list of files with interlaced
+           reads) - left reads (comma-separated list of files with left
+           reads) - right reads (comma-separated list of files with right
+           reads) - single reads (comma-separated list of files with single
+           reads or unpaired reads from paired library) - merged reads
+           (comma-separated list of files with merged reads)) -> structure:
+           parameter "lib_ref" of type "obj_ref" (An X/Y/Z style KBase object
+           reference), parameter "orientation" of String, parameter
+           "lib_type" of String, parameter "dna_source" of String, parameter
+           "min_contig_length" of Long, parameter "kmer_sizes" of list of
+           Long, parameter "skip_error_correction" of type "bool" (A boolean.
+           0 = false, anything else = true.)
+        :returns: instance of type "SPAdesOutput" (Output parameters for
+           SPAdes run. report_name - the name of the KBaseReport.Report
+           workspace object. report_ref - the workspace reference of the
+           report.) -> structure: parameter "report_name" of String,
+           parameter "report_ref" of String
+        """
+        return self._client.call_method(
+            'kb_SPAdes.run_HybridSPAdes',
             [params], self._service_ver, context)
 
     def status(self, context=None):
