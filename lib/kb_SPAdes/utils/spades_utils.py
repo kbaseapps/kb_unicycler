@@ -11,7 +11,7 @@ import codecs
 import uuid
 import copy
 
-from Workspace.WorkspaceClient import Workspace
+from Workspace.WorkspaceClient import Workspace as Workspace
 from kb_SPAdes.utils.Program_Runner import Program_Runner
 from KBaseReport.KBaseReportClient import KBaseReport
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
