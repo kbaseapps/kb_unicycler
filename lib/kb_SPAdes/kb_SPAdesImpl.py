@@ -26,7 +26,7 @@ from kb_quast.kb_quastClient import kb_quast
 from kb_ea_utils.kb_ea_utilsClient import kb_ea_utils
 import time
 
-from kb_SPAdes.utils.spades_assembler import SPAdes_Assembler
+from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
 
 
 class ShockException(Exception):
