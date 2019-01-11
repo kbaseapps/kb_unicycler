@@ -20,6 +20,9 @@ import shutil
 import inspect
 from kb_SPAdes.GenericClient import GenericClient
 
+from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
+from kb_SPAdes.utils.spades_utils import SPAdesUtils
+
 
 class gaprice_SPAdesTest(unittest.TestCase):
 
@@ -53,6 +56,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
         wsName = "test_kb_SPAdes_" + str(wssuffix)
         cls.wsinfo = cls.wsClient.create_workspace({'workspace': wsName})
         print('created workspace ' + cls.getWsName())
+        cls.spades_assembler = SPAdesAssembler(cls.config, cls.provenance)
+        cls.spades_utils = SPAdesUtils(cls.config, cls.provenance)
         cls.serviceImpl = kb_SPAdes(cls.cfg)
         cls.readUtilsImpl = ReadsUtils(cls.callbackURL, token=cls.token)
         cls.staged = {}
@@ -980,3 +985,67 @@ class gaprice_SPAdesTest(unittest.TestCase):
         assembly = self.wsClient.get_objects([{'ref': assembly_ref}])[0]
         self.assertEqual('KBaseGenomeAnnotations.Assembly', assembly['info'][2].split('-')[0])
         self.assertEqual(output_name, assembly['info'][1])
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_spades_utils_check_spades_params")
+    def test_spades_utils_check_spades_params(self):
+        """
+        test_spades_utils_construct_yaml_dataset_file: given different reads libs,
+        check if a yaml file is created correctly
+        """
+        dna_src_list = ['single_cell',  # --sc
+                        'metagenomic',  # --meta
+                        'plasmid',  # --plasmid
+                        'rna',  # --rna
+                        'iontorrent'  # --iontorrent
+                        ]
+        libs_list = [self.staged[n]['info'][1] for n in ['frbasic',
+                                                          'intbasic',
+                                                          'intbasic64',
+                                                          'pacbio',
+                                                          'pacbioccs',
+                                                          'iontorrent',
+                                                          'meta',
+                                                          'meta2',
+                                                          'meta_single_end',
+                                                          'reads_out',
+                                                          'frbasic_kbassy',
+                                                          'intbasic_kbassy',
+                                                          'single_end',
+                                                          'single_end2',
+                                                          'plasmid_reads']
+                     ]
+
+        # test single_cell reads
+        dnasrc = dna_src_list[0]
+        libs1 = libs_list[:1]
+        output_name = 'frbasic_out'
+        min_contig_length = 2
+        kmer_sizes = [33, 55, 77, 99, 127]
+        skip_error_correction = False
+        params = {'workspace_name': self.getWsName(),
+                  'single_reads': libs1,
+                  # 'pairedEnd_reads': libs2,
+                  # 'mate_pair_reads': libs3,
+                  # 'pacbio_reads': libs4,
+                  # 'nanopore_reads': libs5,
+                  'dna_source': dnasrc,
+                  'output_contigset_name': output_name,
+                  'min_contig_length': min_contig_length,
+                  'kmer_sizes': kmer_sizes,
+                  'skip_error_correction': skip_error_correction,
+                  'create_report': 0
+                  }
+
+        self.spades_utils.check_spades_params(params)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_spades_utils_construct_yaml_dataset_file")
+    def test_spades_utils_construct_yaml_dataset_file(self):
+    """
+    test_spades_utils_construct_yaml_dataset_file: given different reads libs,
+    check if a yaml file is created correctly
+    """
+    pass
+
+    

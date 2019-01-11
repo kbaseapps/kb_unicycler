@@ -27,7 +27,7 @@ def mkdir_p(path):
             raise
 
 
-class SPAdes_Assembler(object):
+class SPAdesAssembler(object):
     INVALID_WS_OBJ_NAME_RE = re.compile('[^\\w\\|._-]')
     INVALID_WS_NAME_RE = re.compile('[^\\w:._-]')
 
@@ -38,7 +38,7 @@ class SPAdes_Assembler(object):
 
     def __init__(self, config, provenance):
         """
-        __init__
+        __init__: construct SPAdesAssembler
         """
         # BEGIN_CONSTRUCTOR
         self.workspace_url = config["workspace-url"]

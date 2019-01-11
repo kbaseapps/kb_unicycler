@@ -40,7 +40,7 @@ def _mkdir_p(path):
             raise
 
 
-class spades_utils:
+class SPAdesUtils:
     SPADES_VERSION = '3.13.0'
     SPADES_BIN = '/opt/SPAdes-' + SPADES_VERSION + '-Linux/bin'
 
@@ -101,133 +101,8 @@ class spades_utils:
         """
         _has_long_reads: check if a long reads input exists in the parameters
         """
-        return (params.get('pacbio_reads', None) or
-                params.get('nanopore_reads', None) or
-                params.get('other_frg_file', None))
-
-    def _get_data_portion(self, pe_reads_data, jp_reads_data=None, pacbio_reads_file='',
-                          nanopore_reads_file='', other_frg_file=''):
-        """
-        _get_data_portion: build the 'DATA...END' portion for the config.txt file
-        """
-        data_str = ''
-        if pe_reads_data:
-            # log('PE reads data details:\n{}'.format(json.dumps(pe_reads_data, indent=1)))
-            for pe in pe_reads_data:
-                if data_str != '':
-                    data_str += '\n'
-                data_str += 'PE= ' + pe['pe_prefix'] + ' ' + str(pe['pe_mean']) + ' ' + \
-                            str(pe['pe_stdev']) + ' ' + pe['fwd_file']
-                if pe.get('rev_file', None):
-                    data_str += ' ' + pe['rev_file']
-
-        if jp_reads_data:
-            # log('JUMP reads data details:\n{}'.format(json.dumps(jp_reads_data, indent=1)))
-            for jp in jp_reads_data:
-                if data_str != '':
-                    data_str += '\n'
-                data_str += 'JUMP= ' + jp['jp_prefix'] + ' ' + str(jp['jp_mean']) + ' ' + \
-                            str(jp['jp_stdev']) + ' ' + jp['fwd_file']
-                if jp.get('rev_file', None):
-                    data_str += ' ' + jp['rev_file']
-
-        # Adding the pacbio_reads
-        # Note that pcbio reads must be in a single fasta file!
-        # For example:
-        # data_str +='\nPACBIO= /pool/genomics/frandsenp/masurca/PacBio/pacbio_reads.fasta'
-        # ***if you have both types of reads supply them both as NANOPORE type***
-        if pacbio_reads_file != '':
-            if data_str != '':
-                data_str += '\n'
-            if nanopore_reads_file != '':
-                data_str += 'NANOPORE=' + pacbio_reads_file
-            else:
-                data_str += 'PACBIO=' + pacbio_reads_file
-
-        # Adding the nanopore_reads and note that nanopore reads must be in a single fasta file!
-        # For example:
-        # data_str +='\nNANOPORE= /pool/genomics/frandsenp/masurca/NanoPore/nanopore_reads.fasta'
-        if nanopore_reads_file != '':
-            if data_str != '':
-                data_str += '\n'
-            data_str += 'NANOPORE= ' + nanopore_reads_file
-
-        # Adding the other_frg_file inputs if any
-        # any OTHER sequence data (454, Sanger, Ion torrent, etc) must be first converted into
-        # Celera Assembler compatible .frg file
-        # (see http://wgsassembler.sourceforge.com) and supplied as OTHER=file.frg
-        if other_frg_file != '':
-            if data_str != '':
-                data_str += '\n'
-            data_str += 'OTHER=' + other_frg_file
-
-        return data_str
-
-    def _get_parameters_portion(self, params):
-        """
-        build the 'PARAMETERS...END' portion for the config.txt file
-        """
-        # set the default parameters as suggested in the example configuration file
-        param_str = ("EXTEND_JUMP_READS=0\nUSE_GRID=0\nGRID_QUEUE=all.q\nGRID_BATCH_SIZE" +
-                     "=300000000\nLHE_COVERAGE=25\nMEGA_READS_ONE_PASS=0")
-        if (params.get('graph_kmer_size', None) and
-                type(params['graph_kmer_size']) == int):
-            if param_str != '':
-                param_str += '\n'
-            param_str += 'GRAPH_KMER_SIZE=' + str(params['graph_kmer_size'])
-        else:
-            if param_str != '':
-                param_str += '\n'
-            param_str += 'GRAPH_KMER_SIZE=auto'
-        if params.get('use_linking_mates', None):
-            if param_str != '':
-                param_str += '\n'
-            if params['use_linking_mates'] == 1 and not self._has_long_reads(params):
-                param_str += 'USE_LINKING_MATES=1'
-            else:
-                param_str += 'USE_LINKING_MATES=0'
-        if params.get('limit_jump_coverage', None):
-            if param_str != '':
-                param_str += '\n'
-            param_str += 'LIMIT_JUMP_COVERAGE = ' + str(params['limit_jump_coverage'])
-        if params.get('cgwErrorRate', None):
-            if param_str != '':
-                param_str += '\n'
-            param_str += 'CA_PARAMETERS = cgwErrorRate=' + str(params['cgwErrorRate'])
-        if params.get(self.PARAM_IN_THREADN, None):
-            if param_str != '':
-                param_str += '\n'
-            param_str += 'NUM_THREADS = ' + str(params[self.PARAM_IN_THREADN])
-        if params.get('jf_size', None):
-            if param_str != '':
-                param_str += '\n'
-            param_str += 'JF_SIZE=' + str(params['jf_size'])
-        if params.get('kmer_count_threshold', None):
-            if param_str != '':
-                param_str += '\n'
-            param_str += 'KMER_COUNT_THRESHOLD=' + str(params['kmer_count_threshold'])
-        if params.get('do_homopolymer_trim', None):
-            if param_str != '':
-                param_str += '\n'
-            if params['do_homopolymer_trim'] == 1:
-                param_str += 'DO_HOMOPOLYMER_TRIM=1'
-            else:
-                param_str += 'DO_HOMOPOLYMER_TRIM=0'
-        if params.get('close_gaps', None):
-            if param_str != '':
-                param_str += '\n'
-            if params['close_gaps'] == 1:
-                param_str += 'CLOSE_GAPS=1'
-            else:
-                param_str += 'CLOSE_GAPS=0'
-        if params.get('soap_assembly', None):
-            if param_str != '':
-                param_str += '\n'
-            if params['soap_assembly'] == 1:
-                param_str += 'SOAP_ASSEMBLY=1'
-            else:
-                param_str += 'SOAP_ASSEMBLY=0'
-        return param_str
+        return (params.get(self.PARAM_IN_PACBIO_READS, None) or
+                params.get(self.PARAM_IN_NANO_READS, None))
 
     def _get_hybrid_reads_info(self, input_params):
         """
