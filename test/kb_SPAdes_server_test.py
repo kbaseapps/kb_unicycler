@@ -2,6 +2,7 @@ from __future__ import print_function
 import unittest
 import os
 import time
+import uuid
 
 from os import environ
 from ConfigParser import ConfigParser
@@ -47,6 +48,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
         config.read(config_file)
         for nameval in config.items('kb_SPAdes'):
             cls.cfg[nameval[0]] = nameval[1]
+        cls.cfg["SDK_CALLBACK_URL"] = cls.callbackURL
+        cls.cfg["KB_AUTH_TOKEN"] = cls.token
         cls.wsURL = cls.cfg['workspace-url']
         cls.shockURL = cls.cfg['shock-url']
         cls.hs = HandleService(url=cls.cfg['handle-service-url'],
@@ -56,9 +59,18 @@ class hybrid_SPAdesTest(unittest.TestCase):
         wsName = "test_kb_SPAdes_" + str(wssuffix)
         cls.wsinfo = cls.wsClient.create_workspace({'workspace': wsName})
         print('created workspace ' + cls.getWsName())
+
+        cls.SPAdes_PROJECT_DIR = 'spades_outputs'
+        cls.scratch = cls.cfg['scratch']
+        if not os.path.exists(cls.scratch):
+            os.makedirs(cls.scratch)
+        cls.spades_prjdir = os.path.join(cls.scratch, cls.SPAdes_PROJECT_DIR)
+        if not os.path.exists(cls.spades_prjdir):
+            os.makedirs(cls.spades_prjdir) 
         cls.spades_assembler = SPAdesAssembler(cls.cfg, cls.ctx.provenance)
-        cls.spades_utils = SPAdesUtils(cls.cfg, cls.ctx.provenance)
+        cls.spades_utils = SPAdesUtils(cls.spades_prjdir, cls.cfg)
         cls.serviceImpl = kb_SPAdes(cls.cfg)
+
         cls.readUtilsImpl = ReadsUtils(cls.callbackURL, token=cls.token)
         cls.staged = {}
         cls.nodes_to_delete = []
@@ -993,6 +1005,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
         test_spades_utils_construct_yaml_dataset_file: given different reads libs,
         check if a yaml file is created correctly
         """
+        self.scratch = os.path.join(config['scratch'], str(uuid.uuid4()))
+        mkdir_p(self.scratch)
         dna_src_list = ['single_cell',  # --sc
                         'metagenomic',  # --meta
                         'plasmid',  # --plasmid

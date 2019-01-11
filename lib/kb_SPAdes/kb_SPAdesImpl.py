@@ -520,7 +520,9 @@ A coverage cutoff is not specified.
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
         self.cfg = config
-        self.callbackURL = os.environ['SDK_CALLBACK_URL']
+        self.cfg['SDK_CALLBACK_URL'] = os.environ['SDK_CALLBACK_URL']
+        self.cfg['KB_AUTH_TOKEN'] = os.environ['KB_AUTH_TOKEN']
+        self.callbackURL = self.cfg['SDK_CALLBACK_URL']
         self.log('Callback URL: ' + self.callbackURL)
         self.workspaceURL = config[self.URL_WS]
         self.shockURL = config[self.URL_SHOCK]
@@ -813,7 +815,7 @@ A coverage cutoff is not specified.
         self.log('Running run_HybridSPAdes with params:\n{}'.format(
                  json.dumps(params, indent=1)))
 
-        spades_assembler = SPAdes_Assembler(self.config, ctx.provenance())
+        spades_assembler = SPAdesAssembler(self.cfg, ctx.provenance())
 
         output = spades_assembler.run_hybrid_spades(params)
         #END run_HybridSPAdes

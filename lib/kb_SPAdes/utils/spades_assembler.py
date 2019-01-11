@@ -42,8 +42,8 @@ class SPAdesAssembler(object):
         """
         # BEGIN_CONSTRUCTOR
         self.workspace_url = config["workspace-url"]
-        self.callback_url = config['SDK_CALLBACK_URL']
-        self.token = config['KB_AUTH_TOKEN']
+        self.callback_url = config["SDK_CALLBACK_URL"]
+        self.token = config["KB_AUTH_TOKEN"]
         self.provenance = provenance
 
         self.au = AssemblyUtil(self.callback_url)
@@ -51,17 +51,9 @@ class SPAdesAssembler(object):
         self.scratch = os.path.join(config['scratch'], str(uuid.uuid4()))
         mkdir_p(self.scratch)
 
-        self.masurca_version = 'SPADES-' + os.environ['SPADES_VERSION']
+        self.spades_version = 'SPADES-' + os.environ['SPADES_VERSION']
         self.proj_dir = self._create_proj_dir(self.scratch)
-        self.s_utils = spades_utils(self.proj_dir, config)
-
-        # from the provenance, extract out the version to run by exact hash if possible
-        self.my_version = 'release'
-        if len(provenance) > 0:
-            if 'subactions' in provenance[0]:
-                self.my_version = self._get_version_from_subactions(
-                                    'kb_MaSuRCA', provenance[0]['subactions'])
-        print('Running kb_MaSuRCA version = ' + self.my_version)
+        self.s_utils = SPAdesUtils(self.proj_dir, config)
         # END_CONSTRUCTOR
         pass
 
@@ -107,9 +99,9 @@ class SPAdesAssembler(object):
 
     def _create_proj_dir(self, home_dir):
         """
-        _creating the project directory for MaSuRCA
+        _creating the project directory for SPAdes
         """
-        prjdir = os.path.join(home_dir, self.MaSuRCAR_PROJECT_DIR)
+        prjdir = os.path.join(home_dir, self.SPAdes_PROJECT_DIR)
         mkdir_p(prjdir)
         return prjdir
 
