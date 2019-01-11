@@ -1005,8 +1005,6 @@ class hybrid_SPAdesTest(unittest.TestCase):
         test_spades_utils_construct_yaml_dataset_file: given different reads libs,
         check if a yaml file is created correctly
         """
-        self.scratch = os.path.join(config['scratch'], str(uuid.uuid4()))
-        mkdir_p(self.scratch)
         dna_src_list = ['single_cell',  # --sc
                         'metagenomic',  # --meta
                         'plasmid',  # --plasmid
