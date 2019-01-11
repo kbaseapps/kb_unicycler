@@ -24,7 +24,7 @@ from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
 from kb_SPAdes.utils.spades_utils import SPAdesUtils
 
 
-class gaprice_SPAdesTest(unittest.TestCase):
+class hybrid_SPAdesTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -56,8 +56,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
         wsName = "test_kb_SPAdes_" + str(wssuffix)
         cls.wsinfo = cls.wsClient.create_workspace({'workspace': wsName})
         print('created workspace ' + cls.getWsName())
-        cls.spades_assembler = SPAdesAssembler(cls.cfg, cls.provenance)
-        cls.spades_utils = SPAdesUtils(cls.cfg, cls.provenance)
+        cls.spades_assembler = SPAdesAssembler(cls.cfg, cls.ctx.provenance)
+        cls.spades_utils = SPAdesUtils(cls.cfg, cls.ctx.provenance)
         cls.serviceImpl = kb_SPAdes(cls.cfg)
         cls.readUtilsImpl = ReadsUtils(cls.callbackURL, token=cls.token)
         cls.staged = {}
