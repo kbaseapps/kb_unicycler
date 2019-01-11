@@ -1042,10 +1042,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_spades_utils_construct_yaml_dataset_file")
     def test_spades_utils_construct_yaml_dataset_file(self):
-    """
-    test_spades_utils_construct_yaml_dataset_file: given different reads libs,
-    check if a yaml file is created correctly
-    """
-    pass
+        """
+        test_spades_utils_construct_yaml_dataset_file: given different reads libs,
+        check if a yaml file is created correctly
+        """
+        pass
 
-    
