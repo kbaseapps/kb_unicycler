@@ -4,7 +4,7 @@ import time
 import uuid
 
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
-from kb_SPAdes.utils.spades_utils import spades_utils
+from kb_SPAdes.utils.spades_utils import SPAdesUtils
 
 
 def log(message, prefix_newline=False):
