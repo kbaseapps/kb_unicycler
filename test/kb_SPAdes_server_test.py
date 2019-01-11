@@ -56,8 +56,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
         wsName = "test_kb_SPAdes_" + str(wssuffix)
         cls.wsinfo = cls.wsClient.create_workspace({'workspace': wsName})
         print('created workspace ' + cls.getWsName())
-        cls.spades_assembler = SPAdesAssembler(cls.config, cls.provenance)
-        cls.spades_utils = SPAdesUtils(cls.config, cls.provenance)
+        cls.spades_assembler = SPAdesAssembler(cls.cfg, cls.provenance)
+        cls.spades_utils = SPAdesUtils(cls.cfg, cls.provenance)
         cls.serviceImpl = kb_SPAdes(cls.cfg)
         cls.readUtilsImpl = ReadsUtils(cls.callbackURL, token=cls.token)
         cls.staged = {}
