@@ -7,9 +7,9 @@ import numpy as np
 import zipfile
 import subprocess
 from pprint import pprint
-import codecs
 import uuid
 import copy
+import json
 
 from Workspace.WorkspaceClient import Workspace as Workspace
 from kb_SPAdes.utils.Program_Runner import Program_Runner
@@ -64,7 +64,7 @@ class SPAdesUtils:
     PARAM_IN_WS = 'workspace_name'
     PARAM_IN_CS_NAME = 'output_contigset_name'
     PARAM_IN_PAIREDEND_READS = 'pairedEnd_reads'
-    PARAM_IN_SINGLE_READS = 'pairedEnd_reads'
+    PARAM_IN_SINGLE_READS = 'single_reads'
     PARAM_IN_MATEPAIR_READS = 'mate_pair_reads'
     PARAM_IN_PACBIO_READS = 'pacbio_reads'
     PARAM_IN_NANO_READS = 'nanopore_reads'
@@ -103,130 +103,6 @@ class SPAdesUtils:
         """
         return (params.get(self.PARAM_IN_PACBIO_READS, None) or
                 params.get(self.PARAM_IN_NANO_READS, None))
-
-    def _get_hybrid_reads_info(self, input_params):
-        """
-        _get_hybrid_reads_info--from a list of ReadsParams structures fetches the corresponding
-        reads info with the ReadsParams[lib_ref]
-        returns a tuple of five reads data each is a list of the following structure:
-        reads_data = {
-                'fwd_file': path_to_fastq_file,
-                'orientation': (default value is "fr" (forward-reverse) for paired-end libraries
-                                "rf" (reverse-forward) for mate-pair libraries), None for others
-                'lib_type': ("paired-end", "mate-pairs", "hq-mate-pairs", "single", "pacbio",
-                              "nanopore", "sanger", "trusted-contigs", "untrusted-contigs"),
-                'type': reads_type, # 'interleaved', 'paired', or 'single'
-                'seq_tech': sequencing_tech,
-                'reads_ref': KBase object ref for downstream convenience,
-                'reads_name': KBase object name for downstream convenience,
-                'rev_file': path_to_fastq_file  # only if paired end
-        }
-        """
-        rds_params = copy.deepcopy(input_params)
-        wsname = rds_params[self.PARAM_IN_WS]
-
-        # single end reads grouped params
-        rds_refs = []
-        se_rds_data = []
-
-        if rds_params.get(self.PARAM_IN_SINGLE_READS, None):
-            se_libs = rds_params[self.PARAM_IN_SINGLE_READS]
-            for se_lib in se_libs:
-                if se_lib.get('lib_ref', None):
-                    rds_refs.append(se_lib['lib_ref'])
-            se_rds_data = self._get_kbreads_info(wsname, rds_refs)
-
-            for se_lib in se_libs:
-                for rds in se_rds_data:
-                    if ('lib_ref' in se_lib and se_lib['lib_ref'] == rds['reads_ref']):
-                        se_lib['orientation'] = None
-                        rds['orientation'] = se_lib['orientation']
-                        se_lib['lib_type'] = 'single'
-                        rds['lib_type'] = se_lib['lib_type']
-
-        # pairedEnd reads grouped params
-        rds_refs = []
-        pe_rds_data = []
-
-        if rds_params.get(self.PARAM_IN_PAIREDEND_READS, None):
-            pe_libs = rds_params[self.PARAM_IN_PAIREDEND_READS]
-            for pe_lib in pe_libs:
-                if pe_lib.get('lib_ref', None):
-                    rds_refs.append(pe_lib['lib_ref'])
-            pe_rds_data = self._get_kbreads_info(wsname, rds_refs)
-
-            for pe_lib in pe_libs:
-                for rds in pe_rds_data:
-                    if ('lib_ref' in pe_lib and pe_lib['lib_ref'] == rds['reads_ref']):
-                        if pe_lib.get('orientation', None) is None:
-                            pe_lib['orientation'] = 'fr'
-                        rds['orientation'] = pe_lib['orientation']
-                        if pe_lib.get('lib_type', None) is None:
-                            pe_lib['lib_type'] = 'paired-end'
-                        rds['lib_type'] = pe_lib['lib_type']
-
-        # mate-pair reads grouped params
-        rds_refs = []
-        mp_rds_data = []
-
-        if rds_params.get(self.PARAM_IN_MATEPAIR_READS, None):
-            mp_libs = rds_params[self.PARAM_IN_MATEPAIR_READS]
-            for mp_lib in mp_libs:
-                if mp_lib.get('lib_ref', None):
-                    rds_refs.append(mp_lib['lib_ref'])
-            mp_rds_data = self._get_kbreads_info(wsname, rds_refs)
-
-            for mp_lib in mp_libs:
-                for rds in mp_rds_data:
-                    if ('lib_ref' in mp_lib and mp_lib['lib_ref'] == rds['reads_ref']):
-                        if mp_lib.get('orientation', None) is None:
-                            mp_lib['orientation'] = 'rf'
-                        rds['orientation'] = mp_lib['orientation']
-                        if mp_lib.get('lib_type', None) is None:
-                            mp_lib['lib_type'] = 'mate-pairs'
-                        rds['lib_type'] = mp_lib['lib_type']
-
-        # PacBio reads grouped params
-        rds_refs = []
-        pb_rds_data = []
-
-        if rds_params.get(self.PARAM_IN_PACBIO_READS, None):
-            pb_libs = rds_params[self.PARAM_IN_PACBIO_READS]
-            for pb_lib in pb_libs:
-                if pb_lib.get('lib_ref', None):
-                    rds_refs.append(pb_lib['lib_ref'])
-            pb_rds_data = self._get_kbreads_info(wsname, rds_refs)
-
-            for pb_lib in pb_libs:
-                for rds in pb_rds_data:
-                    if ('lib_ref' in pb_lib and pb_lib['lib_ref'] == rds['reads_ref']):
-                        pb_lib['orientation'] = None
-                        rds['orientation'] = pb_lib['orientation']
-                        if pb_lib.get('lib_type', None) is None:
-                            pb_lib['lib_type'] = 'pacbio_clr'
-                        rds['lib_type'] = pb_lib['lib_type']
-
-        # Nanopore reads grouped params
-        rds_refs = []
-        np_rds_data = []
-
-        if rds_params.get(self.PARAM_IN_NANO_READS, None):
-            np_libs = rds_params[self.PARAM_IN_NANO_READS]
-            for np_lib in np_libs:
-                if np_lib.get('lib_ref', None):
-                    rds_refs.append(np_lib['lib_ref'])
-            np_rds_data = self._get_kbreads_info(wsname, rds_refs)
-
-            for np_lib in np_libs:
-                for rds in np_rds_data:
-                    if ('lib_ref' in np_lib and np_lib['lib_ref'] == rds['reads_ref']):
-                        np_lib['orientation'] = None
-                        rds['orientation'] = np_lib['orientation']
-                        if np_lib.get('lib_type', None) is None:
-                            np_lib['lib_type'] = 'nanopore'
-                        rds['lib_type'] = np_lib['lib_type']
-
-        return (se_rds_data, pe_rds_data, mp_rds_data, pb_rds_data, np_rds_data)
 
     def _get_kbreads_info(self, wsname, reads_refs):
         """
@@ -505,7 +381,7 @@ class SPAdesUtils:
                 raise ValueError('{} must be of type int.'.format(self.PARAM_IN_MIN_CONTIG_LENGTH))
 
         if params.get(self.PARAM_IN_KMER_SIZES, None):
-            print("KMER_SIZES: " + ",".join(str(num) for num in params[self.PARAM_IN_KMER_SIZES]))
+            print("KMER_SIZES: " + ",".joi(str(num) for num in params[self.PARAM_IN_KMER_SIZES]))
         if params.get(self.PARAM_IN_SKIP_ERR_CORRECT, None):
             print("SKIP ERR CORRECTION: " + str(params[self.PARAM_IN_SKIP_ERR_CORRECT]))
 
@@ -521,7 +397,7 @@ class SPAdesUtils:
         else:
             params[self.PARAM_IN_DNA_SOURCE] = None
 
-        params['basic_options'] = [' '.join('-o', self.proj_dir)]  # a list of basic options
+        params['basic_options'] = [' '.join(['-o', self.proj_dir])]  # a list of basic options
         dna_src = params.get(self.PARAM_IN_DNA_SOURCE)
         if dna_src == self.PARAM_IN_SINGLE_CELL:
             params['basic_options'].append('--sc')
@@ -547,15 +423,15 @@ class SPAdesUtils:
             params[self.PARAM_IN_PIPELINE_OPTION] = self.PARAM_IN_CAREFUL
 
         params['pipeline_options'] = ['--careful']  # a list of options on how to run SPAdes
-        pipe_opt = params.get(self.PARAM_IN_DNA_SOURCE)
+        pipe_opt = params.get(self.PARAM_IN_PIPELINE_OPTION)
         if pipe_opt == self.PARAM_IN_ONLY_ERROR_CORR:
             params['pipeline_options'].append('--only-error-correction')
         elif pipe_opt == self.PARAM_IN_ONLY_ASSEMBLER:
-            params['piple_options'].append('--only-assembler')
+            params['pipeline_options'].append('--only-assembler')
         elif pipe_opt == self.PARAM_IN_CONTINUE:
             params['pipeline_options'].append('--continue')
         elif pipe_opt == self.PARAM_IN_DISABLE_GZIP:
-            params['basic_options'].append('--disable-gzip-output')
+            params['pipeline_options'].append('--disable-gzip-output')
 
         if params.get('create_report', None) is None:
             params['create_report'] = 0
@@ -607,7 +483,132 @@ class SPAdesUtils:
         report_ref = report_output['ref']
         return report_name, report_ref
 
-    def construct_yaml_dataset_file(self, params):
+    def get_hybrid_reads_info(self, input_params):
+        """
+        get_hybrid_reads_info--from a list of ReadsParams structures fetches the corresponding
+        reads info with the ReadsParams[lib_ref]
+        returns a tuple of five reads data each is a list of the following structure:
+        reads_data = {
+                'fwd_file': path_to_fastq_file,
+                'orientation': (default value is "fr" (forward-reverse) for paired-end libraries
+                                "rf" (reverse-forward) for mate-pair libraries), None for others
+                'lib_type': ("paired-end", "mate-pairs", "hq-mate-pairs", "single", "pacbio",
+                              "nanopore", "sanger", "trusted-contigs", "untrusted-contigs"),
+                'type': reads_type, # 'interleaved', 'paired', or 'single'
+                'seq_tech': sequencing_tech,
+                'reads_ref': KBase object ref for downstream convenience,
+                'reads_name': KBase object name for downstream convenience,
+                'rev_file': path_to_fastq_file  # only if paired end
+        }
+        """
+        rds_params = copy.deepcopy(input_params)
+        wsname = rds_params[self.PARAM_IN_WS]
+
+        # single end reads grouped params
+        rds_refs = []
+        se_rds_data = []
+
+        if rds_params.get(self.PARAM_IN_SINGLE_READS, None):
+            se_libs = rds_params[self.PARAM_IN_SINGLE_READS]
+            for se_lib in se_libs:
+                if se_lib.get('lib_ref', None):
+                    rds_refs.append(se_lib['lib_ref'])
+            se_rds_data = self._get_kbreads_info(wsname, rds_refs)
+
+            for se_lib in se_libs:
+                for rds in se_rds_data:
+                    if ('lib_ref' in se_lib and se_lib['lib_ref'] == rds['reads_ref']):
+                        se_lib['orientation'] = None
+                        rds['orientation'] = None
+                        se_lib['lib_type'] = 'single'
+                        rds['lib_type'] = se_lib['lib_type']
+
+        # pairedEnd reads grouped params
+        rds_refs = []
+        pe_rds_data = []
+
+        if rds_params.get(self.PARAM_IN_PAIREDEND_READS, None):
+            pe_libs = rds_params[self.PARAM_IN_PAIREDEND_READS]
+            for pe_lib in pe_libs:
+                if pe_lib.get('lib_ref', None):
+                    rds_refs.append(pe_lib['lib_ref'])
+            pe_rds_data = self._get_kbreads_info(wsname, rds_refs)
+
+            for pe_lib in pe_libs:
+                for rds in pe_rds_data:
+                    if ('lib_ref' in pe_lib and pe_lib['lib_ref'] == rds['reads_ref']):
+                        if pe_lib.get('orientation', None) is None:
+                            pe_lib['orientation'] = 'fr'
+                        rds['orientation'] = pe_lib['orientation']
+                        if pe_lib.get('lib_type', None) is None:
+                            pe_lib['lib_type'] = 'paired-end'
+                        rds['lib_type'] = pe_lib['lib_type']
+
+        # mate-pair reads grouped params
+        rds_refs = []
+        mp_rds_data = []
+
+        if rds_params.get(self.PARAM_IN_MATEPAIR_READS, None):
+            mp_libs = rds_params[self.PARAM_IN_MATEPAIR_READS]
+            for mp_lib in mp_libs:
+                if mp_lib.get('lib_ref', None):
+                    rds_refs.append(mp_lib['lib_ref'])
+            mp_rds_data = self._get_kbreads_info(wsname, rds_refs)
+
+            for mp_lib in mp_libs:
+                for rds in mp_rds_data:
+                    if ('lib_ref' in mp_lib and mp_lib['lib_ref'] == rds['reads_ref']):
+                        if mp_lib.get('orientation', None) is None:
+                            mp_lib['orientation'] = 'rf'
+                        rds['orientation'] = mp_lib['orientation']
+                        if mp_lib.get('lib_type', None) is None:
+                            mp_lib['lib_type'] = 'mate-pairs'
+                        rds['lib_type'] = mp_lib['lib_type']
+
+        # PacBio reads grouped params
+        rds_refs = []
+        pb_rds_data = []
+
+        if rds_params.get(self.PARAM_IN_PACBIO_READS, None):
+            pb_libs = rds_params[self.PARAM_IN_PACBIO_READS]
+            for pb_lib in pb_libs:
+                if pb_lib.get('lib_ref', None):
+                    rds_refs.append(pb_lib['lib_ref'])
+            pb_rds_data = self._get_kbreads_info(wsname, rds_refs)
+
+            for pb_lib in pb_libs:
+                for rds in pb_rds_data:
+                    if ('lib_ref' in pb_lib and pb_lib['lib_ref'] == rds['reads_ref']):
+                        pb_lib['orientation'] = None
+                        rds['orientation'] = pb_lib['orientation']
+                        if pb_lib.get('lib_type', None) is None:
+                            pb_lib['lib_type'] = 'pacbio_clr'
+                        rds['lib_type'] = pb_lib['lib_type']
+
+        # Nanopore reads grouped params
+        rds_refs = []
+        np_rds_data = []
+
+        if rds_params.get(self.PARAM_IN_NANO_READS, None):
+            np_libs = rds_params[self.PARAM_IN_NANO_READS]
+            for np_lib in np_libs:
+                if np_lib.get('lib_ref', None):
+                    rds_refs.append(np_lib['lib_ref'])
+            np_rds_data = self._get_kbreads_info(wsname, rds_refs)
+
+            for np_lib in np_libs:
+                for rds in np_rds_data:
+                    if ('lib_ref' in np_lib and np_lib['lib_ref'] == rds['reads_ref']):
+                        np_lib['orientation'] = None
+                        rds['orientation'] = np_lib['orientation']
+                        if np_lib.get('lib_type', None) is None:
+                            np_lib['lib_type'] = 'nanopore'
+                        rds['lib_type'] = np_lib['lib_type']
+
+        return (se_rds_data, pe_rds_data, mp_rds_data, pb_rds_data, np_rds_data)
+
+    def construct_yaml_dataset_file(self, se_libs=[], pe_libs=[], mp_libs=[],
+                                    pb_libs=None, np_libs=None):
         """
         construct_yaml_dataset_file: Specifying input data with YAML data set file (advanced)
         An alternative way to specify an input data set for SPAdes is to create a YAML
@@ -701,14 +702,11 @@ class SPAdesUtils:
         # STEP 1: get the working folder housing the config.txt file and the masurca results
         yaml_file_path = os.path.join(self.proj_dir, 'input_data_set.yaml')
 
-        # STEP 2: retrieve the reads data from input parameter
-        (se_libs, pe_libs, mp_libs, pb_libs, np_libs) = self._get_hybrid_reads_info(params)
-
-        # STEP 3: construct and save the 'input_data_set.yaml' file
+        # STEP 2: construct and save the 'input_data_set.yaml' file
         # generate the object array
         input_data_set = []
 
-        if type(se_libs) == list and se_libs != []:
+        if se_libs and type(se_libs) == list and se_libs != []:
             single_reads_fqs = []
             for se in se_libs:
                 single_reads_fqs.append(se['fwd_file'])
@@ -718,12 +716,13 @@ class SPAdesUtils:
                 "single reads": single_reads_fqs
             })
 
-        if type(pe_libs) == list and pe_libs != []:
+        if pe_libs and type(pe_libs) == list and pe_libs != []:
             right_reads_fqs = []
             left_reads_fqs = []
             for pe in pe_libs:
                 right_reads_fqs.append(pe['fwd_file'])
-                left_reads_fqs.append(pe['rev_file'])
+                if pe.get('rev_file', None):
+                    left_reads_fqs.append(pe['rev_file'])
 
             input_data_set.append({
                 "orientation": "fr",
@@ -732,12 +731,13 @@ class SPAdesUtils:
                 "left reads": left_reads_fqs
             })
 
-        if type(mp_libs) == list and mp_libs != []:
+        if mp_libs and type(mp_libs) == list and mp_libs != []:
             right_reads_fqs = []
             left_reads_fqs = []
             for mp in mp_libs:
                 right_reads_fqs.append(mp['fwd_file'])
-                left_reads_fqs.append(mp['rev_file'])
+                if mp.get('rev_file', None):
+                    left_reads_fqs.append(mp['rev_file'])
 
             input_data_set.append({
                 "orientation": "rf",
@@ -746,7 +746,7 @@ class SPAdesUtils:
                 "left reads": left_reads_fqs
             })
 
-        if type(pb_libs) == list and pb_libs != []:
+        if pb_libs and type(pb_libs) == list and pb_libs != []:
             single_reads_fqs = []
             pb_type = 'single'  # for lib_type = 'pacbio_ccs'
             for pb in pb_libs:
@@ -759,7 +759,7 @@ class SPAdesUtils:
                 "single reads": single_reads_fqs
             })
 
-        if type(np_libs) == list and np_libs != []:
+        if np_libs and type(np_libs) == list and np_libs != []:
             single_reads_fqs = []
             np_type = 'single'
             for npr in np_libs:
@@ -770,9 +770,10 @@ class SPAdesUtils:
                 "single reads": single_reads_fqs
             })
 
+        pprint(input_data_set)
         try:
-            with codecs.open(yaml_file_path, mode='w', encoding='utf-8') as yaml_file:
-                yaml_file.write(input_data_set)
+            with open(yaml_file_path, 'w') as yaml_file:
+                json.dump(input_data_set, yaml_file)
         except IOError as ioerr:
             log('Creation of the {} file raised error:\n'.format(yaml_file_path))
             pprint(ioerr)

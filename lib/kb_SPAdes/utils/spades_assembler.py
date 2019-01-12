@@ -129,10 +129,15 @@ class SPAdesAssembler(object):
         # 1. validate & process the input parameters
         validated_params = self.s_utils.check_spades_params(params)
 
-        # 2. create the yaml input data set file
-        yaml_file = self.s_utils.construct_yaml_dataset_file(validated_params)
+        # STEP 2: retrieve the reads data from input parameter
+        (se_libs, pe_libs, mp_libs, pb_libs, np_libs) = self.s_utils.get_hybrid_reads_info(
+                                                        validated_params)
 
-        # 3. run the spades.py against the yaml file
+        # 3. create the yaml input data set file
+        yaml_file = self.s_utils.construct_yaml_dataset_file(se_libs, pe_libs,
+                                                             mp_libs, pb_libs, np_libs)
+
+        # 4. run the spades.py against the yaml file
         if os.path.isfile(yaml_file):
             assemble_ok = self.s_utils.run_assemble(yaml_file, validated_params)
         else:

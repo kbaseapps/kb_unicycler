@@ -999,11 +999,10 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertEqual(output_name, assembly['info'][1])
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_spades_utils_check_spades_params")
+    @unittest.skip("skipped test_spades_utils_check_spades_params")
     def test_spades_utils_check_spades_params(self):
         """
-        test_spades_utils_construct_yaml_dataset_file: given different reads libs,
-        check if a yaml file is created correctly
+        test_spades_utils_check_spades_params: check if parameters are given and set correctly
         """
         dna_src_list = ['single_cell',  # --sc
                         'metagenomic',  # --meta
@@ -1011,32 +1010,37 @@ class hybrid_SPAdesTest(unittest.TestCase):
                         'rna',  # --rna
                         'iontorrent'  # --iontorrent
                         ]
-        libs_list = [self.staged[n]['info'][1] for n in ['frbasic',
-                                                          'intbasic',
-                                                          'intbasic64',
-                                                          'pacbio',
-                                                          'pacbioccs',
-                                                          'iontorrent',
-                                                          'meta',
-                                                          'meta2',
-                                                          'meta_single_end',
-                                                          'reads_out',
-                                                          'frbasic_kbassy',
-                                                          'intbasic_kbassy',
-                                                          'single_end',
-                                                          'single_end2',
-                                                          'plasmid_reads']
-                     ]
-
-        # test single_cell reads
-        dnasrc = dna_src_list[0]
-        libs1 = libs_list[:1]
-        output_name = 'frbasic_out'
+        # a list of read lib objects' names in the workspace
+        lib_nm_list = ['frbasic',
+                       'intbasic',
+                       'intbasic64',
+                       'pacbio',
+                       'pacbioccs',
+                       'iontorrent',
+                       'meta',
+                       'meta2',
+                       'meta_single_end',
+                       'reads_out',
+                       'frbasic_kbassy',
+                       'intbasic_kbassy',
+                       'single_end',
+                       'single_end2',
+                       'plasmid_reads']
+        # a list of read lib objects' workspace refs
+        lib_ref_list = [self.staged[n]['info'][0] for n in lib_nm_list]
         min_contig_length = 2
         kmer_sizes = [33, 55, 77, 99, 127]
         skip_error_correction = False
+
+        # test single_cell reads
+        dnasrc = dna_src_list[0]
+        libs1 = {'lib_ref': lib_ref_list[0],
+                 'orientation': 'fr',
+                 'lib_type': 'single'}
+        output_name = 'frbasic_out'
+
         params = {'workspace_name': self.getWsName(),
-                  'single_reads': libs1,
+                  'single_reads': [libs1],
                   # 'pairedEnd_reads': libs2,
                   # 'mate_pair_reads': libs3,
                   # 'pacbio_reads': libs4,
@@ -1049,14 +1053,211 @@ class hybrid_SPAdesTest(unittest.TestCase):
                   'create_report': 0
                   }
 
-        self.spades_utils.check_spades_params(params)
+        params0 = {'output_contigset_name': output_name,
+                   'single_reads': [libs1]}
+        err_msg = 'Parameter workspace_name is mandatory!'
+        with self.assertRaises(ValueError) as context_manager:
+            self.spades_utils.check_spades_params(params0)
+            self.assertEqual(err_msg, str(context_manager.exception.message))
+
+        params1 = {'workspace_name': self.getWsName(),
+                   'single_reads': [libs1]}
+        err_msg = 'Parameter output_contigset_name is mandatory!'
+        with self.assertRaises(ValueError) as context_manager:
+            self.spades_utils.check_spades_params(params1)
+            self.assertEqual(err_msg, str(context_manager.exception.message))
+
+        params2 = {'workspace_name': self.getWsName(),
+                   'output_contigset_name': output_name,
+                   'single_reads': libs1}
+        err_msg = 'Input reads must be a list.'
+        with self.assertRaises(ValueError) as context_manager:
+            self.spades_utils.check_spades_params(params2)
+            self.assertEqual(err_msg, str(context_manager.exception.message))
+
+        params3 = {'workspace_name': self.getWsName(),
+                   'output_contigset_name': output_name}
+        err_msg = 'At least one of parameters single_reads, pairedEnd_reads ' +\
+                  'and mate_pair_reads is required.'
+        with self.assertRaises(ValueError) as context_manager:
+            self.spades_utils.check_spades_params(params3)
+            self.assertEqual(err_msg, str(context_manager.exception.message))
+
+        print('=============== raw parameters ==================')
+        pprint(params)
+        params = self.spades_utils.check_spades_params(params)
+        self.assertIn('basic_options', params)
+        self.assertEqual(params['basic_options'], ['-o /kb/module/work/tmp/spades_outputs', '--sc'])
+        self.assertIn('pipeline_options', params)
+        self.assertEqual(params['pipeline_options'], ['--careful'])
+        self.assertEqual(params['dna_source'], 'single_cell')
+        self.assertEqual(params['kmer_sizes'], [33, 55, 77, 99, 127])
+        self.assertEqual(params['min_contig_length'], 2)
+        self.assertEqual(params['output_contigset_name'], 'frbasic_out')
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_spades_utils_construct_yaml_dataset_file")
+    # @unittest.skip("skipped test_spades_utils_get_hybrid_reads_info")
+    def test_spades_utils_get_hybrid_reads_info(self):
+        """
+        test_spades_utils_get_hybrid_reads_info: given the input parameters,
+        fetch the reads info a tuple of five reads data
+        """
+        dna_src_list = ['single_cell',  # --sc
+                        'metagenomic',  # --meta
+                        'plasmid',  # --plasmid
+                        'rna',  # --rna
+                        'iontorrent'  # --iontorrent
+                        ]
+        # a list of read lib objects' names in the workspace
+        lib_nm_list = ['frbasic',
+                       'intbasic',
+                       'intbasic64',
+                       'pacbio',
+                       'pacbioccs',
+                       'iontorrent',
+                       'meta',
+                       'meta2',
+                       'meta_single_end',
+                       'reads_out',
+                       'frbasic_kbassy',
+                       'intbasic_kbassy',
+                       'single_end',
+                       'single_end2',
+                       'plasmid_reads']
+        min_contig_length = 2
+        kmer_sizes = [33, 55, 77, 99, 127]
+        skip_error_correction = False
+        output_name = 'frbasic_out'
+
+        # test single_cell reads
+        dnasrc = dna_src_list[0]
+        libs1 = {'lib_ref':  self.staged['single_end']['ref'],
+                 'orientation': '',
+                 'lib_type': 'single'}
+
+        params1 = {'workspace_name': self.getWsName(),
+                  'single_reads': [libs1],
+                  # 'pairedEnd_reads': [libs2],
+                  # 'mate_pair_reads': [libs3],
+                  # 'pacbio_reads': [libs4],
+                  # 'nanopore_reads': [libs5],
+                  'dna_source': dnasrc,
+                  'output_contigset_name': output_name,
+                  'min_contig_length': min_contig_length,
+                  'kmer_sizes': kmer_sizes,
+                  'skip_error_correction': skip_error_correction,
+                  'create_report': 0
+                  }
+        pprint(params1)
+        (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params1)
+        self.assertFalse(se_rds == [])
+        self.assertTrue(pe_rds == [])
+        self.assertTrue(mp_rds == [])
+        self.assertTrue(pb_rds == [])
+        self.assertTrue(np_rds == [])
+        # test pairedEnd_cell reads
+        dnasrc = dna_src_list[0]
+        libs2 = {'lib_ref': self.staged['frbasic']['ref'],
+                 'orientation': 'fr',
+                 'lib_type': 'paired-end'}
+
+        params2 = {'workspace_name': self.getWsName(),
+                  # 'single_reads': [libs1],
+                  'pairedEnd_reads': libs2,
+                  # 'mate_pair_reads': [libs3],
+                  # 'pacbio_reads': [libs4],
+                  # 'nanopore_reads': [libs5],
+                  'dna_source': dnasrc,
+                  'output_contigset_name': output_name,
+                  'min_contig_length': min_contig_length,
+                  'kmer_sizes': kmer_sizes,
+                  'skip_error_correction': skip_error_correction,
+                  'create_report': 0
+                  }
+        pprint(params2)
+        (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params2)
+        self.assertTrue(se_rds == [])
+        self.assertFalse(pe_rds == [])
+        self.assertTrue(mp_rds == [])
+        self.assertTrue(pb_rds == [])
+        self.assertTrue(np_rds == [])
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_spades_utils_construct_yaml_dataset_file")
     def test_spades_utils_construct_yaml_dataset_file(self):
         """
         test_spades_utils_construct_yaml_dataset_file: given different reads libs,
         check if a yaml file is created correctly
         """
-        pass
+        dna_src_list = ['single_cell',  # --sc
+                        'metagenomic',  # --meta
+                        'plasmid',  # --plasmid
+                        'rna',  # --rna
+                        'iontorrent'  # --iontorrent
+                        ]
+        # a list of read lib objects' names in the workspace
+        lib_nm_list = ['frbasic',
+                       'intbasic',
+                       'intbasic64',
+                       'pacbio',
+                       'pacbioccs',
+                       'iontorrent',
+                       'meta',
+                       'meta2',
+                       'meta_single_end',
+                       'reads_out',
+                       'frbasic_kbassy',
+                       'intbasic_kbassy',
+                       'single_end',
+                       'single_end2',
+                       'plasmid_reads']
+        min_contig_length = 2
+        kmer_sizes = [33, 55, 77, 99, 127]
+        skip_error_correction = False
+        output_name = 'frbasic_out'
 
+        # test single_cell reads
+        dnasrc = dna_src_list[0]
+        libs1 = {'lib_ref':  self.staged['single_end']['ref'],
+                 'orientation': '',
+                 'lib_type': 'single'}
+
+        params = {'workspace_name': self.getWsName(),
+                  'single_reads': [libs1],
+                  # 'pairedEnd_reads': [libs2],
+                  # 'mate_pair_reads': [libs3],
+                  # 'pacbio_reads': [libs4],
+                  # 'nanopore_reads': [libs5],
+                  'dna_source': dnasrc,
+                  'output_contigset_name': output_name,
+                  'min_contig_length': min_contig_length,
+                  'kmer_sizes': kmer_sizes,
+                  'skip_error_correction': skip_error_correction,
+                  'create_report': 0
+                  }
+        pprint(params)
+        yaml_file = self.spades_utils.construct_yaml_dataset_file(params)
+        print(yaml_file)
+
+        # test pairedEnd_cell reads
+        dnasrc = dna_src_list[0]
+        libs2 = {'lib_ref': self.staged['frbasic']['ref'],
+                 'orientation': 'fr',
+                 'lib_type': 'paired-end'}
+
+        params = {'workspace_name': self.getWsName(),
+                  # 'single_reads': [libs1],
+                  'pairedEnd_reads': libs2,
+                  # 'mate_pair_reads': [libs3],
+                  # 'pacbio_reads': [libs4],
+                  # 'nanopore_reads': [libs5],
+                  'dna_source': dnasrc,
+                  'output_contigset_name': output_name,
+                  'min_contig_length': min_contig_length,
+                  'kmer_sizes': kmer_sizes,
+                  'skip_error_correction': skip_error_correction,
+                  'create_report': 0
+                  }
+        pprint(params)
+        yaml_file = self.spades_utils.construct_yaml_dataset_file(params)
+        print(yaml_file)
