@@ -580,9 +580,9 @@ class SPAdesUtils:
                 for rds in pb_rds_data:
                     if ('lib_ref' in pb_lib and pb_lib['lib_ref'] == rds['reads_ref']):
                         pb_lib['orientation'] = None
-                        rds['orientation'] = pb_lib['orientation']
+                        rds['orientation'] = None
                         if pb_lib.get('lib_type', None) is None:
-                            pb_lib['lib_type'] = 'pacbio_clr'
+                            pb_lib['lib_type'] = 'pacbio'
                         rds['lib_type'] = pb_lib['lib_type']
 
         # Nanopore reads grouped params
@@ -748,10 +748,10 @@ class SPAdesUtils:
 
         if pb_libs and type(pb_libs) == list and pb_libs != []:
             single_reads_fqs = []
-            pb_type = 'single'  # for lib_type = 'pacbio_ccs'
+            pb_type = 'single'  # for lib_type = 'pacbioccs'
             for pb in pb_libs:
                 single_reads_fqs.append(pb['fwd_file'])
-            if pb_libs[0]['lib_type'] == 'pacbio_clr':
+            if pb_libs[0]['lib_type'] == 'pacbio':
                 pb_type = 'pacbio'
 
             input_data_set.append({
