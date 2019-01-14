@@ -707,8 +707,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
             pprint(ioerr)
         else:
             pprint(yaml_data)
-            self.assertIn(yaml_data[0], 'single reads')
-            self.assertIn(yaml_data[0], 'type')
+            self.assertIn('single reads', yaml_data[0])
+            self.assertIn('type', yaml_data[0])
 
         # test pairedEnd_cell reads
         dnasrc = dna_src_list[0]
@@ -746,10 +746,10 @@ class hybrid_SPAdesTest(unittest.TestCase):
             pprint(ioerr)
         else:
             pprint(yaml_data)
-            self.assertIn(yaml_data[0], 'left reads')
-            self.assertIn(yaml_data[0], 'right reads')
-            self.assertIn(yaml_data[0]['left reads'], 'rev.fastq')
-            self.assertIn(yaml_data[0]['right reads'], 'fwd.fastq')
+            self.assertIn('left reads', yaml_data[0])
+            self.assertIn('right reads', yaml_data[0])
+            self.assertIn('rev.fastq', yaml_data[0]['left reads'])
+            self.assertIn('fwd.fastq', yaml_data[0]['right reads'])
             self.assertEqual(yaml_data[0]['orientation'], 'fr')
             self.assertEqual(yaml_data[0]['type'], 'paired-end')
 
@@ -788,15 +788,15 @@ class hybrid_SPAdesTest(unittest.TestCase):
             pprint(ioerr)
         else:
             pprint(yaml_data)
-            self.assertIn(yaml_data[0], 'left reads')
-            self.assertIn(yaml_data[0], 'right reads')
-            self.assertIn(yaml_data[0]['left reads'], 'rev.fastq')
-            self.assertIn(yaml_data[0]['right reads'], 'fwd.fastq')
+            self.assertIn('left reads', yaml_data[0])
+            self.assertIn('right reads', yaml_data[0])
+            self.assertIn('rev.fastq', yaml_data[0]['left reads'])
+            self.assertIn('fwd.fastq', yaml_data[0]['right reads'])
             self.assertEqual(yaml_data[0]['orientation'], 'fr')
             self.assertEqual(yaml_data[0]['type'], 'paired-end')
-            self.assertIn(yaml_data[1], 'single reads')
-            self.assertNotIn(yaml_data[1], 'right reads')
-            self.assertIn(yaml_data[1]['single reads'], 'single.fastq')
+            self.assertIn('single reads', yaml_data[1])
+            self.assertNotIn('right reads', yaml_data[1])
+            self.assertIn('single.fastq', yaml_data[1]['single reads'])
             self.assertEqual(yaml_data[1]['type'], 'pacbio')
 
     # Uncomment to skip this test

@@ -421,6 +421,7 @@ class SPAdesUtils:
             params[self.PARAM_IN_PIPELINE_OPTION] = self.PARAM_IN_CAREFUL
 
         pipe_opt = params.get(self.PARAM_IN_PIPELINE_OPTION)
+        params[self.PARAM_IN_PIPELINE_OPTION] = ['--careful']
         if pipe_opt == self.PARAM_IN_ONLY_ERROR_CORR:
             params[self.PARAM_IN_PIPELINE_OPTION].append('--only-error-correction')
         elif pipe_opt == self.PARAM_IN_ONLY_ASSEMBLER:
@@ -429,8 +430,6 @@ class SPAdesUtils:
             params[self.PARAM_IN_PIPELINE_OPTION].append('--continue')
         elif pipe_opt == self.PARAM_IN_DISABLE_GZIP:
             params[self.PARAM_IN_PIPELINE_OPTION].append('--disable-gzip-output')
-        else:
-            params[self.PARAM_IN_PIPELINE_OPTION].append('--careful')
 
         if params.get('create_report', None) is None:
             params['create_report'] = 0
