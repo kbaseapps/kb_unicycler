@@ -748,8 +748,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
             pprint(yaml_data)
             self.assertIn('left reads', yaml_data[0])
             self.assertIn('right reads', yaml_data[0])
-            self.assertIn('rev.fastq', yaml_data[0]['left reads'])
-            self.assertIn('fwd.fastq', yaml_data[0]['right reads'])
+            self.assertIn('rev.fastq', yaml_data[0]['left reads'][0])
+            self.assertIn('fwd.fastq', yaml_data[0]['right reads'][0])
             self.assertEqual(yaml_data[0]['orientation'], 'fr')
             self.assertEqual(yaml_data[0]['type'], 'paired-end')
 
@@ -790,13 +790,13 @@ class hybrid_SPAdesTest(unittest.TestCase):
             pprint(yaml_data)
             self.assertIn('left reads', yaml_data[0])
             self.assertIn('right reads', yaml_data[0])
-            self.assertIn('rev.fastq', yaml_data[0]['left reads'])
-            self.assertIn('fwd.fastq', yaml_data[0]['right reads'])
+            self.assertIn('rev.fastq', yaml_data[0]['left reads'][0])
+            self.assertIn('fwd.fastq', yaml_data[0]['right reads'][0])
             self.assertEqual(yaml_data[0]['orientation'], 'fr')
             self.assertEqual(yaml_data[0]['type'], 'paired-end')
             self.assertIn('single reads', yaml_data[1])
             self.assertNotIn('right reads', yaml_data[1])
-            self.assertIn('single.fastq', yaml_data[1]['single reads'])
+            self.assertIn('single.fastq', yaml_data[1]['single reads'][0])
             self.assertEqual(yaml_data[1]['type'], 'pacbio')
 
     # Uncomment to skip this test
@@ -888,7 +888,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                 'orientation': 'fr',
                 'type': 'paired-end',
                 'right reads': [ecoli1],
-                'left eads': [ecoli2]
+                'left reads': [ecoli2]
             }]
         run_exit_code = 1
         try:
