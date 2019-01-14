@@ -379,7 +379,7 @@ class SPAdesUtils:
                 raise ValueError('{} must be of type int.'.format(self.PARAM_IN_MIN_CONTIG_LENGTH))
 
         if params.get(self.PARAM_IN_KMER_SIZES, None):
-            print("KMER_SIZES: " + ",".joi(str(num) for num in params[self.PARAM_IN_KMER_SIZES]))
+            print("KMER_SIZES: " + ",".join(str(num) for num in params[self.PARAM_IN_KMER_SIZES]))
         if params.get(self.PARAM_IN_SKIP_ERR_CORRECT, None):
             print("SKIP ERR CORRECTION: " + str(params[self.PARAM_IN_SKIP_ERR_CORRECT]))
 
