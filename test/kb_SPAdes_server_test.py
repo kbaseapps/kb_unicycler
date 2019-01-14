@@ -692,12 +692,23 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'skip_error_correction': skip_error_correction,
                    'create_report': 0
                    }
+
         pprint(params1)
         (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params1)
         yaml_file = self.spades_utils.construct_yaml_dataset_file(
             se_rds, pe_rds, mp_rds, pb_rds, np_rds)
-        pprint(se_rds)
         print('Yaml data saved to {}'.format(yaml_file))
+        yaml_data = []
+        try:
+            with open(yaml_file, 'r') as yaml_file:
+                yaml_data = json.load(yaml_file)
+        except IOError as ioerr:
+            print('Loading of the {} file raised error:\n'.format(yaml_file))
+            pprint(ioerr)
+        else:
+            pprint(yaml_data)
+            self.assertIn(yaml_data[0], 'single reads')
+            self.assertIn(yaml_data[0], 'type')
 
         # test pairedEnd_cell reads
         dnasrc = dna_src_list[0]
@@ -726,6 +737,21 @@ class hybrid_SPAdesTest(unittest.TestCase):
             se_rds, pe_rds, mp_rds, pb_rds, np_rds)
         pprint(pe_rds)
         print('Yaml data saved to {}'.format(yaml_file))
+        yaml_data = []
+        try:
+            with open(yaml_file, 'r') as yaml_file:
+                yaml_data = json.load(yaml_file)
+        except IOError as ioerr:
+            print('Loading of the {} file raised error:\n'.format(yaml_file))
+            pprint(ioerr)
+        else:
+            pprint(yaml_data)
+            self.assertIn(yaml_data[0], 'left reads')
+            self.assertIn(yaml_data[0], 'right reads')
+            self.assertIn(yaml_data[0]['left reads'], 'rev.fastq')
+            self.assertIn(yaml_data[0]['right reads'], 'fwd.fastq')
+            self.assertEqual(yaml_data[0]['orientation'], 'fr')
+            self.assertEqual(yaml_data[0]['type'], 'paired-end')
 
         # test pairedEnd_cell reads with pacbio clr reads
         dnasrc = dna_src_list[0]
@@ -753,6 +779,25 @@ class hybrid_SPAdesTest(unittest.TestCase):
             se_rds, pe_rds, mp_rds, pb_rds, np_rds)
         pprint(pb_rds)
         print('Yaml data saved to {}'.format(yaml_file))
+        yaml_data = []
+        try:
+            with open(yaml_file, 'r') as yaml_file:
+                yaml_data = json.load(yaml_file)
+        except IOError as ioerr:
+            print('Loading of the {} file raised error:\n'.format(yaml_file))
+            pprint(ioerr)
+        else:
+            pprint(yaml_data)
+            self.assertIn(yaml_data[0], 'left reads')
+            self.assertIn(yaml_data[0], 'right reads')
+            self.assertIn(yaml_data[0]['left reads'], 'rev.fastq')
+            self.assertIn(yaml_data[0]['right reads'], 'fwd.fastq')
+            self.assertEqual(yaml_data[0]['orientation'], 'fr')
+            self.assertEqual(yaml_data[0]['type'], 'paired-end')
+            self.assertIn(yaml_data[1], 'single reads')
+            self.assertNotIn(yaml_data[1], 'right reads')
+            self.assertIn(yaml_data[1]['single reads'], 'single.fastq')
+            self.assertEqual(yaml_data[1]['type'], 'pacbio')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_spades_utils_run_assemble")

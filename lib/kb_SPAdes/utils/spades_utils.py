@@ -71,7 +71,7 @@ class SPAdesUtils:
     PARAM_IN_KMER_SIZES = 'kmer_sizes'
     PARAM_IN_SKIP_ERR_CORRECT = 'skip_error_correction'
     PARAM_IN_DNA_SOURCE = 'dna_source'
-    PARAM_IN_PIPELINE_OPTION = 'pipeline_option'
+    PARAM_IN_PIPELINE_OPTION = 'pipeline_options'
 
     INVALID_WS_OBJ_NAME_RE = re.compile('[^\\w\\|._-]')
     INVALID_WS_NAME_RE = re.compile('[^\\w:._-]')
@@ -420,16 +420,17 @@ class SPAdesUtils:
         else:
             params[self.PARAM_IN_PIPELINE_OPTION] = self.PARAM_IN_CAREFUL
 
-        params['pipeline_options'] = ['--careful']  # a list of options on how to run SPAdes
         pipe_opt = params.get(self.PARAM_IN_PIPELINE_OPTION)
         if pipe_opt == self.PARAM_IN_ONLY_ERROR_CORR:
-            params['pipeline_options'].append('--only-error-correction')
+            params[self.PARAM_IN_PIPELINE_OPTION].append('--only-error-correction')
         elif pipe_opt == self.PARAM_IN_ONLY_ASSEMBLER:
-            params['pipeline_options'].append('--only-assembler')
+            params[self.PARAM_IN_PIPELINE_OPTION].append('--only-assembler')
         elif pipe_opt == self.PARAM_IN_CONTINUE:
-            params['pipeline_options'].append('--continue')
+            params[self.PARAM_IN_PIPELINE_OPTION].append('--continue')
         elif pipe_opt == self.PARAM_IN_DISABLE_GZIP:
-            params['pipeline_options'].append('--disable-gzip-output')
+            params[self.PARAM_IN_PIPELINE_OPTION].append('--disable-gzip-output')
+        else:
+            params[self.PARAM_IN_PIPELINE_OPTION].append('--careful')
 
         if params.get('create_report', None) is None:
             params['create_report'] = 0
@@ -787,7 +788,7 @@ class SPAdesUtils:
             log("The working directory is {}\n".format(f_dir))
 
             a_cmd = [os.path.join(self.SPADES_BIN, 'spades.py')]
-            a_cmd.append(yaml_file)
+            a_cmd.append(' '.join(['--dataset', yaml_file]))
 
             if not basic_opts:
                 basic_opts = [' '.join(['-o', self.proj_dir])]
