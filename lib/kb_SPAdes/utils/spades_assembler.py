@@ -139,7 +139,9 @@ class SPAdesAssembler(object):
 
         # 4. run the spades.py against the yaml file
         if os.path.isfile(yaml_file):
-            assemble_ok = self.s_utils.run_assemble(yaml_file, validated_params)
+            basic_opts = validated_params.get('basic_options', None)
+            pipleline_opts = validated_params.get('pipeline_options', None)
+            assemble_ok = self.s_utils.run_assemble(yaml_file, basic_opts, pipleline_opts)
         else:
             assemble_ok = -1
 

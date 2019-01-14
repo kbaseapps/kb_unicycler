@@ -12,7 +12,6 @@ import copy
 import json
 
 from Workspace.WorkspaceClient import Workspace as Workspace
-from kb_SPAdes.utils.Program_Runner import Program_Runner
 from KBaseReport.KBaseReportClient import KBaseReport
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from kb_quast.kb_quastClient import kb_quast
@@ -93,7 +92,6 @@ class SPAdesUtils:
         self.kbr = KBaseReport(self.callback_url)
         self.kbq = kb_quast(self.callback_url)
         self.proj_dir = prj_dir
-        self.prog_runner = Program_Runner(os.path.join(self.SPADES_BIN, 'spades.py'), self.proj_dir)
 
         self.spades_version = 'SPAdes-' + os.environ['SPADES_VERSION']
 
@@ -781,22 +779,20 @@ class SPAdesUtils:
         else:
             return yaml_file_path
 
-    def run_assemble(self, yaml_file, params):
-        basic_opts = params.get('basic_options', None)
-        pipeline_opts = params.get('pipeline_options', None)
-
+    def run_assemble(self, yaml_file, basic_opts=None, pipeline_opts=['--careful']):
         exit_code = 1
         if os.path.isfile(yaml_file):
-            log("The input data set file exists at {}\n".format(yaml_file))
+            log("The input data set yaml file exists at {}\n".format(yaml_file))
             f_dir, f_nm = os.path.split(yaml_file)
             log("The working directory is {}\n".format(f_dir))
 
-            a_cmd = [self.SPADES_BIN + '/spades.py']
+            a_cmd = [os.path.join(self.SPADES_BIN, 'spades.py')]
             a_cmd.append(yaml_file)
 
-            if basic_opts:
-                if type(basic_opts) == list and basic_opts != []:
-                    a_cmd.extend(basic_opts)
+            if not basic_opts:
+                basic_opts = [' '.join(['-o', self.proj_dir])]
+            if type(basic_opts) == list and basic_opts != []:
+                a_cmd.extend(basic_opts)
 
             if pipeline_opts:
                 if type(pipeline_opts) == list and pipeline_opts != []:
@@ -813,7 +809,7 @@ class SPAdesUtils:
             else:
                 exit_code = p.returncode
         else:
-            log("The input data set file {} is not found.".format(yaml_file))
+            log("The input data set yaml file {} is not found.".format(yaml_file))
         return exit_code
 
     # copied from MaSuRCA, should be rewritten to suit SPAdes

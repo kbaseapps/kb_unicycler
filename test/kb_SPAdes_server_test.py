@@ -3,6 +3,7 @@ import unittest
 import os
 import time
 import uuid
+import json
 
 from os import environ
 from ConfigParser import ConfigParser
@@ -999,7 +1000,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertEqual(output_name, assembly['info'][1])
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_spades_utils_check_spades_params")
+    # @unittest.skip("skipped test_spades_utils_check_spades_params")
     def test_spades_utils_check_spades_params(self):
         """
         test_spades_utils_check_spades_params: check if parameters are given and set correctly
@@ -1027,17 +1028,17 @@ class hybrid_SPAdesTest(unittest.TestCase):
                        'single_end2',
                        'plasmid_reads']
         # a list of read lib objects' workspace refs
-        lib_ref_list = [self.staged[n]['info'][0] for n in lib_nm_list]
         min_contig_length = 2
         kmer_sizes = [33, 55, 77, 99, 127]
         skip_error_correction = False
 
         # test single_cell reads
         dnasrc = dna_src_list[0]
-        libs1 = {'lib_ref': lib_ref_list[0],
-                 'orientation': 'fr',
+        rds_name = 'single_end'
+        output_name = rds_name + '_out'
+        libs1 = {'lib_ref':  self.staged[rds_name]['ref'],
+                 'orientation': '',
                  'lib_type': 'single'}
-        output_name = 'frbasic_out'
 
         params = {'workspace_name': self.getWsName(),
                   'single_reads': [libs1],
@@ -1093,10 +1094,10 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertEqual(params['dna_source'], 'single_cell')
         self.assertEqual(params['kmer_sizes'], [33, 55, 77, 99, 127])
         self.assertEqual(params['min_contig_length'], 2)
-        self.assertEqual(params['output_contigset_name'], 'frbasic_out')
+        self.assertEqual(params['output_contigset_name'], 'single_end_out')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_spades_utils_get_hybrid_reads_info")
+    # @unittest.skip("skipped test_spades_utils_get_hybrid_reads_info")
     def test_spades_utils_get_hybrid_reads_info(self):
         """
         test_spades_utils_get_hybrid_reads_info: given the input parameters,
@@ -1108,26 +1109,9 @@ class hybrid_SPAdesTest(unittest.TestCase):
                         'rna',  # --rna
                         'iontorrent'  # --iontorrent
                         ]
-        # a list of read lib objects' names in the workspace
-        lib_nm_list = ['frbasic',
-                       'intbasic',
-                       'intbasic64',
-                       'pacbio',
-                       'pacbioccs',
-                       'iontorrent',
-                       'meta',
-                       'meta2',
-                       'meta_single_end',
-                       'reads_out',
-                       'frbasic_kbassy',
-                       'intbasic_kbassy',
-                       'single_end',
-                       'single_end2',
-                       'plasmid_reads']
         min_contig_length = 2
         kmer_sizes = [33, 55, 77, 99, 127]
         skip_error_correction = False
-        output_name = 'frbasic_out'
 
         # test single_cell reads
         dnasrc = dna_src_list[0]
@@ -1168,7 +1152,6 @@ class hybrid_SPAdesTest(unittest.TestCase):
         dnasrc = dna_src_list[0]
         rds_name = 'frbasic'
         output_name = rds_name + '_out'
-
         libs2 = {'lib_ref': self.staged[rds_name]['ref'],
                  'orientation': 'fr',
                  'lib_type': 'paired-end'}
@@ -1186,6 +1169,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'skip_error_correction': skip_error_correction,
                    'create_report': 0
                    }
+                  
         pprint(params2)
         (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params2)
         self.assertTrue(se_rds == [])
@@ -1205,7 +1189,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         # test pairedEnd_cell reads with pacbio clr reads
         dnasrc = dna_src_list[0]
         rds_name2 = 'pacbio'
-        output_name = rds_name2 + '_out'
+        output_name = rds_name + '_' + rds_name2 + '_out'
         libs4 = {'lib_ref': self.staged[rds_name2]['ref'],
                  'orientation': '',
                  'lib_type': 'pacbio'}
@@ -1246,7 +1230,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertIn('single.fastq', pb_rds[0]['fwd_file'])
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_spades_utils_construct_yaml_dataset_file")
+    @unittest.skip("skipped test_spades_utils_construct_yaml_dataset_file")
     def test_spades_utils_construct_yaml_dataset_file(self):
         """
         test_spades_utils_construct_yaml_dataset_file: given different reads libs,
@@ -1258,30 +1242,16 @@ class hybrid_SPAdesTest(unittest.TestCase):
                         'rna',  # --rna
                         'iontorrent'  # --iontorrent
                         ]
-        # a list of read lib objects' names in the workspace
-        lib_nm_list = ['frbasic',
-                       'intbasic',
-                       'intbasic64',
-                       'pacbio',
-                       'pacbioccs',
-                       'iontorrent',
-                       'meta',
-                       'meta2',
-                       'meta_single_end',
-                       'reads_out',
-                       'frbasic_kbassy',
-                       'intbasic_kbassy',
-                       'single_end',
-                       'single_end2',
-                       'plasmid_reads']
+
         min_contig_length = 2
         kmer_sizes = [33, 55, 77, 99, 127]
         skip_error_correction = False
-        output_name = 'frbasic_out'
 
         # test single_cell reads
         dnasrc = dna_src_list[0]
-        libs1 = {'lib_ref':  self.staged['single_end']['ref'],
+        rds_name = 'single_end'
+        output_name = rds_name + '_out'
+        libs1 = {'lib_ref':  self.staged[rds_name]['ref'],
                  'orientation': '',
                  'lib_type': 'single'}
 
@@ -1306,7 +1276,9 @@ class hybrid_SPAdesTest(unittest.TestCase):
 
         # test pairedEnd_cell reads
         dnasrc = dna_src_list[0]
-        libs2 = {'lib_ref': self.staged['frbasic']['ref'],
+        rds_name = 'frbasic'
+        output_name = rds_name + '_out'
+        libs2 = {'lib_ref': self.staged[rds_name]['ref'],
                  'orientation': 'fr',
                  'lib_type': 'paired-end'}
 
@@ -1332,7 +1304,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         # test pairedEnd_cell reads with pacbio clr reads
         dnasrc = dna_src_list[0]
         rds_name2 = 'pacbio'
-        output_name = rds_name2 + '_out'
+        output_name = rds_name + '_' + rds_name2 + '_out'
         libs4 = {'lib_ref': self.staged[rds_name2]['ref'],
                  'orientation': '',
                  'lib_type': 'pacbio'}
@@ -1356,42 +1328,137 @@ class hybrid_SPAdesTest(unittest.TestCase):
         print(yaml_file)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_spades_utils_run_HybridSPAdes)
-    def test_spades_utils_run_HybridSPAdes(self):
+    @unittest.skip("skipped test_spades_utils_run_assemble")
+    def test_spades_utils_run_assemble(self):
         """
-        test_spades_utils_run_HybridSPAdes: given different params,
-        create a yaml file and then run hybrid SPAdes against the params
+        test_spades_utils_utils_run_assemble: given different yaml_file and params,
+        run hybrid SPAdes against the params
+        [
+            {
+                'orientation': 'rf',
+                'type': 'mate-pairs',
+                'right reads': ['/FULL_PATH_TO_DATASET/lib_mp1_right.fastq'],
+                'left reads': ['/FULL_PATH_TO_DATASET/lib_mp1_left.fastq']
+            },
+            {
+                'type': 'single',
+                'single reads': ['/FULL_PATH_TO_DATASET/pacbio_ccs.fastq']
+            },
+            {
+                'type': 'pacbio',
+                'single reads': ['/FULL_PATH_TO_DATASET/pacbio_clr.fastq']
+            }
+        ]
         """
+        # test data dirs from SPAdes installation
+        spades_test_data_set_dir = '/opt/SPAdes-3.13.0-Linux/share/spades/'
+        ecoli_test_data_subdir = 'test_dataset'
+        plasmid_test_data_subdir = 'test_dataset_plasmid'
+        truspades_test_data_subdir = 'test_dataset_truspades'
+
+        ecoli1 = os.path.join(spades_test_data_set_dir,
+                              ecoli_test_data_subdir, 'ecoli_1K_1.fq.gz')
+        ecoli2 = os.path.join(spades_test_data_set_dir,
+                              ecoli_test_data_subdir, 'ecoli_1K_2.fq.gz')
+        pl1 = os.path.join(spades_test_data_set_dir,
+                           plasmid_test_data_subdir, 'pl1.fq.gz')
+        pl2 = os.path.join(spades_test_data_set_dir,
+                           plasmid_test_data_subdir, 'pl2.fq.gz')
+        A_R1 = os.path.join(spades_test_data_set_dir,
+                            truspades_test_data_subdir, 'A_R1.fastq.gz')
+        A_R2 = os.path.join(spades_test_data_set_dir,
+                            truspades_test_data_subdir, 'A_R2.fastq.gz')
+        B_R1 = os.path.join(spades_test_data_set_dir,
+                            truspades_test_data_subdir, 'B_R1.fastq.gz')
+        B_R2 = os.path.join(spades_test_data_set_dir,
+                            truspades_test_data_subdir, 'B_R2.fastq.gz')
+
+        pyyaml2 = os.path.join(spades_test_data_set_dir, 'pyyaml2')
+        pyyaml3 = os.path.join(spades_test_data_set_dir, 'pyyaml3')
+
         dna_src_list = ['single_cell',  # --sc
                         'metagenomic',  # --meta
                         'plasmid',  # --plasmid
                         'rna',  # --rna
                         'iontorrent'  # --iontorrent
                         ]
-        # a list of read lib objects' names in the workspace
-        lib_nm_list = ['frbasic',
-                       'intbasic',
-                       'intbasic64',
-                       'pacbio',
-                       'pacbioccs',
-                       'iontorrent',
-                       'meta',
-                       'meta2',
-                       'meta_single_end',
-                       'reads_out',
-                       'frbasic_kbassy',
-                       'intbasic_kbassy',
-                       'single_end',
-                       'single_end2',
-                       'plasmid_reads']
+
         min_contig_length = 2
         kmer_sizes = [33, 55, 77, 99, 127]
         skip_error_correction = False
-        output_name = 'frbasic_out'
 
         # test single_cell reads
         dnasrc = dna_src_list[0]
-        libs1 = {'lib_ref':  self.staged['single_end']['ref'],
+        rds_name = 'single_end'
+        output_name = rds_name + '_out'
+        libs1 = {'lib_ref':  self.staged[rds_name]['ref'],
+                 'orientation': '',
+                 'lib_type': 'single'}
+
+        params1 = {'workspace_name': self.getWsName(),
+                   'single_reads': [libs1],
+                   # 'pairedEnd_reads': [libs2],
+                   # 'mate_pair_reads': [libs3],
+                   # 'pacbio_reads': [libs4],
+                   # 'nanopore_reads': [libs5],
+                   'dna_source': dnasrc,
+                   'output_contigset_name': output_name,
+                   'min_contig_length': min_contig_length,
+                   'kmer_sizes': kmer_sizes,
+                   'skip_error_correction': skip_error_correction,
+                   'create_report': 0
+                   }
+        pprint(params1)
+        yaml_file_path = os.path.join(self.spades_prjdir, 'test_data_set.yaml')
+        ecoli_ymal_data = [
+            {
+                'orientation': 'fr',
+                'type': 'paired-end',
+                'right reads': [ecoli1],
+                'left eads': [ecoli2]
+            }]
+        run_exit_code = 1
+        try:
+            with open(yaml_file_path, 'w') as yaml_file:
+                json.dump(ecoli_ymal_data, yaml_file)
+        except IOError as ioerr:
+            print('Creation of the {} file raised error:\n'.format(yaml_file_path))
+            pprint(ioerr)
+        else:
+            run_exit_code = self.spades_utils.run_assemble(yaml_file_path,
+                                                           params1['basic_options'],
+                                                           params1['pipeline_options'])
+        print('SPAdes returns code = {}'.format(run_exit_code))
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_spades_assembler_run_hybrid_spades")
+    def test_spades_assembler_run_hybrid_spades(self):
+        """
+        test_spades_utils_run_HybridSPAdes: given different params,
+        create a yaml file and then run hybrid SPAdes against the params
+        """
+        # test data dirs from SPAdes installation
+        spades_test_data_set_dir = '/opt/SPAdes-3.13.0-Linux/share/spades/'
+        ecoli_test_data_subdir = 'test_dataset'
+        plasmid_test_data_subdir = 'test_dataset_plasmid'
+        truspades_test_data_subdir = 'test_dataset_truspades'
+
+        dna_src_list = ['single_cell',  # --sc
+                        'metagenomic',  # --meta
+                        'plasmid',  # --plasmid
+                        'rna',  # --rna
+                        'iontorrent'  # --iontorrent
+                        ]
+
+        min_contig_length = 2
+        kmer_sizes = [33, 55, 77, 99, 127]
+        skip_error_correction = False
+
+        # test single_cell reads
+        dnasrc = dna_src_list[0]
+        rds_name = 'single_end'
+        output_name = rds_name + '_out'
+        libs1 = {'lib_ref':  self.staged[rds_name]['ref'],
                  'orientation': '',
                  'lib_type': 'single'}
 
@@ -1416,7 +1483,9 @@ class hybrid_SPAdesTest(unittest.TestCase):
 
         # test pairedEnd_cell reads
         dnasrc = dna_src_list[0]
-        libs2 = {'lib_ref': self.staged['frbasic']['ref'],
+        rds_name = 'frbasic'
+        output_name = rds_name + '_out'
+        libs2 = {'lib_ref': self.staged[rds_name]['ref'],
                  'orientation': 'fr',
                  'lib_type': 'paired-end'}
 
@@ -1442,10 +1511,11 @@ class hybrid_SPAdesTest(unittest.TestCase):
         # test pairedEnd_cell reads with pacbio clr reads
         dnasrc = dna_src_list[0]
         rds_name2 = 'pacbio'
-        output_name = rds_name2 + '_out'
+        output_name = rds_name + '_' + rds_name2 + '_out'
         libs4 = {'lib_ref': self.staged[rds_name2]['ref'],
                  'orientation': '',
                  'lib_type': 'pacbio'}
+
         params4 = {'workspace_name': self.getWsName(),
                    # 'single_reads': [libs1],
                    'pairedEnd_reads': [libs2],
