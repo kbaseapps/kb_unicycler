@@ -424,7 +424,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertEqual(output_name, assembly['info'][1])
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_spades_utils_check_spades_params")
+    @unittest.skip("skipped test_spades_utils_check_spades_params")
     def test_spades_utils_check_spades_params(self):
         """
         test_spades_utils_check_spades_params: check if parameters are given and set correctly
@@ -521,7 +521,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertEqual(params['output_contigset_name'], 'single_end_out')
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_spades_utils_get_hybrid_reads_info")
+    @unittest.skip("skipped test_spades_utils_get_hybrid_reads_info")
     def test_spades_utils_get_hybrid_reads_info(self):
         """
         test_spades_utils_get_hybrid_reads_info: given the input parameters,
@@ -654,7 +654,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertIn('single.fastq', pb_rds[0]['fwd_file'])
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_spades_utils_construct_yaml_dataset_file")
+    # @unittest.skip("skipped test_spades_utils_construct_yaml_dataset_file")
     def test_spades_utils_construct_yaml_dataset_file(self):
         """
         test_spades_utils_construct_yaml_dataset_file: given different reads libs,
@@ -696,7 +696,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
         (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params1)
         yaml_file = self.spades_utils.construct_yaml_dataset_file(
             se_rds, pe_rds, mp_rds, pb_rds, np_rds)
-        print(yaml_file)
+        pprint(se_rds)
+        print('Yaml data saved to {}'.format(yaml_file))
 
         # test pairedEnd_cell reads
         dnasrc = dna_src_list[0]
@@ -723,7 +724,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
         (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params2)
         yaml_file = self.spades_utils.construct_yaml_dataset_file(
             se_rds, pe_rds, mp_rds, pb_rds, np_rds)
-        print(yaml_file)
+        pprint(pe_rds)
+        print('Yaml data saved to {}'.format(yaml_file))
 
         # test pairedEnd_cell reads with pacbio clr reads
         dnasrc = dna_src_list[0]
@@ -749,10 +751,11 @@ class hybrid_SPAdesTest(unittest.TestCase):
         (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params4)
         yaml_file = self.spades_utils.construct_yaml_dataset_file(
             se_rds, pe_rds, mp_rds, pb_rds, np_rds)
-        print(yaml_file)
+        pprint(pb_rds)
+        print('Yaml data saved to {}'.format(yaml_file))
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_spades_utils_run_assemble")
+    # @unittest.skip("skipped test_spades_utils_run_assemble")
     def test_spades_utils_run_assemble(self):
         """
         test_spades_utils_utils_run_assemble: given different yaml_file and params,
@@ -832,6 +835,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'skip_error_correction': skip_error_correction,
                    'create_report': 0
                    }
+        params1 = self.spades_utils.check_spades_params(params1)
         pprint(params1)
         yaml_file_path = os.path.join(self.spades_prjdir, 'test_data_set.yaml')
         ecoli_ymal_data = [
@@ -861,12 +865,6 @@ class hybrid_SPAdesTest(unittest.TestCase):
         test_spades_utils_run_HybridSPAdes: given different params,
         create a yaml file and then run hybrid SPAdes against the params
         """
-        # test data dirs from SPAdes installation
-        spades_test_data_set_dir = '/opt/SPAdes-3.13.0-Linux/share/spades/'
-        ecoli_test_data_subdir = 'test_dataset'
-        plasmid_test_data_subdir = 'test_dataset_plasmid'
-        truspades_test_data_subdir = 'test_dataset_truspades'
-
         dna_src_list = ['single_cell',  # --sc
                         'metagenomic',  # --meta
                         'plasmid',  # --plasmid
@@ -900,10 +898,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'create_report': 0
                    }
         pprint(params1)
-        (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params1)
-        yaml_file = self.spades_utils.construct_yaml_dataset_file(
-            se_rds, pe_rds, mp_rds, pb_rds, np_rds)
-        print(yaml_file)
+        self.spades_assembler.run_hybrid_spades(params1)
 
         # test pairedEnd_cell reads
         dnasrc = dna_src_list[0]
@@ -927,10 +922,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'create_report': 0
                    }
         pprint(params2)
-        (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params2)
-        yaml_file = self.spades_utils.construct_yaml_dataset_file(
-            se_rds, pe_rds, mp_rds, pb_rds, np_rds)
-        print(yaml_file)
+        self.spades_assembler.run_hybrid_spades(params2)
 
         # test pairedEnd_cell reads with pacbio clr reads
         dnasrc = dna_src_list[0]
@@ -954,7 +946,4 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'create_report': 0
                    }
         pprint(params4)
-        (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params4)
-        yaml_file = self.spades_utils.construct_yaml_dataset_file(
-            se_rds, pe_rds, mp_rds, pb_rds, np_rds)
-        print(yaml_file)
+        self.spades_assembler.run_hybrid_spades(params4)
