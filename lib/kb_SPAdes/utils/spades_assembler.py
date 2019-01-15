@@ -68,9 +68,10 @@ class SPAdesAssembler(object):
 
         wsname = params['workspace_name']
         fa_file_dir = self._find_file_path(self.proj_dir, contig_fa_file)
-        log('Found the directory {} that hosts the contig fasta file: {}'.format(
-            fa_file_dir, contig_fa_file))
+
         if (asmbl_ok == 0 and fa_file_dir != ''):
+            log('Found the directory {} that hosts the contig fasta file: {}'.format(
+                    fa_file_dir, contig_fa_file))
             # fa_file_dir = os.path.join(self.proj_dir, fa_file_dir)
             fa_file_path = os.path.join(fa_file_dir, contig_fa_file)
 

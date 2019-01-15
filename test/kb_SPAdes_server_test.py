@@ -22,6 +22,7 @@ import shutil
 import inspect
 from kb_SPAdes.GenericClient import GenericClient
 
+from Workspace.WorkspaceClient import Workspace as Workspace
 from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
 from kb_SPAdes.utils.spades_utils import SPAdesUtils
 
@@ -55,7 +56,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
         cls.shockURL = cls.cfg['shock-url']
         cls.hs = HandleService(url=cls.cfg['handle-service-url'],
                                token=cls.token)
-        cls.wsClient = workspaceService(cls.wsURL, token=cls.token)
+        # cls.wsClient = workspaceService(cls.wsURL, token=cls.token)
+        cls.wsClient = Workspace(cls.wsURL, token=cls.token)
         wssuffix = int(time.time() * 1000)
         wsName = "test_kb_SPAdes_" + str(wssuffix)
         cls.wsinfo = cls.wsClient.create_workspace({'workspace': wsName})
@@ -67,7 +69,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
             os.makedirs(cls.scratch)
         cls.spades_prjdir = os.path.join(cls.scratch, cls.SPAdes_PROJECT_DIR)
         if not os.path.exists(cls.spades_prjdir):
-            os.makedirs(cls.spades_prjdir) 
+            os.makedirs(cls.spades_prjdir)
         cls.spades_assembler = SPAdesAssembler(cls.cfg, cls.ctx.provenance)
         cls.spades_utils = SPAdesUtils(cls.spades_prjdir, cls.cfg)
         cls.serviceImpl = kb_SPAdes(cls.cfg)
@@ -959,11 +961,12 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
                    'pipeline_options': pipeline_opts,
-                   'create_report': 0
+                   'create_report': 1
                    }
         ret = self.spades_assembler.run_hybrid_spades(params1)
         pprint(ret)
-        report = self.wsClient.get_objects([{'workspace': self.getWsName(), 'ref': ret['report_ref']}])[0]
+        report = self.wsClient.get_objects2({'objects': [{'workspace': self.getWsName(),
+                                             'ref': ret['report_ref']}]})[0]
         self.assertEqual('KBaseReport.Report', report['info'][2].split('-')[0])
         self.assertEqual(1, len(report['data']['objects_created']))
         self.assertEqual('Assembled contigs',
