@@ -141,7 +141,8 @@ class SPAdesAssembler(object):
         if os.path.isfile(yaml_file):
             basic_opts = validated_params.get('basic_options', None)
             pipleline_opts = validated_params.get('pipeline_options', None)
-            assemble_ok = self.s_utils.run_assemble(yaml_file, basic_opts, pipleline_opts)
+            dna_src = validated_params.get('dna_source', None)
+            assemble_ok = self.s_utils.run_assemble(yaml_file, dna_src, basic_opts, pipleline_opts)
         else:
             assemble_ok = -1
 

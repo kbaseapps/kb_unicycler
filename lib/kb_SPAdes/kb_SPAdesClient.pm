@@ -246,9 +246,8 @@ HybridSPAdesParams is a reference to a hash where the following keys are defined
 	pacbio_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
 	nanopore_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
 	dna_source has a value which is a string
-	min_contig_length has a value which is an int
-	kmer_sizes has a value which is a reference to a list where each element is an int
-	skip_error_correction has a value which is a kb_SPAdes.bool
+	pipeline_options has a value which is a reference to a list where each element is a string
+	create_report has a value which is a kb_SPAdes.bool
 ReadsParams is a reference to a hash where the following keys are defined:
 	lib_ref has a value which is a kb_SPAdes.obj_ref
 	orientation has a value which is a string
@@ -276,9 +275,8 @@ HybridSPAdesParams is a reference to a hash where the following keys are defined
 	pacbio_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
 	nanopore_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
 	dna_source has a value which is a string
-	min_contig_length has a value which is an int
-	kmer_sizes has a value which is a reference to a list where each element is an int
-	skip_error_correction has a value which is a kb_SPAdes.bool
+	pipeline_options has a value which is a reference to a list where each element is a string
+	create_report has a value which is a kb_SPAdes.bool
 ReadsParams is a reference to a hash where the following keys are defined:
 	lib_ref has a value which is a kb_SPAdes.obj_ref
 	orientation has a value which is a string
@@ -662,20 +660,12 @@ nanopore_reads - a list of Oxford Nanopore reads
 dna_source - the source of the DNA used for sequencing 'single_cell': DNA
                  amplified from a single cell via MDA anything else: Standard
                  DNA sample from multiple cells. Default value is None.
-min_contig_length - an integer to filter out contigs with length < min_contig_length
-                 from the SPAdes output. Default value is 0 implying no filter.
-kmer_sizes - K-mer sizes, Default values: 33, 55, 77, 99, 127
-                 (all values must be odd, less than 128 and listed in ascending order)
-                 In the absence of these values, K values are automatically selected.
-skip_error_correction - Assembly only (No error correction).
-                 By default this is disabled.
+pipeline_options - a list of string specifying how the SPAdes pipeline should be run
 
 @optional pacbio_reads
 @optional nanopore_reads
 @optional dna_source
-@optional min_contig_length
-@optional kmer_sizes
-@optional skip_error_correction
+@optional pipeline_options
 
 
 =item Definition
@@ -692,9 +682,8 @@ mate_pair_reads has a value which is a reference to a list where each element is
 pacbio_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
 nanopore_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
 dna_source has a value which is a string
-min_contig_length has a value which is an int
-kmer_sizes has a value which is a reference to a list where each element is an int
-skip_error_correction has a value which is a kb_SPAdes.bool
+pipeline_options has a value which is a reference to a list where each element is a string
+create_report has a value which is a kb_SPAdes.bool
 
 </pre>
 
@@ -711,9 +700,8 @@ mate_pair_reads has a value which is a reference to a list where each element is
 pacbio_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
 nanopore_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
 dna_source has a value which is a string
-min_contig_length has a value which is an int
-kmer_sizes has a value which is a reference to a list where each element is an int
-skip_error_correction has a value which is a kb_SPAdes.bool
+pipeline_options has a value which is a reference to a list where each element is a string
+create_report has a value which is a kb_SPAdes.bool
 
 
 =end text

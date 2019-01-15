@@ -10,6 +10,7 @@ from pprint import pprint
 import uuid
 import copy
 import json
+import psutil
 
 from Workspace.WorkspaceClient import Workspace as Workspace
 from KBaseReport.KBaseReportClient import KBaseReport
@@ -75,6 +76,15 @@ class SPAdesUtils:
 
     INVALID_WS_OBJ_NAME_RE = re.compile('[^\\w\\|._-]')
     INVALID_WS_NAME_RE = re.compile('[^\\w:._-]')
+
+    THREADS_PER_CORE = 3
+    MAX_THREADS = 64  # per email thread with Anton Korobeynikov
+    MAX_THREADS_META = 128  # Increase threads for metagenomic assemblies
+    MEMORY_OFFSET_GB = 1  # 1GB
+    MIN_MEMORY_GB = 5
+    MAX_MEMORY_GB_SPADES = 500
+    MAX_MEMORY_GB_META_SPADES = 1000
+    GB = 1000000000
 
     # private method definition----copied from MaSuRCA, should be rewritten to suit SPAdes
     def __init__(self, prj_dir, config):
@@ -408,28 +418,20 @@ class SPAdesUtils:
         elif dna_src == self.PARAM_IN_IONTORRENT:
             params['basic_options'].append('--iontorrent')
 
-        # check for pipeline option parameters
+        # processing pipeline option parameters
         if params.get(self.PARAM_IN_PIPELINE_OPTION, None):
-            pipe_opt = params[self.PARAM_IN_PIPELINE_OPTION]
-            if pipe_opt not in [self.PARAM_IN_ONLY_ERROR_CORR,
-                                self.PARAM_IN_ONLY_ASSEMBLER,
-                                self.PARAM_IN_CONTINUE,
-                                self.PARAM_IN_DISABLE_GZIP,
-                                self.PARAM_IN_CAREFUL]:
+            pipe_opts = params[self.PARAM_IN_PIPELINE_OPTION]
+            opts = [self.PARAM_IN_ONLY_ERROR_CORR,
+                    self.PARAM_IN_ONLY_ASSEMBLER,
+                    self.PARAM_IN_CONTINUE,
+                    self.PARAM_IN_DISABLE_GZIP,
+                    self.PARAM_IN_CAREFUL]
+            if any(elem in opts for elem in pipe_opts):
+                pass
+            else:
                 params[self.PARAM_IN_PIPELINE_OPTION] = self.PARAM_IN_CAREFUL
         else:
             params[self.PARAM_IN_PIPELINE_OPTION] = self.PARAM_IN_CAREFUL
-
-        pipe_opt = params.get(self.PARAM_IN_PIPELINE_OPTION)
-        params[self.PARAM_IN_PIPELINE_OPTION] = ['--careful']
-        if pipe_opt == self.PARAM_IN_ONLY_ERROR_CORR:
-            params[self.PARAM_IN_PIPELINE_OPTION].append('--only-error-correction')
-        elif pipe_opt == self.PARAM_IN_ONLY_ASSEMBLER:
-            params[self.PARAM_IN_PIPELINE_OPTION].append('--only-assembler')
-        elif pipe_opt == self.PARAM_IN_CONTINUE:
-            params[self.PARAM_IN_PIPELINE_OPTION].append('--continue')
-        elif pipe_opt == self.PARAM_IN_DISABLE_GZIP:
-            params[self.PARAM_IN_PIPELINE_OPTION].append('--disable-gzip-output')
 
         if params.get('create_report', None) is None:
             params['create_report'] = 0
@@ -779,26 +781,60 @@ class SPAdesUtils:
         else:
             return yaml_file_path
 
-    def run_assemble(self, yaml_file, basic_opts=None, pipeline_opts=['--careful']):
+    def run_assemble(self, yaml_file, dna_source=None, basic_opts=None,
+                     pipeline_opts=['careful']):
+        """
+        run_assemble: run the SPAdes assemble with given input parameters/options
+        """
         exit_code = 1
         if os.path.isfile(yaml_file):
             log("The input data set yaml file exists at {}\n".format(yaml_file))
             f_dir, f_nm = os.path.split(yaml_file)
-            log("The working directory is {}\n".format(f_dir))
+
+            mem = (psutil.virtual_memory().available / self.GB - self.MEMORY_OFFSET_GB)
+            if mem < self.MIN_MEMORY_GB:
+                raise ValueError(
+                    'Only ' + str(psutil.virtual_memory().available) +
+                    ' bytes of memory are available. The SPAdes wrapper will' +
+                    ' not run without at least ' +
+                    str(self.MIN_MEMORY_GB + self.MEMORY_OFFSET_GB) +
+                    ' gigabytes available')
+
+            if dna_source and dna_source == self.PARAM_IN_METAGENOME:
+                max_mem = self.MAX_MEMORY_GB_META_SPADES
+                max_threads = self.MAX_THREADS_META
+            else:
+                max_mem = self.MAX_MEMORY_GB_SPADES
+                max_threads = self.MAX_THREADS
+
+            threads = min(max_threads, psutil.cpu_count() * self.THREADS_PER_CORE)
+
+            if mem > max_mem:
+                mem = max_mem
 
             a_cmd = [os.path.join(self.SPADES_BIN, 'spades.py')]
-            a_cmd.append(' '.join(['--dataset', yaml_file]))
+            a_cmd += ['--threads', str(threads), '--memory', str(mem)]
+            a_cmd += ['--dataset', yaml_file]
 
             if not basic_opts:
-                basic_opts = [' '.join(['-o', self.proj_dir])]
+                basic_opts = ['-o', self.proj_dir]
             if type(basic_opts) == list and basic_opts != []:
-                a_cmd.extend(basic_opts)
+                a_cmd += basic_opts
 
             if pipeline_opts:
+                a_cmd.append('--careful')
                 if type(pipeline_opts) == list and pipeline_opts != []:
-                    a_cmd.extend(pipeline_opts)
+                    for p_opt in pipeline_opts:
+                        if p_opt == self.PARAM_IN_ONLY_ERROR_CORR:
+                            a_cmd.append('--only-error-correction')
+                        if p_opt == self.PARAM_IN_ONLY_ASSEMBLER:
+                            a_cmd.append('--only-assembler')
+                        if p_opt == self.PARAM_IN_CONTINUE:
+                            a_cmd.append('--continue')
+                        if p_opt == self.PARAM_IN_DISABLE_GZIP:
+                            a_cmd.append('--disable-gzip-output')
 
-            log("The assembling command is {}\n".format(' '.join(a_cmd)))
+            log("The SPAdes assembling command is:\n{}".format(' '.join(a_cmd)))
             p = subprocess.Popen(a_cmd, cwd=f_dir, shell=False)
             exit_code = p.wait()
             log('Return code: ' + str(exit_code))

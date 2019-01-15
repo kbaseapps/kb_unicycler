@@ -424,7 +424,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertEqual(output_name, assembly['info'][1])
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_spades_utils_check_spades_params")
+    # @unittest.skip("skipped test_spades_utils_check_spades_params")
     def test_spades_utils_check_spades_params(self):
         """
         test_spades_utils_check_spades_params: check if parameters are given and set correctly
@@ -451,10 +451,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
                        'single_end',
                        'single_end2',
                        'plasmid_reads']
-        # a list of read lib objects' workspace refs
-        min_contig_length = 2
-        kmer_sizes = [33, 55, 77, 99, 127]
-        skip_error_correction = False
+
+        pipeline_opts = None
 
         # test single_cell reads
         dnasrc = dna_src_list[0]
@@ -472,9 +470,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                   # 'nanopore_reads': [libs5],
                   'dna_source': dnasrc,
                   'output_contigset_name': output_name,
-                  'min_contig_length': min_contig_length,
-                  'kmer_sizes': kmer_sizes,
-                  'skip_error_correction': skip_error_correction,
+                  'pipeline_options': pipeline_opts,
                   'create_report': 0
                   }
 
@@ -516,8 +512,6 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertIn('pipeline_options', params)
         self.assertEqual(params['pipeline_options'], ['--careful'])
         self.assertEqual(params['dna_source'], 'single_cell')
-        self.assertEqual(params['kmer_sizes'], [33, 55, 77, 99, 127])
-        self.assertEqual(params['min_contig_length'], 2)
         self.assertEqual(params['output_contigset_name'], 'single_end_out')
 
     # Uncomment to skip this test
@@ -533,9 +527,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                         'rna',  # --rna
                         'iontorrent'  # --iontorrent
                         ]
-        min_contig_length = 2
-        kmer_sizes = [33, 55, 77, 99, 127]
-        skip_error_correction = False
+        pipeline_opts = None
 
         # test single_cell reads
         dnasrc = dna_src_list[0]
@@ -553,9 +545,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    # 'nanopore_reads': [libs5],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
-                   'min_contig_length': min_contig_length,
-                   'kmer_sizes': kmer_sizes,
-                   'skip_error_correction': skip_error_correction,
+                   'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
         pprint(params1)
@@ -588,9 +578,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    # 'nanopore_reads': [libs5],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
-                   'min_contig_length': min_contig_length,
-                   'kmer_sizes': kmer_sizes,
-                   'skip_error_correction': skip_error_correction,
+                   'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
                   
@@ -625,9 +613,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    # 'nanopore_reads': [libs5],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
-                   'min_contig_length': min_contig_length,
-                   'kmer_sizes': kmer_sizes,
-                   'skip_error_correction': skip_error_correction,
+                   'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
         pprint(params4)
@@ -654,7 +640,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertIn('single.fastq', pb_rds[0]['fwd_file'])
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_spades_utils_construct_yaml_dataset_file")
+    @unittest.skip("skipped test_spades_utils_construct_yaml_dataset_file")
     def test_spades_utils_construct_yaml_dataset_file(self):
         """
         test_spades_utils_construct_yaml_dataset_file: given different reads libs,
@@ -667,9 +653,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                         'iontorrent'  # --iontorrent
                         ]
 
-        min_contig_length = 2
-        kmer_sizes = [33, 55, 77, 99, 127]
-        skip_error_correction = False
+        pipeline_opts = None
 
         # test single_cell reads
         dnasrc = dna_src_list[0]
@@ -687,13 +671,10 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    # 'nanopore_reads': [libs5],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
-                   'min_contig_length': min_contig_length,
-                   'kmer_sizes': kmer_sizes,
-                   'skip_error_correction': skip_error_correction,
+                   'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
 
-        pprint(params1)
         (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params1)
         yaml_file = self.spades_utils.construct_yaml_dataset_file(
             se_rds, pe_rds, mp_rds, pb_rds, np_rds)
@@ -706,7 +687,6 @@ class hybrid_SPAdesTest(unittest.TestCase):
             print('Loading of the {} file raised error:\n'.format(yaml_file))
             pprint(ioerr)
         else:
-            pprint(yaml_data)
             self.assertIn('single reads', yaml_data[0])
             self.assertIn('type', yaml_data[0])
 
@@ -726,16 +706,12 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    # 'nanopore_reads': [libs5],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
-                   'min_contig_length': min_contig_length,
-                   'kmer_sizes': kmer_sizes,
-                   'skip_error_correction': skip_error_correction,
+                   'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
-        pprint(params2)
         (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params2)
         yaml_file = self.spades_utils.construct_yaml_dataset_file(
             se_rds, pe_rds, mp_rds, pb_rds, np_rds)
-        pprint(pe_rds)
         print('Yaml data saved to {}'.format(yaml_file))
         yaml_data = []
         try:
@@ -745,7 +721,6 @@ class hybrid_SPAdesTest(unittest.TestCase):
             print('Loading of the {} file raised error:\n'.format(yaml_file))
             pprint(ioerr)
         else:
-            pprint(yaml_data)
             self.assertIn('left reads', yaml_data[0])
             self.assertIn('right reads', yaml_data[0])
             self.assertIn('rev.fastq', yaml_data[0]['left reads'][0])
@@ -768,16 +743,12 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    # 'nanopore_reads': [libs5],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
-                   'min_contig_length': min_contig_length,
-                   'kmer_sizes': kmer_sizes,
-                   'skip_error_correction': skip_error_correction,
+                   'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
-        pprint(params4)
         (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params4)
         yaml_file = self.spades_utils.construct_yaml_dataset_file(
             se_rds, pe_rds, mp_rds, pb_rds, np_rds)
-        pprint(pb_rds)
         print('Yaml data saved to {}'.format(yaml_file))
         yaml_data = []
         try:
@@ -787,7 +758,6 @@ class hybrid_SPAdesTest(unittest.TestCase):
             print('Loading of the {} file raised error:\n'.format(yaml_file))
             pprint(ioerr)
         else:
-            pprint(yaml_data)
             self.assertIn('left reads', yaml_data[0])
             self.assertIn('right reads', yaml_data[0])
             self.assertIn('rev.fastq', yaml_data[0]['left reads'][0])
@@ -800,7 +770,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
             self.assertEqual(yaml_data[1]['type'], 'pacbio')
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_spades_utils_run_assemble")
+    @unittest.skip("skipped test_spades_utils_run_assemble")
     def test_spades_utils_run_assemble(self):
         """
         test_spades_utils_utils_run_assemble: given different yaml_file and params,
@@ -855,9 +825,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                         'iontorrent'  # --iontorrent
                         ]
 
-        min_contig_length = 2
-        kmer_sizes = [33, 55, 77, 99, 127]
-        skip_error_correction = False
+        pipeline_opts = None
 
         # test single_cell reads
         dnasrc = dna_src_list[0]
@@ -875,9 +843,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    # 'nanopore_reads': [libs5],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
-                   'min_contig_length': min_contig_length,
-                   'kmer_sizes': kmer_sizes,
-                   'skip_error_correction': skip_error_correction,
+                   'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
         params1 = self.spades_utils.check_spades_params(params1)
@@ -917,9 +883,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                         'iontorrent'  # --iontorrent
                         ]
 
-        min_contig_length = 2
-        kmer_sizes = [33, 55, 77, 99, 127]
-        skip_error_correction = False
+        pipeline_opts = None
 
         # test single_cell reads
         dnasrc = dna_src_list[0]
@@ -937,9 +901,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    # 'nanopore_reads': [libs5],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
-                   'min_contig_length': min_contig_length,
-                   'kmer_sizes': kmer_sizes,
-                   'skip_error_correction': skip_error_correction,
+                   'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
         pprint(params1)
@@ -961,9 +923,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    # 'nanopore_reads': [libs5],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
-                   'min_contig_length': min_contig_length,
-                   'kmer_sizes': kmer_sizes,
-                   'skip_error_correction': skip_error_correction,
+                   'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
         pprint(params2)
@@ -985,9 +945,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    # 'nanopore_reads': [libs5],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
-                   'min_contig_length': min_contig_length,
-                   'kmer_sizes': kmer_sizes,
-                   'skip_error_correction': skip_error_correction,
+                   'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
         pprint(params4)

@@ -89,20 +89,12 @@ module kb_SPAdes {
     dna_source - the source of the DNA used for sequencing 'single_cell': DNA
                      amplified from a single cell via MDA anything else: Standard
                      DNA sample from multiple cells. Default value is None.
-    min_contig_length - an integer to filter out contigs with length < min_contig_length
-                     from the SPAdes output. Default value is 0 implying no filter.
-    kmer_sizes - K-mer sizes, Default values: 33, 55, 77, 99, 127
-                     (all values must be odd, less than 128 and listed in ascending order)
-                     In the absence of these values, K values are automatically selected.
-    skip_error_correction - Assembly only (No error correction).
-                     By default this is disabled.
+    pipeline_options - a list of string specifying how the SPAdes pipeline should be run
     
     @optional pacbio_reads
     @optional nanopore_reads
     @optional dna_source
-    @optional min_contig_length
-    @optional kmer_sizes
-    @optional skip_error_correction
+    @optional pipeline_options
     */
 
     typedef structure {
@@ -116,9 +108,8 @@ module kb_SPAdes {
         list<ReadsParams> nanopore_reads;
 
         string dna_source;
-        int min_contig_length;
-        list<int> kmer_sizes;
-        bool skip_error_correction;
+        list<string> pipeline_options;
+        bool create_report;
     } HybridSPAdesParams;
 
 

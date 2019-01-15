@@ -30,19 +30,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * dna_source - the source of the DNA used for sequencing 'single_cell': DNA
  *                  amplified from a single cell via MDA anything else: Standard
  *                  DNA sample from multiple cells. Default value is None.
- * min_contig_length - an integer to filter out contigs with length < min_contig_length
- *                  from the SPAdes output. Default value is 0 implying no filter.
- * kmer_sizes - K-mer sizes, Default values: 33, 55, 77, 99, 127
- *                  (all values must be odd, less than 128 and listed in ascending order)
- *                  In the absence of these values, K values are automatically selected.
- * skip_error_correction - Assembly only (No error correction).
- *                  By default this is disabled.
+ * pipeline_options - a list of string specifying how the SPAdes pipeline should be run
  * @optional pacbio_reads
  * @optional nanopore_reads
  * @optional dna_source
- * @optional min_contig_length
- * @optional kmer_sizes
- * @optional skip_error_correction
+ * @optional pipeline_options
  * </pre>
  * 
  */
@@ -57,16 +49,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "pacbio_reads",
     "nanopore_reads",
     "dna_source",
-    "min_contig_length",
-    "kmer_sizes",
-    "skip_error_correction"
+    "pipeline_options",
+    "create_report"
 })
 public class HybridSPAdesParams {
 
     @JsonProperty("workspace_name")
-    private String workspaceName;
+    private java.lang.String workspaceName;
     @JsonProperty("output_contigset_name")
-    private String outputContigsetName;
+    private java.lang.String outputContigsetName;
     @JsonProperty("single_reads")
     private List<us.kbase.kbspades.ReadsParams> singleReads;
     @JsonProperty("pairedEnd_reads")
@@ -78,41 +69,39 @@ public class HybridSPAdesParams {
     @JsonProperty("nanopore_reads")
     private List<us.kbase.kbspades.ReadsParams> nanoporeReads;
     @JsonProperty("dna_source")
-    private String dnaSource;
-    @JsonProperty("min_contig_length")
-    private java.lang.Long minContigLength;
-    @JsonProperty("kmer_sizes")
-    private List<Long> kmerSizes;
-    @JsonProperty("skip_error_correction")
-    private java.lang.Long skipErrorCorrection;
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private java.lang.String dnaSource;
+    @JsonProperty("pipeline_options")
+    private List<String> pipelineOptions;
+    @JsonProperty("create_report")
+    private Long createReport;
+    private Map<java.lang.String, Object> additionalProperties = new HashMap<java.lang.String, Object>();
 
     @JsonProperty("workspace_name")
-    public String getWorkspaceName() {
+    public java.lang.String getWorkspaceName() {
         return workspaceName;
     }
 
     @JsonProperty("workspace_name")
-    public void setWorkspaceName(String workspaceName) {
+    public void setWorkspaceName(java.lang.String workspaceName) {
         this.workspaceName = workspaceName;
     }
 
-    public HybridSPAdesParams withWorkspaceName(String workspaceName) {
+    public HybridSPAdesParams withWorkspaceName(java.lang.String workspaceName) {
         this.workspaceName = workspaceName;
         return this;
     }
 
     @JsonProperty("output_contigset_name")
-    public String getOutputContigsetName() {
+    public java.lang.String getOutputContigsetName() {
         return outputContigsetName;
     }
 
     @JsonProperty("output_contigset_name")
-    public void setOutputContigsetName(String outputContigsetName) {
+    public void setOutputContigsetName(java.lang.String outputContigsetName) {
         this.outputContigsetName = outputContigsetName;
     }
 
-    public HybridSPAdesParams withOutputContigsetName(String outputContigsetName) {
+    public HybridSPAdesParams withOutputContigsetName(java.lang.String outputContigsetName) {
         this.outputContigsetName = outputContigsetName;
         return this;
     }
@@ -193,78 +182,63 @@ public class HybridSPAdesParams {
     }
 
     @JsonProperty("dna_source")
-    public String getDnaSource() {
+    public java.lang.String getDnaSource() {
         return dnaSource;
     }
 
     @JsonProperty("dna_source")
-    public void setDnaSource(String dnaSource) {
+    public void setDnaSource(java.lang.String dnaSource) {
         this.dnaSource = dnaSource;
     }
 
-    public HybridSPAdesParams withDnaSource(String dnaSource) {
+    public HybridSPAdesParams withDnaSource(java.lang.String dnaSource) {
         this.dnaSource = dnaSource;
         return this;
     }
 
-    @JsonProperty("min_contig_length")
-    public java.lang.Long getMinContigLength() {
-        return minContigLength;
+    @JsonProperty("pipeline_options")
+    public List<String> getPipelineOptions() {
+        return pipelineOptions;
     }
 
-    @JsonProperty("min_contig_length")
-    public void setMinContigLength(java.lang.Long minContigLength) {
-        this.minContigLength = minContigLength;
+    @JsonProperty("pipeline_options")
+    public void setPipelineOptions(List<String> pipelineOptions) {
+        this.pipelineOptions = pipelineOptions;
     }
 
-    public HybridSPAdesParams withMinContigLength(java.lang.Long minContigLength) {
-        this.minContigLength = minContigLength;
+    public HybridSPAdesParams withPipelineOptions(List<String> pipelineOptions) {
+        this.pipelineOptions = pipelineOptions;
         return this;
     }
 
-    @JsonProperty("kmer_sizes")
-    public List<Long> getKmerSizes() {
-        return kmerSizes;
+    @JsonProperty("create_report")
+    public Long getCreateReport() {
+        return createReport;
     }
 
-    @JsonProperty("kmer_sizes")
-    public void setKmerSizes(List<Long> kmerSizes) {
-        this.kmerSizes = kmerSizes;
+    @JsonProperty("create_report")
+    public void setCreateReport(Long createReport) {
+        this.createReport = createReport;
     }
 
-    public HybridSPAdesParams withKmerSizes(List<Long> kmerSizes) {
-        this.kmerSizes = kmerSizes;
-        return this;
-    }
-
-    @JsonProperty("skip_error_correction")
-    public java.lang.Long getSkipErrorCorrection() {
-        return skipErrorCorrection;
-    }
-
-    @JsonProperty("skip_error_correction")
-    public void setSkipErrorCorrection(java.lang.Long skipErrorCorrection) {
-        this.skipErrorCorrection = skipErrorCorrection;
-    }
-
-    public HybridSPAdesParams withSkipErrorCorrection(java.lang.Long skipErrorCorrection) {
-        this.skipErrorCorrection = skipErrorCorrection;
+    public HybridSPAdesParams withCreateReport(Long createReport) {
+        this.createReport = createReport;
         return this;
     }
 
     @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
+    public Map<java.lang.String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperties(String name, Object value) {
+    public void setAdditionalProperties(java.lang.String name, Object value) {
         this.additionalProperties.put(name, value);
     }
 
     @Override
-    public String toString() {
-        return ((((((((((((((((((((((((("HybridSPAdesParams"+" [workspaceName=")+ workspaceName)+", outputContigsetName=")+ outputContigsetName)+", singleReads=")+ singleReads)+", pairedEndReads=")+ pairedEndReads)+", matePairReads=")+ matePairReads)+", pacbioReads=")+ pacbioReads)+", nanoporeReads=")+ nanoporeReads)+", dnaSource=")+ dnaSource)+", minContigLength=")+ minContigLength)+", kmerSizes=")+ kmerSizes)+", skipErrorCorrection=")+ skipErrorCorrection)+", additionalProperties=")+ additionalProperties)+"]");
+    public java.lang.String toString() {
+        return ((((((((((((((((((((((("HybridSPAdesParams"+" [workspaceName=")+ workspaceName)+", outputContigsetName=")+ outputContigsetName)+", singleReads=")+ singleReads)+", pairedEndReads=")+ pairedEndReads)+", matePairReads=")+ matePairReads)+", pacbioReads=")+ pacbioReads)+", nanoporeReads=")+ nanoporeReads)+", dnaSource=")+ dnaSource)+", pipelineOptions=")+ pipelineOptions)+", createReport=")+ createReport)+", additionalProperties=")+ additionalProperties)+"]");
     }
 
 }
