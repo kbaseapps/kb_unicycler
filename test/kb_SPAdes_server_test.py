@@ -77,7 +77,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         cls.nodes_to_delete = []
         cls.handles_to_delete = []
         cls.setupTestData()
-        print('\n\n=============== Starting tests ==================')
+        print('\n\n=============== Starting SPAdes tests ==================')
 
     @classmethod
     def tearDownClass(cls):
@@ -424,7 +424,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertEqual(output_name, assembly['info'][1])
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_spades_utils_check_spades_params")
+    @unittest.skip("skipped test_spades_utils_check_spades_params")
     def test_spades_utils_check_spades_params(self):
         """
         test_spades_utils_check_spades_params: check if parameters are given and set correctly
@@ -510,7 +510,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertIn('basic_options', params)
         self.assertEqual(params['basic_options'], ['-o /kb/module/work/tmp/spades_outputs', '--sc'])
         self.assertIn('pipeline_options', params)
-        self.assertEqual(params['pipeline_options'], ['--careful'])
+        self.assertEqual(params['pipeline_options'], ['careful'])
         self.assertEqual(params['dna_source'], 'single_cell')
         self.assertEqual(params['output_contigset_name'], 'single_end_out')
 
@@ -846,8 +846,43 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
-        params1 = self.spades_utils.check_spades_params(params1)
-        pprint(params1)
+
+        spades_prjdir = os.path.join(self.spades_prjdir, rds_name)
+        spades_assemble_dir = os.path.join(spades_prjdir, 'assemble_results')
+        spades_utils = SPAdesUtils(spades_prjdir, self.cfg)
+        params1 = spades_utils.check_spades_params(params1)
+        (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = spades_utils.get_hybrid_reads_info(params1)
+        single_yaml_file = spades_utils.construct_yaml_dataset_file(
+                                se_rds, pe_rds, mp_rds, pb_rds, np_rds)
+        run_exit_code = 1
+        run_exit_code = spades_utils.run_assemble(single_yaml_file, 'single_cell',
+                                                  params1['basic_options'],
+                                                  params1['pipeline_options'])
+        print('{} SPAdes assembling returns code= {}'.format(rds_name, run_exit_code))
+        self.assertEqual(run_exit_code, 0)
+        self.assertEqual(spades_prjdir, '/kb/module/work/tmp/spades_outputs/single_end')
+        self.assertTrue(os.path.isdir(os.path.join(spades_assemble_dir, 'K21')))
+        self.assertTrue(os.path.isdir(os.path.join(spades_assemble_dir, 'K33')))
+        self.assertTrue(os.path.isdir(os.path.join(spades_assemble_dir, 'K55')))
+        self.assertTrue(os.path.isdir(os.path.join(spades_assemble_dir, 'corrected')))
+        self.assertTrue(os.path.isdir(os.path.join(spades_assemble_dir, 'misc')))
+        self.assertTrue(os.path.isdir(os.path.join(spades_assemble_dir, 'tmp')))
+        self.assertTrue(os.path.isdir(os.path.join(spades_assemble_dir, 'mismatch_corrector')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir, 'spades.log')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir, 'assembly_graph.fastg')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir,
+                        'assembly_graph_with_scaffolds.gfa')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir, 'before_rr.fasta')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir, 'contigs.fasta')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir, 'contigs.paths')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir, 'dataset.info')))
+        self.assertTrue(os.path.isfile(os.path.join(self.spades_prjdir, 'input_data_set.yaml')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir, 'params.txt')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir, 'scaffolds.fasta')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir,
+                        'corrected', 'corrected.yaml')))
+
+        # testing with SPAdes test reads from installation
         yaml_file_path = os.path.join(self.spades_prjdir, 'test_data_set.yaml')
         ecoli_ymal_data = [
             {
@@ -856,7 +891,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
                 'right reads': [ecoli1],
                 'left reads': [ecoli2]
             }]
-        run_exit_code = 1
+        basic_opts = ['-o', self.spades_prjdir]
+        ecoli_exit_code = 1
         try:
             with open(yaml_file_path, 'w') as yaml_file:
                 json.dump(ecoli_ymal_data, yaml_file)
@@ -864,13 +900,34 @@ class hybrid_SPAdesTest(unittest.TestCase):
             print('Creation of the {} file raised error:\n'.format(yaml_file_path))
             pprint(ioerr)
         else:
-            run_exit_code = self.spades_utils.run_assemble(yaml_file_path,
-                                                           params1['basic_options'],
-                                                           params1['pipeline_options'])
-        print('SPAdes returns code = {}'.format(run_exit_code))
+            ecoli_exit_code = self.spades_utils.run_assemble(yaml_file_path, 'single_cell',
+                                                             basic_opts)
+        spades_prjdir = self.spades_prjdir
+        self.assertEqual(ecoli_exit_code, 0)
+        self.assertEqual(spades_prjdir, '/kb/module/work/tmp/spades_outputs')
+        self.assertTrue(os.path.isdir(os.path.join(spades_prjdir, 'K21')))
+        self.assertTrue(os.path.isdir(os.path.join(spades_prjdir, 'K33')))
+        self.assertTrue(os.path.isdir(os.path.join(spades_prjdir, 'K55')))
+        self.assertTrue(os.path.isdir(os.path.join(spades_prjdir, 'corrected')))
+        self.assertTrue(os.path.isdir(os.path.join(spades_prjdir, 'misc')))
+        self.assertTrue(os.path.isdir(os.path.join(spades_prjdir, 'tmp')))
+        self.assertTrue(os.path.isdir(os.path.join(spades_prjdir, 'mismatch_corrector')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'spades.log')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'assembly_graph.fastg')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir,
+                        'assembly_graph_with_scaffolds.gfa')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'before_rr.fasta')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'contigs.fasta')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'contigs.paths')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'dataset.info')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'test_data_set.yaml')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'params.txt')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'scaffolds.fasta')))
+        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir,
+                        'corrected', 'corrected.yaml')))
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_spades_assembler_run_hybrid_spades")
+    # @unittest.skip("skipped test_spades_assembler_run_hybrid_spades")
     def test_spades_assembler_run_hybrid_spades(self):
         """
         test_spades_utils_run_HybridSPAdes: given different params,
@@ -904,8 +961,30 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
-        pprint(params1)
-        self.spades_assembler.run_hybrid_spades(params1)
+        ret = self.spades_assembler.run_hybrid_spades(params1)
+        pprint(ret)
+        report = self.wsClient.get_objects([{'workspace': self.getWsName(), 'ref': ret['report_ref']}])[0]
+        self.assertEqual('KBaseReport.Report', report['info'][2].split('-')[0])
+        self.assertEqual(1, len(report['data']['objects_created']))
+        self.assertEqual('Assembled contigs',
+                         report['data']['objects_created'][0]['description'])
+
+        assembly_ref = report['data']['objects_created'][0]['ref']
+        assembly = self.wsClient.get_objects([{'ref': assembly_ref}])[0]
+        # print("ASSEMBLY OBJECT:")
+        self.assertEqual('KBaseGenomeAnnotations.Assembly', assembly['info'][2].split('-')[0])
+        self.assertEqual(1, len(assembly['provenance']))
+        temp_handle_info = self.hs.hids_to_handles([assembly['data']['fasta_handle_ref']])
+        print("HANDLE OBJECT:")
+        pprint(temp_handle_info)
+        assembly_fasta_node = temp_handle_info[0]['id']
+        self.nodes_to_delete.append(assembly_fasta_node)
+        header = {"Authorization": "Oauth {0}".format(self.token)}
+        fasta_node = requests.get(self.shockURL + '/node/' + assembly_fasta_node,
+                                  headers=header, allow_redirects=True).json()
+
+        self.assertEqual(output_name, assembly['data']['assembly_id'])
+        # self.assertEqual(output_name, assembly['data']['name']) #name key doesnt seem to exist
 
         # test pairedEnd_cell reads
         dnasrc = dna_src_list[0]

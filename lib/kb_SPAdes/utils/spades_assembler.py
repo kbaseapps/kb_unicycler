@@ -68,9 +68,10 @@ class SPAdesAssembler(object):
 
         wsname = params['workspace_name']
         fa_file_dir = self._find_file_path(self.proj_dir, contig_fa_file)
-
+        log('Found the directory {} that hosts the contig fasta file: {}'.format(
+            fa_file_dir, contig_fa_file))
         if (asmbl_ok == 0 and fa_file_dir != ''):
-            fa_file_dir = os.path.join(self.proj_dir, fa_file_dir)
+            # fa_file_dir = os.path.join(self.proj_dir, fa_file_dir)
             fa_file_path = os.path.join(fa_file_dir, contig_fa_file)
 
             log("Load assembly from fasta file {}...".format(fa_file_path))
@@ -147,4 +148,4 @@ class SPAdesAssembler(object):
             assemble_ok = -1
 
         # 5. save the assembly to KBase and, if everything has gone well, create a report
-        return self._save_assembly(params, assemble_ok, self.SPAdes_final_contigs)
+        return self._save_assembly(validated_params, assemble_ok, self.SPAdes_final_contigs)
