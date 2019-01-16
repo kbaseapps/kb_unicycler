@@ -2,7 +2,6 @@ from __future__ import print_function
 import unittest
 import os
 import time
-import uuid
 import json
 
 from os import environ
@@ -11,18 +10,14 @@ import psutil
 
 import requests
 from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
-from biokbase.workspace.client import ServerError as WorkspaceError  # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from kb_SPAdes.kb_SPAdesImpl import kb_SPAdes
-from ReadsUtils.baseclient import ServerError
 from ReadsUtils.ReadsUtilsClient import ReadsUtils
 from kb_SPAdes.kb_SPAdesServer import MethodContext
 from pprint import pprint
 import shutil
 import inspect
-from kb_SPAdes.GenericClient import GenericClient
 
-from Workspace.WorkspaceClient import Workspace as Workspace
 from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
 from kb_SPAdes.utils.spades_utils import SPAdesUtils
 
@@ -56,8 +51,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         cls.shockURL = cls.cfg['shock-url']
         cls.hs = HandleService(url=cls.cfg['handle-service-url'],
                                token=cls.token)
-        # cls.wsClient = workspaceService(cls.wsURL, token=cls.token)
-        cls.wsClient = Workspace(cls.wsURL, token=cls.token)
+        cls.wsClient = workspaceService(cls.wsURL, token=cls.token)
         wssuffix = int(time.time() * 1000)
         wsName = "test_kb_SPAdes_" + str(wssuffix)
         cls.wsinfo = cls.wsClient.create_workspace({'workspace': wsName})
@@ -169,7 +163,6 @@ class hybrid_SPAdesTest(unittest.TestCase):
 
         ob = dict(object_body)  # copy
         ob['sequencing_tech'] = sequencing_tech
-#        ob['single_genome'] = single_genome
         ob['wsname'] = cls.getWsName()
         ob['name'] = wsobjname
         if single_end or rev_reads:
@@ -425,6 +418,31 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertEqual('KBaseGenomeAnnotations.Assembly', assembly['info'][2].split('-')[0])
         self.assertEqual(output_name, assembly['info'][1])
 
+    def assertReportAssembly(self, ret_obj, assembly_name):
+        """
+        assertReportAssembly: given a report object, check the object existence
+        """
+        report = self.wsClient.get_objects2({
+                        'objects': [{'ref': ret_obj['report_ref']}]})['data'][0]
+        self.assertEqual('KBaseReport.Report', report['info'][2].split('-')[0])
+        self.assertEqual(1, len(report['data']['objects_created']))
+        self.assertEqual('Assembled contigs',
+                         report['data']['objects_created'][0]['description'])
+
+        assembly_ref = report['data']['objects_created'][0]['ref']
+        assembly = self.wsClient.get_objects([{'ref': assembly_ref}])[0]
+
+        self.assertEqual('KBaseGenomeAnnotations.Assembly', assembly['info'][2].split('-')[0])
+        self.assertEqual(1, len(assembly['provenance']))
+        self.assertEqual(assembly_name, assembly['data']['assembly_id'])
+
+        temp_handle_info = self.hs.hids_to_handles([assembly['data']['fasta_handle_ref']])
+        assembly_fasta_node = temp_handle_info[0]['id']
+        self.nodes_to_delete.append(assembly_fasta_node)
+        header = {"Authorization": "Oauth {0}".format(self.token)}
+        fasta_node = requests.get(self.shockURL + '/node/' + assembly_fasta_node,
+                                  headers=header, allow_redirects=True).json()
+
     # Uncomment to skip this test
     @unittest.skip("skipped test_spades_utils_check_spades_params")
     def test_spades_utils_check_spades_params(self):
@@ -510,7 +528,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         pprint(params)
         params = self.spades_utils.check_spades_params(params)
         self.assertIn('basic_options', params)
-        self.assertEqual(params['basic_options'], ['-o /kb/module/work/tmp/spades_outputs', '--sc'])
+        self.assertEqual(params['basic_options'], ['-o', 'assemble_results', '--sc'])
         self.assertIn('pipeline_options', params)
         self.assertEqual(params['pipeline_options'], ['careful'])
         self.assertEqual(params['dna_source'], 'single_cell')
@@ -964,30 +982,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'create_report': 1
                    }
         ret = self.spades_assembler.run_hybrid_spades(params1)
-        pprint(ret)
-        report = self.wsClient.get_objects2({'objects': [{'workspace': self.getWsName(),
-                                             'ref': ret['report_ref']}]})[0]
-        self.assertEqual('KBaseReport.Report', report['info'][2].split('-')[0])
-        self.assertEqual(1, len(report['data']['objects_created']))
-        self.assertEqual('Assembled contigs',
-                         report['data']['objects_created'][0]['description'])
-
-        assembly_ref = report['data']['objects_created'][0]['ref']
-        assembly = self.wsClient.get_objects([{'ref': assembly_ref}])[0]
-        # print("ASSEMBLY OBJECT:")
-        self.assertEqual('KBaseGenomeAnnotations.Assembly', assembly['info'][2].split('-')[0])
-        self.assertEqual(1, len(assembly['provenance']))
-        temp_handle_info = self.hs.hids_to_handles([assembly['data']['fasta_handle_ref']])
-        print("HANDLE OBJECT:")
-        pprint(temp_handle_info)
-        assembly_fasta_node = temp_handle_info[0]['id']
-        self.nodes_to_delete.append(assembly_fasta_node)
-        header = {"Authorization": "Oauth {0}".format(self.token)}
-        fasta_node = requests.get(self.shockURL + '/node/' + assembly_fasta_node,
-                                  headers=header, allow_redirects=True).json()
-
-        self.assertEqual(output_name, assembly['data']['assembly_id'])
-        # self.assertEqual(output_name, assembly['data']['name']) #name key doesnt seem to exist
+        self.assertReportAssembly(ret, output_name)
 
         # test pairedEnd_cell reads
         dnasrc = dna_src_list[0]
@@ -1008,8 +1003,9 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
-        pprint(params2)
-        self.spades_assembler.run_hybrid_spades(params2)
+
+        ret = self.spades_assembler.run_hybrid_spades(params2)
+        self.assertReportAssembly(ret, output_name)
 
         # test pairedEnd_cell reads with pacbio clr reads
         dnasrc = dna_src_list[0]
@@ -1030,5 +1026,5 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
-        pprint(params4)
-        self.spades_assembler.run_hybrid_spades(params4)
+        ret = self.spades_assembler.run_hybrid_spades(params4)
+        self.assertReportAssembly(ret, output_name)

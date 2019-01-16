@@ -72,7 +72,6 @@ class SPAdesAssembler(object):
         if (asmbl_ok == 0 and fa_file_dir != ''):
             log('Found the directory {} that hosts the contig fasta file: {}'.format(
                     fa_file_dir, contig_fa_file))
-            # fa_file_dir = os.path.join(self.proj_dir, fa_file_dir)
             fa_file_path = os.path.join(fa_file_dir, contig_fa_file)
 
             log("Load assembly from fasta file {}...".format(fa_file_path))
@@ -101,33 +100,16 @@ class SPAdesAssembler(object):
 
     def _create_proj_dir(self, home_dir):
         """
-        _creating the project directory for SPAdes
+        _create_proj_dir: creating the project directory for SPAdes
         """
         prjdir = os.path.join(home_dir, self.SPAdes_PROJECT_DIR)
         mkdir_p(prjdir)
         return prjdir
 
-    def _get_version_from_subactions(self, module_name, subactions):
-        """
-        _get_version_from_subactions: as the name says
-        """
-        # go through each sub action looking for
-        if not subactions:
-            return 'dev'  # 'release'  # default to release if we can't find anything
-        for sa in subactions:
-            if 'name' in sa:
-                if sa['name'] == module_name:
-                    # local-docker-image implies that we are running in kb-test, so return 'dev'
-                    if sa['commit'] == 'local-docker-image':
-                        return 'dev'
-                    # to check that it is a valid hash, make sure it is the right
-                    # length and made up of valid hash characters
-                    if re.match('[a-fA-F0-9]{40}$', sa['commit']):
-                        return sa['commit']
-        # again, default to setting this to release
-        return 'dev'  # 'release'
-
     def run_hybrid_spades(self, params):
+        """
+        run_hybrid_spades: breakdown steps of SPAdes assembling process
+        """
         # 1. validate & process the input parameters
         validated_params = self.s_utils.check_spades_params(params)
 
