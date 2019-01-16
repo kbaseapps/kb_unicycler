@@ -984,7 +984,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'create_report': 1
                    }
         ret = self.spades_assembler.run_hybrid_spades(params1)
-        self.assertReportAssembly(ret, output_name)
+        if params1.get('create_report', 0) == 1:
+            self.assertReportAssembly(ret, output_name)
 
         # test pairedEnd_cell reads
         dnasrc = dna_src_list[0]
@@ -1007,7 +1008,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    }
 
         ret = self.spades_assembler.run_hybrid_spades(params2)
-        self.assertReportAssembly(ret, output_name)
+        if params2.get('create_report', 0) == 1:
+            self.assertReportAssembly(ret, output_name)
 
         # test pairedEnd_cell reads with pacbio clr reads
         dnasrc = dna_src_list[0]
@@ -1029,4 +1031,5 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'create_report': 1
                    }
         ret = self.spades_assembler.run_hybrid_spades(params4)
-        self.assertReportAssembly(ret, output_name)
+        if params4.get('create_report', 0) == 1:
+            self.assertReportAssembly(ret, output_name)
