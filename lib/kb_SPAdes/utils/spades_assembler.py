@@ -114,19 +114,22 @@ class SPAdesAssembler(object):
         validated_params = self.s_utils.check_spades_params(params)
 
         # STEP 2: retrieve the reads data from input parameter
-        (se_libs, pe_libs, mp_libs, pb_libs, np_libs) = self.s_utils.get_hybrid_reads_info(
-                                                        validated_params)
+        (sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs) \
+            = self.s_utils.get_hybrid_reads_info(validated_params)
 
         # 3. create the yaml input data set file
-        yaml_file = self.s_utils.construct_yaml_dataset_file(se_libs, pe_libs,
-                                                             mp_libs, pb_libs, np_libs)
+        yaml_file = self.s_utils.construct_yaml_dataset_file(sgl_rds, pe_rds, mp_rds,
+                                                             pb_ccs, pb_clr, np_rds, sgr_rds,
+                                                             tr_ctgs, ut_ctgs)
 
         # 4. run the spades.py against the yaml file
         if os.path.isfile(yaml_file):
             basic_opts = validated_params.get('basic_options', None)
             pipleline_opts = validated_params.get('pipeline_options', None)
+            km_sizes = validated_params.get('kmer_sizes', None)
             dna_src = validated_params.get('dna_source', None)
-            assemble_ok = self.s_utils.run_assemble(yaml_file, dna_src, basic_opts, pipleline_opts)
+            assemble_ok = self.s_utils.run_assemble(yaml_file, km_sizes, dna_src,
+                                                    basic_opts, pipleline_opts)
         else:
             assemble_ok = -1
 

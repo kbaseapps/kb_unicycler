@@ -82,9 +82,14 @@ module kb_SPAdes {
     1) Illumina paired-end/high-quality mate-pairs/unpaired reads
     2) IonTorrent paired-end/high-quality mate-pairs/unpaired reads
     3) PacBio CCS reads
+    Version 3.13.0 of SPAdes supports paired-end reads, mate-pairs and unpaired reads.
+    SPAdes can take as input several paired-end and mate-pair libraries simultaneously.
+
     workspace_name - the name of the workspace from which to take input
                      and store output.
     output_contigset_name - the name of the output contigset
+    read_libraries - a list of Illumina or IonTorrent paired-end/high-quality mate-pairs/unpaired reads
+    long_reads_libraries - a list of PacBio, Oxford Nanopore Sanger reads and/or additional contigs
     dna_source - the source of the DNA used for sequencing 'single_cell': DNA
                      amplified from a single cell via MDA anything else: Standard
                      DNA sample from multiple cells. Default value is None.

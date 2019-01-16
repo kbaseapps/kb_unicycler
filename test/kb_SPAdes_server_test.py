@@ -446,7 +446,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                                   headers=header, allow_redirects=True).json()
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_spades_utils_check_spades_params")
+    # @unittest.skip("skipped test_spades_utils_check_spades_params")
     def test_spades_utils_check_spades_params(self):
         """
         test_spades_utils_check_spades_params: check if parameters are given and set correctly
@@ -485,11 +485,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                  'lib_type': 'single'}
 
         params = {'workspace_name': self.getWsName(),
-                  'single_reads': [libs1],
-                  # 'pairedEnd_reads': [libs2],
-                  # 'mate_pair_reads': [libs3],
-                  # 'pacbio_reads': [libs4],
-                  # 'nanopore_reads': [libs5],
+                  'reads_libraries': [libs1],
                   'dna_source': dnasrc,
                   'output_contigset_name': output_name,
                   'pipeline_options': pipeline_opts,
@@ -497,14 +493,14 @@ class hybrid_SPAdesTest(unittest.TestCase):
                   }
 
         params0 = {'output_contigset_name': output_name,
-                   'single_reads': [libs1]}
+                   'reads_libraries': [libs1]}
         err_msg = 'Parameter workspace_name is mandatory!'
         with self.assertRaises(ValueError) as context_manager:
             self.spades_utils.check_spades_params(params0)
             self.assertEqual(err_msg, str(context_manager.exception.message))
 
         params1 = {'workspace_name': self.getWsName(),
-                   'single_reads': [libs1]}
+                   'reads_libraries': [libs1]}
         err_msg = 'Parameter output_contigset_name is mandatory!'
         with self.assertRaises(ValueError) as context_manager:
             self.spades_utils.check_spades_params(params1)
@@ -512,7 +508,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
 
         params2 = {'workspace_name': self.getWsName(),
                    'output_contigset_name': output_name,
-                   'single_reads': libs1}
+                   'reads_libraries': libs1}
         err_msg = 'Input reads must be a list.'
         with self.assertRaises(ValueError) as context_manager:
             self.spades_utils.check_spades_params(params2)
@@ -537,7 +533,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertEqual(params['output_contigset_name'], 'single_end_out')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_spades_utils_get_hybrid_reads_info")
+    # @unittest.skip("skipped test_spades_utils_get_hybrid_reads_info")
     def test_spades_utils_get_hybrid_reads_info(self):
         """
         test_spades_utils_get_hybrid_reads_info: given the input parameters,
@@ -560,29 +556,30 @@ class hybrid_SPAdesTest(unittest.TestCase):
                  'lib_type': 'single'}
 
         params1 = {'workspace_name': self.getWsName(),
-                   'single_reads': [libs1],
-                   # 'pairedEnd_reads': [libs2],
-                   # 'mate_pair_reads': [libs3],
-                   # 'pacbio_reads': [libs4],
-                   # 'nanopore_reads': [libs5],
+                   'reads_libraries': [libs1],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
                    'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
         pprint(params1)
-        (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params1)
-        self.assertFalse(se_rds == [])
+        (sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs) \
+            = self.spades_utils.get_hybrid_reads_info(params1)
+        self.assertFalse(sgl_rds == [])
         self.assertTrue(pe_rds == [])
         self.assertTrue(mp_rds == [])
-        self.assertTrue(pb_rds == [])
+        self.assertTrue(pb_ccs == [])
+        self.assertTrue(pb_clr == [])
         self.assertTrue(np_rds == [])
-        self.assertEqual(se_rds[0]['lib_type'], 'single')
-        self.assertEqual(se_rds[0]['reads_ref'], self.staged[rds_name]['ref'])
-        self.assertEqual(se_rds[0]['type'], 'single')
-        self.assertEqual(se_rds[0]['seq_tech'], u'Illumina')
-        self.assertIn(rds_name, se_rds[0]['reads_name'])
-        self.assertIn('single.fastq', se_rds[0]['fwd_file'])
+        self.assertTrue(sgr_rds == [])
+        self.assertTrue(tr_ctgs == [])
+        self.assertTrue(ut_ctgs == [])
+        self.assertEqual(sgl_rds[0]['lib_type'], 'single')
+        self.assertEqual(sgl_rds[0]['reads_ref'], self.staged[rds_name]['ref'])
+        self.assertEqual(sgl_rds[0]['type'], 'single')
+        self.assertEqual(sgl_rds[0]['seq_tech'], u'Illumina')
+        self.assertIn(rds_name, sgl_rds[0]['reads_name'])
+        self.assertIn('single.fastq', sgl_rds[0]['fwd_file'])
 
         # test pairedEnd_cell reads
         dnasrc = dna_src_list[0]
@@ -593,11 +590,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                  'lib_type': 'paired-end'}
 
         params2 = {'workspace_name': self.getWsName(),
-                   # 'single_reads': [libs1],
-                   'pairedEnd_reads': [libs2],
-                   # 'mate_pair_reads': [libs3],
-                   # 'pacbio_reads': [libs4],
-                   # 'nanopore_reads': [libs5],
+                   'reads_libraries': [libs2],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
                    'pipeline_options': pipeline_opts,
@@ -605,11 +598,13 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    }
                   
         pprint(params2)
-        (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params2)
-        self.assertTrue(se_rds == [])
+        (sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs) \
+            = self.spades_utils.get_hybrid_reads_info(params2)
+        self.assertTrue(sgl_rds == [])
         self.assertFalse(pe_rds == [])
         self.assertTrue(mp_rds == [])
-        self.assertTrue(pb_rds == [])
+        self.assertTrue(pb_ccs == [])
+        self.assertTrue(pb_clr == [])
         self.assertTrue(np_rds == [])
         self.assertEqual(pe_rds[0]['lib_type'], 'paired-end')
         self.assertEqual(pe_rds[0]['reads_ref'], self.staged[rds_name]['ref'])
@@ -624,26 +619,27 @@ class hybrid_SPAdesTest(unittest.TestCase):
         dnasrc = dna_src_list[0]
         rds_name2 = 'pacbio'
         output_name = rds_name + '_' + rds_name2 + '_out'
-        libs4 = {'lib_ref': self.staged[rds_name2]['ref'],
-                 'orientation': '',
-                 'lib_type': 'pacbio'}
+        libs4 = {'long_reads_ref': self.staged[rds_name2]['ref'],
+                 'long_reads_type': 'pacbio-clr'}
         params4 = {'workspace_name': self.getWsName(),
-                   # 'single_reads': [libs1],
-                   'pairedEnd_reads': [libs2],
-                   # 'mate_pair_reads': [libs3],
-                   'pacbio_reads': [libs4],
-                   # 'nanopore_reads': [libs5],
+                   'reads_libraries': [libs2],
+                   'long_reads_libraries': [libs4],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
                    'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
         pprint(params4)
-        (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params4)
-        self.assertTrue(se_rds == [])
-        self.assertFalse(pe_rds == [])
+        (sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs) \
+            = self.spades_utils.get_hybrid_reads_info(params4)
+        self.assertTrue(sgl_rds == [])
         self.assertTrue(mp_rds == [])
-        self.assertFalse(pb_rds == [])
+        self.assertTrue(pb_ccs == [])
+        self.assertTrue(sgr_rds == [])
+        self.assertFalse(pe_rds == [])
+        self.assertTrue(tr_ctgs == [])
+        self.assertTrue(ut_ctgs == [])
+        self.assertFalse(pb_clr == [])
         self.assertTrue(np_rds == [])
         self.assertEqual(pe_rds[0]['lib_type'], 'paired-end')
         self.assertEqual(pe_rds[0]['reads_ref'], self.staged[rds_name]['ref'])
@@ -653,16 +649,16 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertIn(rds_name, pe_rds[0]['reads_name'])
         self.assertIn('fwd.fastq', pe_rds[0]['fwd_file'])
         self.assertIn('rev.fastq', pe_rds[0]['rev_file'])
-        self.assertEqual(pb_rds[0]['lib_type'], 'pacbio')
-        self.assertEqual(pb_rds[0]['reads_ref'], self.staged[rds_name2]['ref'])
-        self.assertEqual(pb_rds[0]['type'], 'single')
-        self.assertEqual(pb_rds[0]['seq_tech'], u'PacBio CLR')
+        self.assertEqual(pb_clr[0]['lib_type'], 'pacbio')
+        self.assertEqual(pb_clr[0]['reads_ref'], self.staged[rds_name2]['ref'])
+        self.assertEqual(pb_clr[0]['type'], 'single')
+        self.assertEqual(pb_clr[0]['seq_tech'], u'PacBio CLR')
         self.assertEqual(pe_rds[0]['orientation'], 'fr')
-        self.assertIn(rds_name2, pb_rds[0]['reads_name'])
-        self.assertIn('single.fastq', pb_rds[0]['fwd_file'])
+        self.assertIn(rds_name2, pb_clr[0]['reads_name'])
+        self.assertIn('single.fastq', pb_clr[0]['fwd_file'])
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_spades_utils_construct_yaml_dataset_file")
+    # @unittest.skip("skipped test_spades_utils_construct_yaml_dataset_file")
     def test_spades_utils_construct_yaml_dataset_file(self):
         """
         test_spades_utils_construct_yaml_dataset_file: given different reads libs,
@@ -686,20 +682,16 @@ class hybrid_SPAdesTest(unittest.TestCase):
                  'lib_type': 'single'}
 
         params1 = {'workspace_name': self.getWsName(),
-                   'single_reads': [libs1],
-                   # 'pairedEnd_reads': [libs2],
-                   # 'mate_pair_reads': [libs3],
-                   # 'pacbio_reads': [libs4],
-                   # 'nanopore_reads': [libs5],
+                   'reads_libraries': [libs1],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
                    'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
 
-        (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params1)
         yaml_file = self.spades_utils.construct_yaml_dataset_file(
-            se_rds, pe_rds, mp_rds, pb_rds, np_rds)
+                    self.spades_utils.get_hybrid_reads_info(params1))
+
         print('Yaml data saved to {}'.format(yaml_file))
         yaml_data = []
         try:
@@ -721,19 +713,15 @@ class hybrid_SPAdesTest(unittest.TestCase):
                  'lib_type': 'paired-end'}
 
         params2 = {'workspace_name': self.getWsName(),
-                   # 'single_reads': [libs1],
-                   'pairedEnd_reads': [libs2],
-                   # 'mate_pair_reads': [libs3],
-                   # 'pacbio_reads': [libs4],
-                   # 'nanopore_reads': [libs5],
+                   'reads_libraries': [libs2],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
                    'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
-        (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params2)
+
         yaml_file = self.spades_utils.construct_yaml_dataset_file(
-            se_rds, pe_rds, mp_rds, pb_rds, np_rds)
+                    self.spades_utils.get_hybrid_reads_info(params2))
         print('Yaml data saved to {}'.format(yaml_file))
         yaml_data = []
         try:
@@ -754,23 +742,18 @@ class hybrid_SPAdesTest(unittest.TestCase):
         dnasrc = dna_src_list[0]
         rds_name2 = 'pacbio'
         output_name = rds_name + '_' + rds_name2 + '_out'
-        libs4 = {'lib_ref': self.staged[rds_name2]['ref'],
-                 'orientation': '',
-                 'lib_type': 'pacbio'}
+        libs4 = {'long_reads_ref': self.staged[rds_name2]['ref'],
+                 'long_reads_type': 'pacbio-clr'}
         params4 = {'workspace_name': self.getWsName(),
-                   # 'single_reads': [libs1],
-                   'pairedEnd_reads': [libs2],
-                   # 'mate_pair_reads': [libs3],
-                   'pacbio_reads': [libs4],
-                   # 'nanopore_reads': [libs5],
+                   'reads_libraries': [libs2],
+                   'long_reads_libraries': [libs4],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
                    'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
-        (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = self.spades_utils.get_hybrid_reads_info(params4)
         yaml_file = self.spades_utils.construct_yaml_dataset_file(
-            se_rds, pe_rds, mp_rds, pb_rds, np_rds)
+                    self.spades_utils.get_hybrid_reads_info(params4))
         print('Yaml data saved to {}'.format(yaml_file))
         yaml_data = []
         try:
@@ -792,7 +775,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
             self.assertEqual(yaml_data[1]['type'], 'pacbio')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_spades_utils_run_assemble")
+    # @unittest.skip("skipped test_spades_utils_run_assemble")
     def test_spades_utils_run_assemble(self):
         """
         test_spades_utils_utils_run_assemble: given different yaml_file and params,
@@ -848,6 +831,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                         ]
 
         pipeline_opts = None
+        km_sizes = '21, 33, 55'
 
         # test single_cell reads
         dnasrc = dna_src_list[0]
@@ -858,11 +842,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                  'lib_type': 'single'}
 
         params1 = {'workspace_name': self.getWsName(),
-                   'single_reads': [libs1],
-                   # 'pairedEnd_reads': [libs2],
-                   # 'mate_pair_reads': [libs3],
-                   # 'pacbio_reads': [libs4],
-                   # 'nanopore_reads': [libs5],
+                   'reads_libraries': [libs1],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
                    'pipeline_options': pipeline_opts,
@@ -873,11 +853,10 @@ class hybrid_SPAdesTest(unittest.TestCase):
         spades_assemble_dir = os.path.join(spades_prjdir, 'assemble_results')
         spades_utils = SPAdesUtils(spades_prjdir, self.cfg)
         params1 = spades_utils.check_spades_params(params1)
-        (se_rds, pe_rds, mp_rds, pb_rds, np_rds) = spades_utils.get_hybrid_reads_info(params1)
         single_yaml_file = spades_utils.construct_yaml_dataset_file(
-                                se_rds, pe_rds, mp_rds, pb_rds, np_rds)
+                                spades_utils.get_hybrid_reads_info(params1))
         run_exit_code = 1
-        run_exit_code = spades_utils.run_assemble(single_yaml_file, 'single_cell',
+        run_exit_code = spades_utils.run_assemble(single_yaml_file, km_sizes, 'single_cell',
                                                   params1['basic_options'],
                                                   params1['pipeline_options'])
         print('{} SPAdes assembling returns code= {}'.format(rds_name, run_exit_code))
@@ -922,8 +901,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
             print('Creation of the {} file raised error:\n'.format(yaml_file_path))
             pprint(ioerr)
         else:
-            ecoli_exit_code = self.spades_utils.run_assemble(yaml_file_path, 'single_cell',
-                                                             basic_opts)
+            ecoli_exit_code = self.spades_utils.run_assemble(yaml_file_path, km_sizes,
+                                                             'single_cell', basic_opts)
         spades_prjdir = self.spades_prjdir
         self.assertEqual(ecoli_exit_code, 0)
         self.assertEqual(spades_prjdir, '/kb/module/work/tmp/spades_outputs')
@@ -973,11 +952,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                  'lib_type': 'single'}
 
         params1 = {'workspace_name': self.getWsName(),
-                   'single_reads': [libs1],
-                   # 'pairedEnd_reads': [libs2],
-                   # 'mate_pair_reads': [libs3],
-                   # 'pacbio_reads': [libs4],
-                   # 'nanopore_reads': [libs5],
+                   'reads_libraries': [libs1],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
                    'pipeline_options': pipeline_opts,
@@ -996,11 +971,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                  'lib_type': 'paired-end'}
 
         params2 = {'workspace_name': self.getWsName(),
-                   # 'single_reads': [libs1],
-                   'pairedEnd_reads': [libs2],
-                   # 'mate_pair_reads': [libs3],
-                   # 'pacbio_reads': [libs4],
-                   # 'nanopore_reads': [libs5],
+                   'reads_libraries': [libs2],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
                    'pipeline_options': pipeline_opts,
@@ -1015,16 +986,12 @@ class hybrid_SPAdesTest(unittest.TestCase):
         dnasrc = dna_src_list[0]
         rds_name2 = 'pacbio'
         output_name = rds_name + '_' + rds_name2 + '_out'
-        libs4 = {'lib_ref': self.staged[rds_name2]['ref'],
-                 'orientation': '',
-                 'lib_type': 'pacbio'}
+        libs4 = {'long_reads_ref': self.staged[rds_name2]['ref'],
+                 'long_reads_type': 'pacbio-clr'}
 
         params4 = {'workspace_name': self.getWsName(),
-                   # 'single_reads': [libs1],
-                   'pairedEnd_reads': [libs2],
-                   # 'mate_pair_reads': [libs3],
-                   'pacbio_reads': [libs4],
-                   # 'nanopore_reads': [libs5],
+                   'reads_libraries': [libs2],
+                   'long_reads_libraries': [libs4],
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
                    'pipeline_options': pipeline_opts,

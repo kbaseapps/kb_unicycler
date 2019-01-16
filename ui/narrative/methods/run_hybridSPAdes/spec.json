@@ -167,28 +167,6 @@
               ]
             }
         },
-        {   
-            "id": "pacbio_reads",
-            "optional": true,
-            "advanced": false,
-            "allow_multiple": false,
-            "default_values": [ "" ],
-            "field_type": "text",
-            "text_options": {
-                "valid_ws_types": ["KBaseGenomes.ContigSet","KBaseGenomeAnnotations.Assembly","KBaseAssembly.SingleEndLibrary","KBaseFile.SingleEndLibrary","KBaseAssembly.PairedEndLibrary","KBaseFile.PairedEndLibrary"]
-            }   
-        },  
-        {   
-            "id": "nanopore_reads",
-            "optional": true,
-            "advanced": false,
-            "allow_multiple": false,
-            "default_values": [ "" ],
-            "field_type": "text",
-            "text_options": {
-                "valid_ws_types": ["KBaseGenomes.ContigSet","KBaseGenomeAnnotations.Assembly","KBaseAssembly.SingleEndLibrary","KBaseFile.SingleEndLibrary","KBaseAssembly.PairedEndLibrary","KBaseFile.PairedEndLibrary"]
-            }   
-        },  
         {
             "id": "output_contigset_name",
             "optional": false,
@@ -241,7 +219,7 @@
         "service-mapping": {
             "url": "",
             "name":"kb_SPAdes",
-            "method": "run_HybridSPAde",
+            "method": "run_HybridSPAdes",
             "input_mapping": [
                 {
                     "narrative_system_variable": "workspace",
@@ -270,10 +248,6 @@
                 {
                     "constant_value": 1,
                     "target_property": "create_report"
-                },
-                {            
-                    "constant_value"  : 2,
-                    "target_property" : "num_threads"
                 }
             ],
             "output_mapping": [
@@ -292,10 +266,6 @@
                 {
                     "service_method_output_path": [0],
                     "target_property": "spades_result"
-                },
-                {
-                    "input_parameter": "read_libraries",
-                    "target_property": "input_read_libraries"
                 },
                 {
                     "input_parameter": "output_contigset_name",
