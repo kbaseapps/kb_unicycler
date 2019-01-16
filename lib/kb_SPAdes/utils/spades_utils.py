@@ -63,6 +63,8 @@ class SPAdesUtils:
     # Input parameters
     PARAM_IN_WS = 'workspace_name'
     PARAM_IN_CS_NAME = 'output_contigset_name'
+    PARAM_IN_READS = 'reads_libraries'
+    PARAM_IN_LONG_READS = 'long_reads_libraries'
     PARAM_IN_PAIREDEND_READS = 'pairedEnd_reads'
     PARAM_IN_SINGLE_READS = 'single_reads'
     PARAM_IN_MATEPAIR_READS = 'mate_pair_reads'
@@ -117,7 +119,7 @@ class SPAdesUtils:
                 'seq_tech': sequencing_tech,
                 'reads_ref': KBase object ref for downstream convenience,
                 'reads_name': KBase object name for downstream convenience,
-                'rev_file': path_to_fastq_file, #only if paired end
+                'rev_file': path_to_fastq_file,  # only if paired end
         }
         """
         obj_ids = []

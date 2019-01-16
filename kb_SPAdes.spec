@@ -72,6 +72,11 @@ module kb_SPAdes {
         string lib_type;
     } ReadsParams;
 
+    typedef structure {
+        obj_ref long_reads_ref;
+        string long_reads_type;
+    } LongReadsParams;
+
 
     /*------To run SPAdes 3.13.0 you need at least one library of the following types:------
     1) Illumina paired-end/high-quality mate-pairs/unpaired reads
@@ -80,35 +85,28 @@ module kb_SPAdes {
     workspace_name - the name of the workspace from which to take input
                      and store output.
     output_contigset_name - the name of the output contigset
-    single_reads - a list of Illumina/IonTorrent single reads or unpaired reads from paired library
-    pairedEnd_reads - a list of Illumina/IonTorrent PairedEndLibrary reads
-    mate_pair_reads - a list of Illumina/IonTorrent Mate Pair or unpaired reads
-
-    pacbio_reads - a list of PacBio CLR reads 
-    nanopore_reads - a list of Oxford Nanopore reads
     dna_source - the source of the DNA used for sequencing 'single_cell': DNA
                      amplified from a single cell via MDA anything else: Standard
                      DNA sample from multiple cells. Default value is None.
     pipeline_options - a list of string specifying how the SPAdes pipeline should be run
+    kmer_sizes - (optional) K-mer sizes, Default values: 21, 33, 55, 77, 99, 127
+                     (all values must be odd, less than 128 and listed in ascending order)
+                     In the absence of these values, K values are automatically selected.
     
-    @optional pacbio_reads
-    @optional nanopore_reads
     @optional dna_source
     @optional pipeline_options
+    @optional kmer_sizes
     */
 
     typedef structure {
         string workspace_name;
         string output_contigset_name;
-        list<ReadsParams> single_reads;
-        list<ReadsParams> pairedEnd_reads;
-        list<ReadsParams> mate_pair_reads;
-
-        list<ReadsParams> pacbio_reads;
-        list<ReadsParams> nanopore_reads;
+        list<ReadsParams> reads_libraries;
+        list<LongReadsParams> long_reads_libraries;
 
         string dna_source;
         list<string> pipeline_options;
+        list<int> kmer_sizes;
         bool create_report;
     } HybridSPAdesParams;
 

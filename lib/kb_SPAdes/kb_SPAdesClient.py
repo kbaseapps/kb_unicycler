@@ -80,92 +80,38 @@ class kb_SPAdes(object):
            mate-pairs/unpaired reads 3) PacBio CCS reads workspace_name - the
            name of the workspace from which to take input and store output.
            output_contigset_name - the name of the output contigset
-           single_reads - a list of Illumina/IonTorrent single reads or
-           unpaired reads from paired library pairedEnd_reads - a list of
-           Illumina/IonTorrent PairedEndLibrary reads mate_pair_reads - a
-           list of Illumina/IonTorrent Mate Pair or unpaired reads
-           pacbio_reads - a list of PacBio CLR reads nanopore_reads - a list
-           of Oxford Nanopore reads dna_source - the source of the DNA used
-           for sequencing 'single_cell': DNA amplified from a single cell via
-           MDA anything else: Standard DNA sample from multiple cells.
-           Default value is None. pipeline_options - a list of string
-           specifying how the SPAdes pipeline should be run @optional
-           pacbio_reads @optional nanopore_reads @optional dna_source
-           @optional pipeline_options) -> structure: parameter
-           "workspace_name" of String, parameter "output_contigset_name" of
-           String, parameter "single_reads" of list of type "ReadsParams"
-           (parameter groups--define attributes for specifying inputs with
-           YAML data set file (advanced) The following attributes are
-           available: - orientation ("fr", "rf", "ff") - type ("paired-end",
-           "mate-pairs", "hq-mate-pairs", "single", "pacbio", "nanopore",
-           "sanger", "trusted-contigs", "untrusted-contigs") - interlaced
-           reads (comma-separated list of files with interlaced reads) - left
-           reads (comma-separated list of files with left reads) - right
-           reads (comma-separated list of files with right reads) - single
-           reads (comma-separated list of files with single reads or unpaired
-           reads from paired library) - merged reads (comma-separated list of
-           files with merged reads)) -> structure: parameter "lib_ref" of
-           type "obj_ref" (An X/Y/Z style KBase object reference), parameter
-           "orientation" of String, parameter "lib_type" of String, parameter
-           "pairedEnd_reads" of list of type "ReadsParams" (parameter
-           groups--define attributes for specifying inputs with YAML data set
-           file (advanced) The following attributes are available: -
-           orientation ("fr", "rf", "ff") - type ("paired-end", "mate-pairs",
-           "hq-mate-pairs", "single", "pacbio", "nanopore", "sanger",
-           "trusted-contigs", "untrusted-contigs") - interlaced reads
-           (comma-separated list of files with interlaced reads) - left reads
-           (comma-separated list of files with left reads) - right reads
-           (comma-separated list of files with right reads) - single reads
-           (comma-separated list of files with single reads or unpaired reads
-           from paired library) - merged reads (comma-separated list of files
-           with merged reads)) -> structure: parameter "lib_ref" of type
-           "obj_ref" (An X/Y/Z style KBase object reference), parameter
-           "orientation" of String, parameter "lib_type" of String, parameter
-           "mate_pair_reads" of list of type "ReadsParams" (parameter
-           groups--define attributes for specifying inputs with YAML data set
-           file (advanced) The following attributes are available: -
-           orientation ("fr", "rf", "ff") - type ("paired-end", "mate-pairs",
-           "hq-mate-pairs", "single", "pacbio", "nanopore", "sanger",
-           "trusted-contigs", "untrusted-contigs") - interlaced reads
-           (comma-separated list of files with interlaced reads) - left reads
-           (comma-separated list of files with left reads) - right reads
-           (comma-separated list of files with right reads) - single reads
-           (comma-separated list of files with single reads or unpaired reads
-           from paired library) - merged reads (comma-separated list of files
-           with merged reads)) -> structure: parameter "lib_ref" of type
-           "obj_ref" (An X/Y/Z style KBase object reference), parameter
-           "orientation" of String, parameter "lib_type" of String, parameter
-           "pacbio_reads" of list of type "ReadsParams" (parameter
-           groups--define attributes for specifying inputs with YAML data set
-           file (advanced) The following attributes are available: -
-           orientation ("fr", "rf", "ff") - type ("paired-end", "mate-pairs",
-           "hq-mate-pairs", "single", "pacbio", "nanopore", "sanger",
-           "trusted-contigs", "untrusted-contigs") - interlaced reads
-           (comma-separated list of files with interlaced reads) - left reads
-           (comma-separated list of files with left reads) - right reads
-           (comma-separated list of files with right reads) - single reads
-           (comma-separated list of files with single reads or unpaired reads
-           from paired library) - merged reads (comma-separated list of files
-           with merged reads)) -> structure: parameter "lib_ref" of type
-           "obj_ref" (An X/Y/Z style KBase object reference), parameter
-           "orientation" of String, parameter "lib_type" of String, parameter
-           "nanopore_reads" of list of type "ReadsParams" (parameter
-           groups--define attributes for specifying inputs with YAML data set
-           file (advanced) The following attributes are available: -
-           orientation ("fr", "rf", "ff") - type ("paired-end", "mate-pairs",
-           "hq-mate-pairs", "single", "pacbio", "nanopore", "sanger",
-           "trusted-contigs", "untrusted-contigs") - interlaced reads
-           (comma-separated list of files with interlaced reads) - left reads
-           (comma-separated list of files with left reads) - right reads
-           (comma-separated list of files with right reads) - single reads
-           (comma-separated list of files with single reads or unpaired reads
-           from paired library) - merged reads (comma-separated list of files
-           with merged reads)) -> structure: parameter "lib_ref" of type
-           "obj_ref" (An X/Y/Z style KBase object reference), parameter
-           "orientation" of String, parameter "lib_type" of String, parameter
+           dna_source - the source of the DNA used for sequencing
+           'single_cell': DNA amplified from a single cell via MDA anything
+           else: Standard DNA sample from multiple cells. Default value is
+           None. pipeline_options - a list of string specifying how the
+           SPAdes pipeline should be run kmer_sizes - (optional) K-mer sizes,
+           Default values: 21, 33, 55, 77, 99, 127 (all values must be odd,
+           less than 128 and listed in ascending order) In the absence of
+           these values, K values are automatically selected. @optional
+           dna_source @optional pipeline_options @optional kmer_sizes) ->
+           structure: parameter "workspace_name" of String, parameter
+           "output_contigset_name" of String, parameter "reads_libraries" of
+           list of type "ReadsParams" (parameter groups--define attributes
+           for specifying inputs with YAML data set file (advanced) The
+           following attributes are available: - orientation ("fr", "rf",
+           "ff") - type ("paired-end", "mate-pairs", "hq-mate-pairs",
+           "single", "pacbio", "nanopore", "sanger", "trusted-contigs",
+           "untrusted-contigs") - interlaced reads (comma-separated list of
+           files with interlaced reads) - left reads (comma-separated list of
+           files with left reads) - right reads (comma-separated list of
+           files with right reads) - single reads (comma-separated list of
+           files with single reads or unpaired reads from paired library) -
+           merged reads (comma-separated list of files with merged reads)) ->
+           structure: parameter "lib_ref" of type "obj_ref" (An X/Y/Z style
+           KBase object reference), parameter "orientation" of String,
+           parameter "lib_type" of String, parameter "long_reads_libraries"
+           of list of type "LongReadsParams" -> structure: parameter
+           "long_reads_ref" of type "obj_ref" (An X/Y/Z style KBase object
+           reference), parameter "long_reads_type" of String, parameter
            "dna_source" of String, parameter "pipeline_options" of list of
-           String, parameter "create_report" of type "bool" (A boolean. 0 =
-           false, anything else = true.)
+           String, parameter "kmer_sizes" of list of Long, parameter
+           "create_report" of type "bool" (A boolean. 0 = false, anything
+           else = true.)
         :returns: instance of type "SPAdesOutput" (Output parameters for
            SPAdes run. report_name - the name of the KBaseReport.Report
            workspace object. report_ref - the workspace reference of the

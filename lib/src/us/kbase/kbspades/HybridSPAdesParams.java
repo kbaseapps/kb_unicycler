@@ -22,19 +22,16 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * workspace_name - the name of the workspace from which to take input
  *                  and store output.
  * output_contigset_name - the name of the output contigset
- * single_reads - a list of Illumina/IonTorrent single reads or unpaired reads from paired library
- * pairedEnd_reads - a list of Illumina/IonTorrent PairedEndLibrary reads
- * mate_pair_reads - a list of Illumina/IonTorrent Mate Pair or unpaired reads
- * pacbio_reads - a list of PacBio CLR reads 
- * nanopore_reads - a list of Oxford Nanopore reads
  * dna_source - the source of the DNA used for sequencing 'single_cell': DNA
  *                  amplified from a single cell via MDA anything else: Standard
  *                  DNA sample from multiple cells. Default value is None.
  * pipeline_options - a list of string specifying how the SPAdes pipeline should be run
- * @optional pacbio_reads
- * @optional nanopore_reads
+ * kmer_sizes - (optional) K-mer sizes, Default values: 21, 33, 55, 77, 99, 127
+ *                  (all values must be odd, less than 128 and listed in ascending order)
+ *                  In the absence of these values, K values are automatically selected.
  * @optional dna_source
  * @optional pipeline_options
+ * @optional kmer_sizes
  * </pre>
  * 
  */
@@ -43,13 +40,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "workspace_name",
     "output_contigset_name",
-    "single_reads",
-    "pairedEnd_reads",
-    "mate_pair_reads",
-    "pacbio_reads",
-    "nanopore_reads",
+    "reads_libraries",
+    "long_reads_libraries",
     "dna_source",
     "pipeline_options",
+    "kmer_sizes",
     "create_report"
 })
 public class HybridSPAdesParams {
@@ -58,22 +53,18 @@ public class HybridSPAdesParams {
     private java.lang.String workspaceName;
     @JsonProperty("output_contigset_name")
     private java.lang.String outputContigsetName;
-    @JsonProperty("single_reads")
-    private List<us.kbase.kbspades.ReadsParams> singleReads;
-    @JsonProperty("pairedEnd_reads")
-    private List<us.kbase.kbspades.ReadsParams> pairedEndReads;
-    @JsonProperty("mate_pair_reads")
-    private List<us.kbase.kbspades.ReadsParams> matePairReads;
-    @JsonProperty("pacbio_reads")
-    private List<us.kbase.kbspades.ReadsParams> pacbioReads;
-    @JsonProperty("nanopore_reads")
-    private List<us.kbase.kbspades.ReadsParams> nanoporeReads;
+    @JsonProperty("reads_libraries")
+    private List<ReadsParams> readsLibraries;
+    @JsonProperty("long_reads_libraries")
+    private List<LongReadsParams> longReadsLibraries;
     @JsonProperty("dna_source")
     private java.lang.String dnaSource;
     @JsonProperty("pipeline_options")
     private List<String> pipelineOptions;
+    @JsonProperty("kmer_sizes")
+    private List<Long> kmerSizes;
     @JsonProperty("create_report")
-    private Long createReport;
+    private java.lang.Long createReport;
     private Map<java.lang.String, Object> additionalProperties = new HashMap<java.lang.String, Object>();
 
     @JsonProperty("workspace_name")
@@ -106,78 +97,33 @@ public class HybridSPAdesParams {
         return this;
     }
 
-    @JsonProperty("single_reads")
-    public List<us.kbase.kbspades.ReadsParams> getSingleReads() {
-        return singleReads;
+    @JsonProperty("reads_libraries")
+    public List<ReadsParams> getReadsLibraries() {
+        return readsLibraries;
     }
 
-    @JsonProperty("single_reads")
-    public void setSingleReads(List<us.kbase.kbspades.ReadsParams> singleReads) {
-        this.singleReads = singleReads;
+    @JsonProperty("reads_libraries")
+    public void setReadsLibraries(List<ReadsParams> readsLibraries) {
+        this.readsLibraries = readsLibraries;
     }
 
-    public HybridSPAdesParams withSingleReads(List<us.kbase.kbspades.ReadsParams> singleReads) {
-        this.singleReads = singleReads;
+    public HybridSPAdesParams withReadsLibraries(List<ReadsParams> readsLibraries) {
+        this.readsLibraries = readsLibraries;
         return this;
     }
 
-    @JsonProperty("pairedEnd_reads")
-    public List<us.kbase.kbspades.ReadsParams> getPairedEndReads() {
-        return pairedEndReads;
+    @JsonProperty("long_reads_libraries")
+    public List<LongReadsParams> getLongReadsLibraries() {
+        return longReadsLibraries;
     }
 
-    @JsonProperty("pairedEnd_reads")
-    public void setPairedEndReads(List<us.kbase.kbspades.ReadsParams> pairedEndReads) {
-        this.pairedEndReads = pairedEndReads;
+    @JsonProperty("long_reads_libraries")
+    public void setLongReadsLibraries(List<LongReadsParams> longReadsLibraries) {
+        this.longReadsLibraries = longReadsLibraries;
     }
 
-    public HybridSPAdesParams withPairedEndReads(List<us.kbase.kbspades.ReadsParams> pairedEndReads) {
-        this.pairedEndReads = pairedEndReads;
-        return this;
-    }
-
-    @JsonProperty("mate_pair_reads")
-    public List<us.kbase.kbspades.ReadsParams> getMatePairReads() {
-        return matePairReads;
-    }
-
-    @JsonProperty("mate_pair_reads")
-    public void setMatePairReads(List<us.kbase.kbspades.ReadsParams> matePairReads) {
-        this.matePairReads = matePairReads;
-    }
-
-    public HybridSPAdesParams withMatePairReads(List<us.kbase.kbspades.ReadsParams> matePairReads) {
-        this.matePairReads = matePairReads;
-        return this;
-    }
-
-    @JsonProperty("pacbio_reads")
-    public List<us.kbase.kbspades.ReadsParams> getPacbioReads() {
-        return pacbioReads;
-    }
-
-    @JsonProperty("pacbio_reads")
-    public void setPacbioReads(List<us.kbase.kbspades.ReadsParams> pacbioReads) {
-        this.pacbioReads = pacbioReads;
-    }
-
-    public HybridSPAdesParams withPacbioReads(List<us.kbase.kbspades.ReadsParams> pacbioReads) {
-        this.pacbioReads = pacbioReads;
-        return this;
-    }
-
-    @JsonProperty("nanopore_reads")
-    public List<us.kbase.kbspades.ReadsParams> getNanoporeReads() {
-        return nanoporeReads;
-    }
-
-    @JsonProperty("nanopore_reads")
-    public void setNanoporeReads(List<us.kbase.kbspades.ReadsParams> nanoporeReads) {
-        this.nanoporeReads = nanoporeReads;
-    }
-
-    public HybridSPAdesParams withNanoporeReads(List<us.kbase.kbspades.ReadsParams> nanoporeReads) {
-        this.nanoporeReads = nanoporeReads;
+    public HybridSPAdesParams withLongReadsLibraries(List<LongReadsParams> longReadsLibraries) {
+        this.longReadsLibraries = longReadsLibraries;
         return this;
     }
 
@@ -211,17 +157,32 @@ public class HybridSPAdesParams {
         return this;
     }
 
+    @JsonProperty("kmer_sizes")
+    public List<Long> getKmerSizes() {
+        return kmerSizes;
+    }
+
+    @JsonProperty("kmer_sizes")
+    public void setKmerSizes(List<Long> kmerSizes) {
+        this.kmerSizes = kmerSizes;
+    }
+
+    public HybridSPAdesParams withKmerSizes(List<Long> kmerSizes) {
+        this.kmerSizes = kmerSizes;
+        return this;
+    }
+
     @JsonProperty("create_report")
-    public Long getCreateReport() {
+    public java.lang.Long getCreateReport() {
         return createReport;
     }
 
     @JsonProperty("create_report")
-    public void setCreateReport(Long createReport) {
+    public void setCreateReport(java.lang.Long createReport) {
         this.createReport = createReport;
     }
 
-    public HybridSPAdesParams withCreateReport(Long createReport) {
+    public HybridSPAdesParams withCreateReport(java.lang.Long createReport) {
         this.createReport = createReport;
         return this;
     }
@@ -238,7 +199,7 @@ public class HybridSPAdesParams {
 
     @Override
     public java.lang.String toString() {
-        return ((((((((((((((((((((((("HybridSPAdesParams"+" [workspaceName=")+ workspaceName)+", outputContigsetName=")+ outputContigsetName)+", singleReads=")+ singleReads)+", pairedEndReads=")+ pairedEndReads)+", matePairReads=")+ matePairReads)+", pacbioReads=")+ pacbioReads)+", nanoporeReads=")+ nanoporeReads)+", dnaSource=")+ dnaSource)+", pipelineOptions=")+ pipelineOptions)+", createReport=")+ createReport)+", additionalProperties=")+ additionalProperties)+"]");
+        return ((((((((((((((((((("HybridSPAdesParams"+" [workspaceName=")+ workspaceName)+", outputContigsetName=")+ outputContigsetName)+", readsLibraries=")+ readsLibraries)+", longReadsLibraries=")+ longReadsLibraries)+", dnaSource=")+ dnaSource)+", pipelineOptions=")+ pipelineOptions)+", kmerSizes=")+ kmerSizes)+", createReport=")+ createReport)+", additionalProperties=")+ additionalProperties)+"]");
     }
 
 }

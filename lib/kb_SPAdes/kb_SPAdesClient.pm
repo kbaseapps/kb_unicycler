@@ -240,19 +240,20 @@ $output is a kb_SPAdes.SPAdesOutput
 HybridSPAdesParams is a reference to a hash where the following keys are defined:
 	workspace_name has a value which is a string
 	output_contigset_name has a value which is a string
-	single_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-	pairedEnd_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-	mate_pair_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-	pacbio_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-	nanopore_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
+	reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
+	long_reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.LongReadsParams
 	dna_source has a value which is a string
 	pipeline_options has a value which is a reference to a list where each element is a string
+	kmer_sizes has a value which is a reference to a list where each element is an int
 	create_report has a value which is a kb_SPAdes.bool
 ReadsParams is a reference to a hash where the following keys are defined:
 	lib_ref has a value which is a kb_SPAdes.obj_ref
 	orientation has a value which is a string
 	lib_type has a value which is a string
 obj_ref is a string
+LongReadsParams is a reference to a hash where the following keys are defined:
+	long_reads_ref has a value which is a kb_SPAdes.obj_ref
+	long_reads_type has a value which is a string
 bool is an int
 SPAdesOutput is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
@@ -269,19 +270,20 @@ $output is a kb_SPAdes.SPAdesOutput
 HybridSPAdesParams is a reference to a hash where the following keys are defined:
 	workspace_name has a value which is a string
 	output_contigset_name has a value which is a string
-	single_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-	pairedEnd_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-	mate_pair_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-	pacbio_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-	nanopore_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
+	reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
+	long_reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.LongReadsParams
 	dna_source has a value which is a string
 	pipeline_options has a value which is a reference to a list where each element is a string
+	kmer_sizes has a value which is a reference to a list where each element is an int
 	create_report has a value which is a kb_SPAdes.bool
 ReadsParams is a reference to a hash where the following keys are defined:
 	lib_ref has a value which is a kb_SPAdes.obj_ref
 	orientation has a value which is a string
 	lib_type has a value which is a string
 obj_ref is a string
+LongReadsParams is a reference to a hash where the following keys are defined:
+	long_reads_ref has a value which is a kb_SPAdes.obj_ref
+	long_reads_type has a value which is a string
 bool is an int
 SPAdesOutput is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
@@ -636,6 +638,38 @@ lib_type has a value which is a string
 
 
 
+=head2 LongReadsParams
+
+=over 4
+
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a hash where the following keys are defined:
+long_reads_ref has a value which is a kb_SPAdes.obj_ref
+long_reads_type has a value which is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a hash where the following keys are defined:
+long_reads_ref has a value which is a kb_SPAdes.obj_ref
+long_reads_type has a value which is a string
+
+
+=end text
+
+=back
+
+
+
 =head2 HybridSPAdesParams
 
 =over 4
@@ -651,21 +685,17 @@ lib_type has a value which is a string
 workspace_name - the name of the workspace from which to take input
                  and store output.
 output_contigset_name - the name of the output contigset
-single_reads - a list of Illumina/IonTorrent single reads or unpaired reads from paired library
-pairedEnd_reads - a list of Illumina/IonTorrent PairedEndLibrary reads
-mate_pair_reads - a list of Illumina/IonTorrent Mate Pair or unpaired reads
-
-pacbio_reads - a list of PacBio CLR reads 
-nanopore_reads - a list of Oxford Nanopore reads
 dna_source - the source of the DNA used for sequencing 'single_cell': DNA
                  amplified from a single cell via MDA anything else: Standard
                  DNA sample from multiple cells. Default value is None.
 pipeline_options - a list of string specifying how the SPAdes pipeline should be run
+kmer_sizes - (optional) K-mer sizes, Default values: 21, 33, 55, 77, 99, 127
+                 (all values must be odd, less than 128 and listed in ascending order)
+                 In the absence of these values, K values are automatically selected.
 
-@optional pacbio_reads
-@optional nanopore_reads
 @optional dna_source
 @optional pipeline_options
+@optional kmer_sizes
 
 
 =item Definition
@@ -676,13 +706,11 @@ pipeline_options - a list of string specifying how the SPAdes pipeline should be
 a reference to a hash where the following keys are defined:
 workspace_name has a value which is a string
 output_contigset_name has a value which is a string
-single_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-pairedEnd_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-mate_pair_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-pacbio_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-nanopore_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
+reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
+long_reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.LongReadsParams
 dna_source has a value which is a string
 pipeline_options has a value which is a reference to a list where each element is a string
+kmer_sizes has a value which is a reference to a list where each element is an int
 create_report has a value which is a kb_SPAdes.bool
 
 </pre>
@@ -694,13 +722,11 @@ create_report has a value which is a kb_SPAdes.bool
 a reference to a hash where the following keys are defined:
 workspace_name has a value which is a string
 output_contigset_name has a value which is a string
-single_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-pairedEnd_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-mate_pair_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-pacbio_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-nanopore_reads has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
+reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
+long_reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.LongReadsParams
 dna_source has a value which is a string
 pipeline_options has a value which is a reference to a list where each element is a string
+kmer_sizes has a value which is a reference to a list where each element is an int
 create_report has a value which is a kb_SPAdes.bool
 
 
