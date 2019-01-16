@@ -18,6 +18,7 @@ from pprint import pprint
 import shutil
 import inspect
 
+from Workspace.WorkspaceClient import Workspace as Workspace
 from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
 from kb_SPAdes.utils.spades_utils import SPAdesUtils
 
@@ -51,7 +52,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
         cls.shockURL = cls.cfg['shock-url']
         cls.hs = HandleService(url=cls.cfg['handle-service-url'],
                                token=cls.token)
-        cls.wsClient = workspaceService(cls.wsURL, token=cls.token)
+        # cls.wsClient = workspaceService(cls.wsURL, token=cls.token)
+        cls.wsClient = Workspace(cls.wsURL, token=cls.token)
         wssuffix = int(time.time() * 1000)
         wsName = "test_kb_SPAdes_" + str(wssuffix)
         cls.wsinfo = cls.wsClient.create_workspace({'workspace': wsName})
@@ -301,7 +303,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
     @classmethod
     def setupTestData(cls):
         print('Shock url ' + cls.shockURL)
-        print('WS url ' + cls.wsClient.url)
+        # print('WS url ' + cls.wsClient.url)
         print('Handle service url ' + cls.hs.url)
         print('CPUs detected ' + str(psutil.cpu_count()))
         print('Available memory ' + str(psutil.virtual_memory().available))
@@ -1001,7 +1003,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
                    'pipeline_options': pipeline_opts,
-                   'create_report': 0
+                   'create_report': 1
                    }
 
         ret = self.spades_assembler.run_hybrid_spades(params2)
@@ -1024,7 +1026,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'dna_source': dnasrc,
                    'output_contigset_name': output_name,
                    'pipeline_options': pipeline_opts,
-                   'create_report': 0
+                   'create_report': 1
                    }
         ret = self.spades_assembler.run_hybrid_spades(params4)
         self.assertReportAssembly(ret, output_name)
