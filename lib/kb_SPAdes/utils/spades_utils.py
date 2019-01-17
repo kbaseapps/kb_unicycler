@@ -737,8 +737,8 @@ class SPAdesUtils:
         if pb_clr and type(pb_clr) == list and pb_clr != []:
             single_reads_fqs = []
             pb_type = 'pacbio'  # for long_reads_type = 'pacbio-clr'
-            for ccs in pb_ccs:
-                single_reads_fqs.append(ccs['fwd_file'])
+            for clr in pb_clr:
+                single_reads_fqs.append(clr['fwd_file'])
 
             input_data_set.append({
                 "type": pb_type,
@@ -788,6 +788,10 @@ class SPAdesUtils:
                 "type": ut_type,
                 "single reads": single_reads_fqs
             })
+
+        if input_data_set == []:
+            print('Empty input data set!!')
+            return ''
 
         pprint(input_data_set)
         try:

@@ -596,8 +596,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
-                  
-        pprint(params2)
+
         (sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs) \
             = self.spades_utils.get_hybrid_reads_info(params2)
         self.assertTrue(sgl_rds == [])
@@ -695,8 +694,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
         print('Yaml data saved to {}'.format(yaml_file))
         yaml_data = []
         try:
-            with open(yaml_file, 'r') as yaml_file:
-                yaml_data = json.load(yaml_file)
+            with open(yaml_file, 'r') as yaml_file_hd:
+                yaml_data = json.load(yaml_file_hd)
         except IOError as ioerr:
             print('Loading of the {} file raised error:\n'.format(yaml_file))
             pprint(ioerr)
