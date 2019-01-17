@@ -687,9 +687,10 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
-
+        (sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs) \
+            = self.spades_utils.get_hybrid_reads_info(params1)
         yaml_file = self.spades_utils.construct_yaml_dataset_file(
-                    self.spades_utils.get_hybrid_reads_info(params1))
+                sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs)
 
         print('Yaml data saved to {}'.format(yaml_file))
         yaml_data = []
@@ -719,8 +720,10 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'create_report': 0
                    }
 
+        (sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs) \
+            = self.spades_utils.get_hybrid_reads_info(params2)
         yaml_file = self.spades_utils.construct_yaml_dataset_file(
-                    self.spades_utils.get_hybrid_reads_info(params2))
+                sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs)
         print('Yaml data saved to {}'.format(yaml_file))
         yaml_data = []
         try:
@@ -751,8 +754,10 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'pipeline_options': pipeline_opts,
                    'create_report': 0
                    }
+        (sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs) \
+            = self.spades_utils.get_hybrid_reads_info(params4)
         yaml_file = self.spades_utils.construct_yaml_dataset_file(
-                    self.spades_utils.get_hybrid_reads_info(params4))
+                sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs)
         print('Yaml data saved to {}'.format(yaml_file))
         yaml_data = []
         try:
