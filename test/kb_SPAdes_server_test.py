@@ -379,11 +379,11 @@ class hybrid_SPAdesTest(unittest.TestCase):
         return str(object_info[6]) + '/' + str(object_info[0]) + \
             '/' + str(object_info[4])
 
-    def run_hybrid_success(self, readnames, output_name, expected=None,
-                           contig_count=None, min_contig_length=0, dna_source=None,
-                           kmer_sizes=None, skip_error_correction=0):
-        """
-        run_hybrid_success: The main method to test all possible hybrid input data sets 
+    def run_hybrid_success(self, readnames, output_name, longreadnames=None,
+                           dna_source=None, kmer_sizes=None, orientation='fr',
+                           lib_type='paired-end', long_reads_type='pacbio-clr'):
+        """  
+        run_hybrid_success: The main method to test all possible hybrid input data sets
         """
         test_name = inspect.stack()[1][3]
         print('\n**** starting expected success test: ' + test_name + ' *****')
@@ -392,12 +392,20 @@ class hybrid_SPAdesTest(unittest.TestCase):
         print("READNAMES: " + str(readnames))
         print("STAGED: " + str(self.staged))
 
-        libs = [self.staged[n]['info'][1] for n in readnames]
+        libs = [{'lib_ref': self.staged[n]['ref'],
+                 'orientation': orientation,
+                 'lib_type': lib_type} for n in readnames]
 
         params = {'workspace_name': self.getWsName(),
-                  'read_libraries': libs,
-                  'output_contigset_name': output_name
+                  'reads_libraries': libs,
+                  'output_contigset_name': output_name,
+                  'create_report': 1
                   }
+
+        if longreadnames:
+            long_libs = [{'long_reads_ref': self.staged[n]['ref'],
+                            'long_reads_type': long_reads_type} for n in longreadnames]
+            params['long_reads_libraries'] = long_libs
 
         if not (dna_source is None):
             if dna_source == 'None':
@@ -406,19 +414,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
                 params['dna_source'] = dna_source
 
         ret = self.getImpl().run_HybridSPAdes(self.ctx, params)[0]
-
-        report = self.wsClient.get_objects([{'ref': ret['report_ref']}])[0]
-        self.assertEqual('KBaseReport.Report', report['info'][2].split('-')[0])
-        self.assertEqual(1, len(report['data']['objects_created']))
-        self.assertEqual('Assembled contigs',
-                         report['data']['objects_created'][0]['description'])
-        self.assertIn('Assembled into ', report['data']['text_message'])
-        self.assertIn('contigs', report['data']['text_message'])
-
-        assembly_ref = report['data']['objects_created'][0]['ref']
-        assembly = self.wsClient.get_objects([{'ref': assembly_ref}])[0]
-        self.assertEqual('KBaseGenomeAnnotations.Assembly', assembly['info'][2].split('-')[0])
-        self.assertEqual(output_name, assembly['info'][1])
+        if params.get('create_report', 0) == 1:
+            self.assertReportAssembly(ret, output_name)
 
     def assertReportAssembly(self, ret_obj, assembly_name):
         """
@@ -430,6 +427,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertEqual(1, len(report['data']['objects_created']))
         self.assertEqual('Assembled contigs',
                          report['data']['objects_created'][0]['description'])
+        self.assertIn('Assembled into ', report['data']['text_message'])
+        self.assertIn('contigs', report['data']['text_message'])
 
         assembly_ref = report['data']['objects_created'][0]['ref']
         assembly = self.wsClient.get_objects([{'ref': assembly_ref}])[0]
@@ -444,6 +443,107 @@ class hybrid_SPAdesTest(unittest.TestCase):
         header = {"Authorization": "Oauth {0}".format(self.token)}
         fasta_node = requests.get(self.shockURL + '/node/' + assembly_fasta_node,
                                   headers=header, allow_redirects=True).json()
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_fr_pair_kbfile")
+    def test_fr_pair_kbfile(self):
+
+        self.run_hybrid_success(
+            ['frbasic'], 'frbasic_out')
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_fr_pair_kbassy")
+    def test_fr_pair_kbassy(self):
+
+        self.run_hybrid_success(
+            ['frbasic_kbassy'], 'frbasic_kbassy_out')
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_interlaced_kbfile")
+    def test_interlaced_kbfile(self):
+
+        self.run_hybrid_success(
+            ['intbasic'], 'intbasic_out')
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_interlaced_kbassy")
+    def test_interlaced_kbassy(self):
+
+        self.run_hybrid_success(
+            ['intbasic_kbassy'], 'intbasic_kbassy_out',
+            dna_source='')
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_multiple")
+    def test_multiple(self):
+        self.run_hybrid_success(
+            ['intbasic_kbassy', 'frbasic'], 'multiple_out',
+            dna_source='None')
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_plasmid_kbfile")
+    def test_plasmid_kbfile(self):
+        self.run_hybrid_success(
+            ['plasmid_reads'], 'plasmid_out',
+            dna_source='plasmid')
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_multiple_single")
+    def test_multiple_single(self):
+        self.run_hybrid_success(
+            ['single_end', 'single_end2'], 'multiple_single_out',
+            dna_source='None', lib_type='single')
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_metagenome_kbfile")
+    def test_metagenome_kbfile(self):
+        self.run_hybrid_success(
+            ['meta'], 'metabasic_out',
+            dna_source='metagenomic')
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_multiple_pacbio_single")
+    def test_multiple_pacbio_single(self):
+        self.run_hybrid_success(
+            ['single_end'], 'pacbio_single_out', longreadnames=['pacbio'],
+            lib_type='single', long_reads_type='pacbio-clr', dna_source='None')
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_multiple_pacbio_illumina")
+    def test_multiple_pacbio_illumina(self):
+        self.run_hybrid_success(
+            ['intbasic_kbassy'], 'pacbio_multiple_out', longreadnames=['pacbio'],
+            lib_type='single', long_reads_type='pacbio-clr', dna_source='None')
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_pacbioccs_alone")
+    def test_pacbioccs_alone(self):
+        self.run_hybrid_success(
+            ['pacbioccs'], 'pacbioccs_alone_out', lib_type='single',
+            dna_source='None')
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_pacbioccs_single")
+    def test_pacbioccs_single(self):
+        self.run_hybrid_success(
+            ['single_end'], 'pacbioccs_single_out', longreadnames=['pacbioccs'],
+            lib_type='single', long_reads_type='pacbio-ccs', dna_source='None')
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_multiple_pacbioccs_illumina")
+    def test_multiple_pacbioccs_illumina(self):
+        self.run_hybrid_success(
+            ['intbasic_kbassy'], 'pacbioccs_multiple_out', longreadnames=['pacbioccs'],
+            lib_type='single', long_reads_type='pacbio-ccs', dna_source='None')
+
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_single_reads")
+    def test_single_reads(self):
+        self.run_hybrid_success(
+            ['single_end'], 'single_out',
+            lib_type='single', dna_source='None')
+
+    # ########################End of passed tests######################
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_spades_utils_check_spades_params")

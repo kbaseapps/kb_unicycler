@@ -421,6 +421,16 @@ class SPAdesUtils:
         else:
             params[self.PARAM_IN_PIPELINE_OPTION] = [self.PARAM_IN_CAREFUL]
 
+        if '--meta' in params['basic_options']:
+            # you cannot specify --careful, --mismatch-correction
+            # or --cov-cutoff in metagenomic mode!
+            try:
+                params[self.PARAM_IN_PIPELINE_OPTION].remove(self.PARAM_IN_CAREFUL)
+                params[self.PARAM_IN_PIPELINE_OPTION].remove('mismatch-correction')
+                params[self.PARAM_IN_PIPELINE_OPTION].remove('cov-cutoff')
+            except ValueError:
+                pass
+
         if params.get('create_report', None) is None:
             params['create_report'] = 0
 
@@ -852,10 +862,11 @@ class SPAdesUtils:
             if type(basic_opts) == list and basic_opts != []:
                 a_cmd += basic_opts
 
-            a_cmd += ['--careful']
             if pipeline_opts:
                 if type(pipeline_opts) == list and pipeline_opts != []:
                     for p_opt in pipeline_opts:
+                        if p_opt == self.PARAM_IN_CAREFUL:
+                            a_cmd += ['--careful']
                         if p_opt == self.PARAM_IN_ONLY_ERROR_CORR:
                             a_cmd += ['--only-error-correction']
                         if p_opt == self.PARAM_IN_ONLY_ASSEMBLER:
@@ -864,6 +875,17 @@ class SPAdesUtils:
                             a_cmd += ['--continue']
                         if p_opt == self.PARAM_IN_DISABLE_GZIP:
                             a_cmd += ['--disable-gzip-output']
+
+            # Last check of command options before the call
+            if '--meta' in a_cmd:
+                # you cannot specify --careful, --mismatch-correction
+                # or --cov-cutoff in metagenomic mode!
+                try:
+                    a_cmd.remove(self.PARAM_IN_CAREFUL)
+                    a_cmd.remove('mismatch-correction')
+                    a_cmd.remove('cov-cutoff')
+                except ValueError:
+                    pass
 
             log("The SPAdes assembling command is:\n{}".format(' '.join(a_cmd)))
             assemble_out_dir = os.path.join(self.proj_dir, self.ASSEMBLE_RESULTS_DIR)
