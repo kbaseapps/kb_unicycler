@@ -857,8 +857,12 @@ class hybrid_SPAdesTest(unittest.TestCase):
         spades_assemble_dir = os.path.join(spades_prjdir, 'assemble_results')
         spades_utils = SPAdesUtils(spades_prjdir, self.cfg)
         params1 = spades_utils.check_spades_params(params1)
-        single_yaml_file = spades_utils.construct_yaml_dataset_file(
-                                spades_utils.get_hybrid_reads_info(params1))
+
+        (sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs) \
+            = self.spades_utils.get_hybrid_reads_info(params1)
+        single_yaml_file = self.spades_utils.construct_yaml_dataset_file(
+                sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs)
+
         run_exit_code = 1
         run_exit_code = spades_utils.run_assemble(single_yaml_file, km_sizes, 'single_cell',
                                                   params1['basic_options'],
