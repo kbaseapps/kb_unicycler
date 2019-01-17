@@ -649,7 +649,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertIn(rds_name, pe_rds[0]['reads_name'])
         self.assertIn('fwd.fastq', pe_rds[0]['fwd_file'])
         self.assertIn('rev.fastq', pe_rds[0]['rev_file'])
-        self.assertEqual(pb_clr[0]['lib_type'], 'pacbio')
+        self.assertEqual(pb_clr[0]['long_reads_type'], 'pacbio-clr')
         self.assertEqual(pb_clr[0]['reads_ref'], self.staged[rds_name2]['ref'])
         self.assertEqual(pb_clr[0]['type'], 'single')
         self.assertEqual(pb_clr[0]['seq_tech'], u'PacBio CLR')

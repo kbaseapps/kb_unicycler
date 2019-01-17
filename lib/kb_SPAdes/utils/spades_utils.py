@@ -490,7 +490,7 @@ class SPAdesUtils:
         OR:
         {
                 'fwd_file': path_to_fastq_file,
-                'long_reads_type': ("pacbio_ccs", "pacbio_clr", "nanopore", "sanger",
+                'long_reads_type': ("pacbio-ccs", "pacbio-clr", "nanopore", "sanger",
                                     "trusted-contigs", "untrusted-contigs"),
                 'type': reads_type, # 'interleaved', 'paired', or 'single'
                 'seq_tech': sequencing_tech,
@@ -504,8 +504,8 @@ class SPAdesUtils:
         sgl_rds_data = []  # single
         pe_rds_data = []   # paired-end
         mp_rds_data = []   # mate-pairs
-        pb_ccs_data = []   # pacbio_ccs
-        pb_clr_data = []   # pacbio_clr
+        pb_ccs_data = []   # pacbio-ccs
+        pb_clr_data = []   # pacbio-clr
         np_rds_data = []   # nanopore
         sgr_rds_data = []  # sanger
         tr_ctg_data = []   # trusted-contigs
@@ -547,20 +547,20 @@ class SPAdesUtils:
         # and/or additional contigs
         long_rds_refs = []
         if rds_params.get(self.PARAM_IN_LONG_READS, None):
-            long_rds_libs = rds_params[self.PARAM_IN_READS]
+            long_rds_libs = rds_params[self.PARAM_IN_LONG_READS]
             for lrds_lib in long_rds_libs:
-                if rds_lib.get('lib_ref', None):
-                    long_rds_refs.append(lrds_lib['lib_ref'])
+                if lrds_lib.get('long_reads_ref', None):
+                    long_rds_refs.append(lrds_lib['long_reads_ref'])
             kb_lrds_data = self._get_kbreads_info(wsname, long_rds_refs)
 
             for lrds_lib in long_rds_libs:
                 for kb_ld in kb_lrds_data:
                     if ('long_reads_ref' in lrds_lib and
                             lrds_lib['long_reads_ref'] == kb_ld['reads_ref']):
-                        if lrds_lib['long_reads_type'] == 'pacbio_ccs':
+                        if lrds_lib['long_reads_type'] == 'pacbio-ccs':
                             kb_ld['long_reads_type'] = lrds_lib['long_reads_type']
                             pb_ccs_data.append(kb_ld)
-                        elif lrds_lib['long_reads_type'] == 'pacbio_clr':
+                        elif lrds_lib['long_reads_type'] == 'pacbio-clr':
                             kb_ld['long_reads_type'] = lrds_lib['long_reads_type']
                             pb_clr_data.append(kb_ld)
                         elif lrds_lib['long_reads_type'] == 'nanopore':
@@ -725,7 +725,7 @@ class SPAdesUtils:
 
         if pb_ccs and type(pb_ccs) == list and pb_ccs != []:
             single_reads_fqs = []
-            pb_type = 'single'  # for long_reads_type = 'pacbio_ccs'
+            pb_type = 'single'  # for long_reads_type = 'pacbio-ccs'
             for ccs in pb_ccs:
                 single_reads_fqs.append(ccs['fwd_file'])
 
@@ -736,7 +736,7 @@ class SPAdesUtils:
 
         if pb_clr and type(pb_clr) == list and pb_clr != []:
             single_reads_fqs = []
-            pb_type = 'pacbio'  # for long_reads_type = 'pacbio_clr'
+            pb_type = 'pacbio'  # for long_reads_type = 'pacbio-clr'
             for ccs in pb_ccs:
                 single_reads_fqs.append(ccs['fwd_file'])
 
@@ -759,7 +759,7 @@ class SPAdesUtils:
         if sgr_libs and type(sgr_libs) == list and sgr_libs != []:
             single_reads_fqs = []
             sgr_type = 'sanger'  # for long_reads_type = 'sanger'
-            for srg in sgr_libs:
+            for sgr in sgr_libs:
                 single_reads_fqs.append(sgr['fwd_file'])
 
             input_data_set.append({
@@ -831,7 +831,7 @@ class SPAdesUtils:
             if mem > max_mem:
                 mem = max_mem
 
-            tmpdir = os.path.join(self.scratch, 'spades_tmp_dir')
+            tmpdir = os.path.join(self.proj_dir, 'spades_tmp_dir')
             if not os.path.exists(tmpdir):
                 os.makedirs(tmpdir)
 
