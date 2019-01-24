@@ -1,4 +1,4 @@
-### Version 1.3.4
+### Version 1.1.4
 __Changes__
 - added citations in PLOS format
 
