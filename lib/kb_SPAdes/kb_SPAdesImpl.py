@@ -733,7 +733,7 @@ A coverage cutoff is not specified.
         # return variables are: output
         #BEGIN run_metaSPAdes
 
-        output = self.run_SPAdes(ctx,params)
+        output = self.run_SPAdes(ctx,params)[0]
         #END run_metaSPAdes
 
         # At some point might do deeper type checking...
