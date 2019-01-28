@@ -187,6 +187,24 @@ public class KbSPAdesClient {
         return res.get(0);
     }
 
+    /**
+     * <p>Original spec-file function name: run_metaSPAdes</p>
+     * <pre>
+     * Run SPAdes on paired end libraries for metagenomes
+     * </pre>
+     * @param   params   instance of type {@link us.kbase.kbspades.SPAdesParams SPAdesParams}
+     * @return   parameter "output" of type {@link us.kbase.kbspades.SPAdesOutput SPAdesOutput}
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public SPAdesOutput runMetaSPAdes(SPAdesParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(params);
+        TypeReference<List<SPAdesOutput>> retType = new TypeReference<List<SPAdesOutput>>() {};
+        List<SPAdesOutput> res = caller.jsonrpcCall("kb_SPAdes.run_metaSPAdes", args, retType, true, true, jsonRpcContext, this.serviceVersion);
+        return res.get(0);
+    }
+
     public Map<String, Object> status(RpcContext... jsonRpcContext) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         TypeReference<List<Map<String, Object>>> retType = new TypeReference<List<Map<String, Object>>>() {};
