@@ -133,5 +133,8 @@ module kb_SPAdes {
 
     /* Run HybridSPAdes on paired end libraries with PacBio CLR and Oxford Nanopore reads*/
     funcdef run_HybridSPAdes(HybridSPAdesParams params) returns(SPAdesOutput output)
+
+   /* Run SPAdes on paired end libraries for metagenomes */
+    funcdef run_metaSPAdes(SPAdesParams params) returns(SPAdesOutput output)
         authentication required;
 };

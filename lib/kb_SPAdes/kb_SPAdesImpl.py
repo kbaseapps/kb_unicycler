@@ -59,8 +59,8 @@ A coverage cutoff is not specified.
     # the latter method is running.
     ######################################### noqa
     VERSION = "1.1.4"
-    GIT_URL = "https://github.com/qzzhang/kb_SPAdes"
-    GIT_COMMIT_HASH = "200e649e9bdb54b4e17582472ea931e830969be7"
+    GIT_URL = "https://github.com/bio-boris/kb_SPAdes.git"
+    GIT_COMMIT_HASH = "01fee9f8fa3ba5cb801d4dbd9afdd86f60bce81f"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -748,6 +748,33 @@ A coverage cutoff is not specified.
            "pipeline_options" of list of String, parameter "kmer_sizes" of
            list of Long, parameter "create_report" of type "bool" (A boolean.
            0 = false, anything else = true.)
+    def run_metaSPAdes(self, ctx, params):
+        """
+        Run SPAdes on paired end libraries for metagenomes
+        :param params: instance of type "SPAdesParams" (Input parameters for
+           running SPAdes. workspace_name - the name of the workspace from
+           which to take input and store output. output_contigset_name - the
+           name of the output contigset list<paired_end_lib> read_libraries -
+           Illumina PairedEndLibrary files to assemble. dna_source -
+           (optional) the source of the DNA used for sequencing
+           'single_cell': DNA amplified from a single cell via MDA anything
+           else: Standard DNA sample from multiple cells. Default value is
+           None. min_contig_length - (optional) integer to filter out contigs
+           with length < min_contig_length from the SPAdes output. Default
+           value is 0 implying no filter. kmer_sizes - (optional) K-mer
+           sizes, Default values: 33, 55, 77, 99, 127 (all values must be
+           odd, less than 128 and listed in ascending order) In the absence
+           of these values, K values are automatically selected.
+           skip_error_correction - (optional) Assembly only (No error
+           correction). By default this is disabled.) -> structure: parameter
+           "workspace_name" of String, parameter "output_contigset_name" of
+           String, parameter "read_libraries" of list of type
+           "paired_end_lib" (The workspace object name of a PairedEndLibrary
+           file, whether of the KBaseAssembly or KBaseFile type.), parameter
+           "dna_source" of String, parameter "min_contig_length" of Long,
+           parameter "kmer_sizes" of list of Long, parameter
+           "skip_error_correction" of type "bool" (A boolean. 0 = false,
+           anything else = true.)
         :returns: instance of type "SPAdesOutput" (Output parameters for
            SPAdes run. report_name - the name of the KBaseReport.Report
            workspace object. report_ref - the workspace reference of the
@@ -768,6 +795,14 @@ A coverage cutoff is not specified.
         # At some point might do deeper type checking...
         if not isinstance(output, dict):
             raise ValueError('Method run_HybridSPAdes return value ' +
+        #BEGIN run_metaSPAdes
+
+        output = self.run_SPAdes(ctx,params)[0]
+        #END run_metaSPAdes
+
+        # At some point might do deeper type checking...
+        if not isinstance(output, dict):
+            raise ValueError('Method run_metaSPAdes return value ' +
                              'output is not type dict as required.')
         # return the results
         return [output]

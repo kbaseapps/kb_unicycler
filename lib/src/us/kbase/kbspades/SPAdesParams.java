@@ -16,20 +16,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * <p>Original spec-file type: SPAdesParams</p>
  * <pre>
  * Input parameters for running SPAdes.
- * workspace_name - the name of the workspace from which to take input
- *                  and store output.
- * output_contigset_name - the name of the output contigset
- * read_libraries - a list of Illumina PairedEndLibrary files in FASTQ or BAM format.
- * dna_source - (optional) the source of the DNA used for sequencing 'single_cell': DNA
- *                  amplified from a single cell via MDA anything else: Standard
- *                  DNA sample from multiple cells. Default value is None.
- * min_contig_length - (optional) integer to filter out contigs with length < min_contig_length
- *                  from the SPAdes output. Default value is 0 implying no filter.
- * kmer_sizes - (optional) K-mer sizes, Default values: 33, 55, 77, 99, 127
- *                  (all values must be odd, less than 128 and listed in ascending order)
- *                  In the absence of these values, K values are automatically selected.
- * skip_error_correction - (optional) Assembly only (No error correction).
- *                  By default this is disabled.
+ *     workspace_name - the name of the workspace from which to take input
+ *                      and store output.
+ *     output_contigset_name - the name of the output contigset list<paired_end_lib>
+ *                      read_libraries - Illumina PairedEndLibrary files to assemble.
+ *     dna_source - (optional) the source of the DNA used for sequencing 'single_cell': DNA
+ *                      amplified from a single cell via MDA anything else: Standard
+ *                      DNA sample from multiple cells. Default value is None.
+ *     min_contig_length - (optional) integer to filter out contigs with length < min_contig_length
+ *                      from the SPAdes output. Default value is 0 implying no filter.
+ *     kmer_sizes - (optional) K-mer sizes, Default values: 33, 55, 77, 99, 127
+ *                      (all values must be odd, less than 128 and listed in ascending order)
+ *                      In the absence of these values, K values are automatically selected.
+ *     skip_error_correction - (optional) Assembly only (No error correction).
+ *                      By default this is disabled.
  * </pre>
  * 
  */

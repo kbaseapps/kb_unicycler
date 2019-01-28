@@ -193,6 +193,11 @@ public class KbSPAdesClient {
      * Run HybridSPAdes on paired end libraries with PacBio CLR and Oxford Nanopore reads
      * </pre>
      * @param   params   instance of type {@link us.kbase.kbspades.HybridSPAdesParams HybridSPAdesParams}
+     * <p>Original spec-file function name: run_metaSPAdes</p>
+     * <pre>
+     * Run SPAdes on paired end libraries for metagenomes
+     * </pre>
+     * @param   params   instance of type {@link us.kbase.kbspades.SPAdesParams SPAdesParams}
      * @return   parameter "output" of type {@link us.kbase.kbspades.SPAdesOutput SPAdesOutput}
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
@@ -202,6 +207,11 @@ public class KbSPAdesClient {
         args.add(params);
         TypeReference<List<SPAdesOutput>> retType = new TypeReference<List<SPAdesOutput>>() {};
         List<SPAdesOutput> res = caller.jsonrpcCall("kb_SPAdes.run_HybridSPAdes", args, retType, true, true, jsonRpcContext, this.serviceVersion);
+    public SPAdesOutput runMetaSPAdes(SPAdesParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(params);
+        TypeReference<List<SPAdesOutput>> retType = new TypeReference<List<SPAdesOutput>>() {};
+        List<SPAdesOutput> res = caller.jsonrpcCall("kb_SPAdes.run_metaSPAdes", args, retType, true, true, jsonRpcContext, this.serviceVersion);
         return res.get(0);
     }
 
