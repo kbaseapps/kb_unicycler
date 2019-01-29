@@ -58,9 +58,9 @@ A coverage cutoff is not specified.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "1.1.4"
-    GIT_URL = "https://github.com/bio-boris/kb_SPAdes.git"
-    GIT_COMMIT_HASH = "01fee9f8fa3ba5cb801d4dbd9afdd86f60bce81f"
+    VERSION = "1.1.5"
+    GIT_URL = "https://github.com/qzzhang/kb_SPAdes"
+    GIT_COMMIT_HASH = "5fcf49b3bfa09cdc422902634f93ab955888196c"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -748,14 +748,38 @@ A coverage cutoff is not specified.
            "pipeline_options" of list of String, parameter "kmer_sizes" of
            list of Long, parameter "create_report" of type "bool" (A boolean.
            0 = false, anything else = true.)
+        :returns: instance of type "SPAdesOutput" (Output parameters for
+           SPAdes run. report_name - the name of the KBaseReport.Report
+           workspace object. report_ref - the workspace reference of the
+           report.) -> structure: parameter "report_name" of String,
+           parameter "report_ref" of String
+        """
+        # ctx is the context object
+        # return variables are: output
+        #BEGIN run_HybridSPAdes
+        self.log('Running run_HybridSPAdes with params:\n{}'.format(
+                 json.dumps(params, indent=1)))
+
+        spades_assembler = SPAdesAssembler(self.cfg, ctx.provenance())
+
+        output = spades_assembler.run_hybrid_spades(params)
+        #END run_HybridSPAdes
+
+        # At some point might do deeper type checking...
+        if not isinstance(output, dict):
+            raise ValueError('Method run_HybridSPAdes return value ' +
+                             'output is not type dict as required.')
+        # return the results
+        return [output]
+
     def run_metaSPAdes(self, ctx, params):
         """
         Run SPAdes on paired end libraries for metagenomes
         :param params: instance of type "SPAdesParams" (Input parameters for
            running SPAdes. workspace_name - the name of the workspace from
            which to take input and store output. output_contigset_name - the
-           name of the output contigset list<paired_end_lib> read_libraries -
-           Illumina PairedEndLibrary files to assemble. dna_source -
+           name of the output contigset read_libraries - a list of Illumina
+           PairedEndLibrary files in FASTQ or BAM format. dna_source -
            (optional) the source of the DNA used for sequencing
            'single_cell': DNA amplified from a single cell via MDA anything
            else: Standard DNA sample from multiple cells. Default value is
@@ -783,18 +807,6 @@ A coverage cutoff is not specified.
         """
         # ctx is the context object
         # return variables are: output
-        #BEGIN run_HybridSPAdes
-        self.log('Running run_HybridSPAdes with params:\n{}'.format(
-                 json.dumps(params, indent=1)))
-
-        spades_assembler = SPAdesAssembler(self.cfg, ctx.provenance())
-
-        output = spades_assembler.run_hybrid_spades(params)
-        #END run_HybridSPAdes
-
-        # At some point might do deeper type checking...
-        if not isinstance(output, dict):
-            raise ValueError('Method run_HybridSPAdes return value ' +
         #BEGIN run_metaSPAdes
 
         output = self.run_SPAdes(ctx,params)[0]
