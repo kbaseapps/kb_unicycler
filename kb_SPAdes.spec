@@ -135,7 +135,8 @@ module kb_SPAdes {
     funcdef run_HybridSPAdes(HybridSPAdesParams params) returns(SPAdesOutput output)
         authentication required;
 
-   /* Run SPAdes on paired end libraries for metagenomes */
+    /* Run SPAdes on paired end libraries for metagenomes */
     funcdef run_metaSPAdes(SPAdesParams params) returns(SPAdesOutput output)
         authentication required;
 };
+
