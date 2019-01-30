@@ -1,3 +1,7 @@
+### Version 1.2.0
+__Changes__
+- updated to 3.13 and added hybrid spades feature
+
 ### Version 1.1.4
 __Changes__
 - added citations in PLOS format
