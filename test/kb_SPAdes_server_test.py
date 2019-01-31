@@ -867,3 +867,4 @@ class gaprice_SPAdesTest(unittest.TestCase):
         assembly = self.wsClient.get_objects([{'ref': assembly_ref}])[0]
         self.assertEqual('KBaseGenomeAnnotations.Assembly', assembly['info'][2].split('-')[0])
         self.assertEqual(output_name, assembly['info'][1])
+        

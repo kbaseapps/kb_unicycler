@@ -26,6 +26,8 @@ from kb_quast.kb_quastClient import kb_quast
 from kb_ea_utils.kb_ea_utilsClient import kb_ea_utils
 import time
 
+from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
+
 
 class ShockException(Exception):
     pass
@@ -39,8 +41,8 @@ class kb_SPAdes:
     kb_SPAdes
 
     Module Description:
-    A KBase module: gaprice_SPAdes
-Simple wrapper for the SPAdes assembler.
+    A KBase module: kb_SPAdes
+A wrapper for the SPAdes assembler with hybrid features supported.
 http://bioinf.spbau.ru/spades
 
 Always runs in careful mode.
@@ -56,9 +58,9 @@ A coverage cutoff is not specified.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "1.1.4"
-    GIT_URL = "https://github.com/bio-boris/kb_SPAdes.git"
-    GIT_COMMIT_HASH = "01fee9f8fa3ba5cb801d4dbd9afdd86f60bce81f"
+    VERSION = "1.1.5"
+    GIT_URL = "https://github.com/qzzhang/kb_SPAdes"
+    GIT_COMMIT_HASH = "5fcf49b3bfa09cdc422902634f93ab955888196c"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -518,7 +520,9 @@ A coverage cutoff is not specified.
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
         self.cfg = config
-        self.callbackURL = os.environ['SDK_CALLBACK_URL']
+        self.cfg['SDK_CALLBACK_URL'] = os.environ['SDK_CALLBACK_URL']
+        self.cfg['KB_AUTH_TOKEN'] = os.environ['KB_AUTH_TOKEN']
+        self.callbackURL = self.cfg['SDK_CALLBACK_URL']
         self.log('Callback URL: ' + self.callbackURL)
         self.workspaceURL = config[self.URL_WS]
         self.shockURL = config[self.URL_SHOCK]
@@ -536,8 +540,8 @@ A coverage cutoff is not specified.
         :param params: instance of type "SPAdesParams" (Input parameters for
            running SPAdes. workspace_name - the name of the workspace from
            which to take input and store output. output_contigset_name - the
-           name of the output contigset list<paired_end_lib> read_libraries -
-           Illumina PairedEndLibrary files to assemble. dna_source -
+           name of the output contigset read_libraries - a list of Illumina
+           PairedEndLibrary files in FASTQ or BAM format. dna_source -
            (optional) the source of the DNA used for sequencing
            'single_cell': DNA amplified from a single cell via MDA anything
            else: Standard DNA sample from multiple cells. Default value is
@@ -696,14 +700,86 @@ A coverage cutoff is not specified.
         # return the results
         return [output]
 
+    def run_HybridSPAdes(self, ctx, params):
+        """
+        Run HybridSPAdes on paired end libraries with PacBio CLR and Oxford Nanopore reads
+        :param params: instance of type "HybridSPAdesParams" (------To run
+           SPAdes 3.13.0 you need at least one library of the following
+           types:------ 1) Illumina paired-end/high-quality
+           mate-pairs/unpaired reads 2) IonTorrent paired-end/high-quality
+           mate-pairs/unpaired reads 3) PacBio CCS reads Version 3.13.0 of
+           SPAdes supports paired-end reads, mate-pairs and unpaired reads.
+           SPAdes can take as input several paired-end and mate-pair
+           libraries simultaneously. workspace_name - the name of the
+           workspace from which to take input and store output.
+           output_contigset_name - the name of the output contigset
+           read_libraries - a list of Illumina or IonTorrent
+           paired-end/high-quality mate-pairs/unpaired reads
+           long_reads_libraries - a list of PacBio, Oxford Nanopore Sanger
+           reads and/or additional contigs dna_source - the source of the DNA
+           used for sequencing 'single_cell': DNA amplified from a single
+           cell via MDA anything else: Standard DNA sample from multiple
+           cells. Default value is None. pipeline_options - a list of string
+           specifying how the SPAdes pipeline should be run kmer_sizes -
+           (optional) K-mer sizes, Default values: 21, 33, 55, 77, 99, 127
+           (all values must be odd, less than 128 and listed in ascending
+           order) In the absence of these values, K values are automatically
+           selected. @optional dna_source @optional pipeline_options
+           @optional kmer_sizes) -> structure: parameter "workspace_name" of
+           String, parameter "output_contigset_name" of String, parameter
+           "reads_libraries" of list of type "ReadsParams" (parameter
+           groups--define attributes for specifying inputs with YAML data set
+           file (advanced) The following attributes are available: -
+           orientation ("fr", "rf", "ff") - type ("paired-end", "mate-pairs",
+           "hq-mate-pairs", "single", "pacbio", "nanopore", "sanger",
+           "trusted-contigs", "untrusted-contigs") - interlaced reads
+           (comma-separated list of files with interlaced reads) - left reads
+           (comma-separated list of files with left reads) - right reads
+           (comma-separated list of files with right reads) - single reads
+           (comma-separated list of files with single reads or unpaired reads
+           from paired library) - merged reads (comma-separated list of files
+           with merged reads)) -> structure: parameter "lib_ref" of type
+           "obj_ref" (An X/Y/Z style KBase object reference), parameter
+           "orientation" of String, parameter "lib_type" of String, parameter
+           "long_reads_libraries" of list of type "LongReadsParams" ->
+           structure: parameter "long_reads_ref" of type "obj_ref" (An X/Y/Z
+           style KBase object reference), parameter "long_reads_type" of
+           String, parameter "dna_source" of String, parameter
+           "pipeline_options" of list of String, parameter "kmer_sizes" of
+           list of Long, parameter "create_report" of type "bool" (A boolean.
+           0 = false, anything else = true.)
+        :returns: instance of type "SPAdesOutput" (Output parameters for
+           SPAdes run. report_name - the name of the KBaseReport.Report
+           workspace object. report_ref - the workspace reference of the
+           report.) -> structure: parameter "report_name" of String,
+           parameter "report_ref" of String
+        """
+        # ctx is the context object
+        # return variables are: output
+        #BEGIN run_HybridSPAdes
+        self.log('Running run_HybridSPAdes with params:\n{}'.format(
+                 json.dumps(params, indent=1)))
+
+        spades_assembler = SPAdesAssembler(self.cfg, ctx.provenance())
+
+        output = spades_assembler.run_hybrid_spades(params)
+        #END run_HybridSPAdes
+
+        # At some point might do deeper type checking...
+        if not isinstance(output, dict):
+            raise ValueError('Method run_HybridSPAdes return value ' +
+                             'output is not type dict as required.')
+        # return the results
+        return [output]
+
     def run_metaSPAdes(self, ctx, params):
         """
         Run SPAdes on paired end libraries for metagenomes
         :param params: instance of type "SPAdesParams" (Input parameters for
            running SPAdes. workspace_name - the name of the workspace from
            which to take input and store output. output_contigset_name - the
-           name of the output contigset list<paired_end_lib> read_libraries -
-           Illumina PairedEndLibrary files to assemble. dna_source -
+           name of the output contigset read_libraries - a list of Illumina
+           PairedEndLibrary files in FASTQ or BAM format. dna_source -
            (optional) the source of the DNA used for sequencing
            'single_cell': DNA amplified from a single cell via MDA anything
            else: Standard DNA sample from multiple cells. Default value is
