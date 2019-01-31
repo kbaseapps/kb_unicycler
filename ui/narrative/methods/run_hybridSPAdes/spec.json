@@ -3,7 +3,7 @@
     "authors": [
         "qzhang"
     ],
-    "contact": "help@kbase.us",
+    "contact": "http://kbase.us/contact-us/",
     "categories": ["active", "assembly"],
     "widgets": {
         "input": null,
@@ -35,7 +35,7 @@
         {
             "id": "lib_type",
             "optional": false,
-            "advanced": false,
+            "advanced": true,
             "allow_multiple": false,
             "default_values": [ "single" ],
             "field_type": "dropdown",
@@ -184,10 +184,10 @@
             "optional": true,
             "advanced": true,
             "allow_multiple": true,
-            "default_values": ["21, 33, 55"],
+            "default_values": [],
             "field_type": "text",
             "text_options": {
-                "validate_as" : "text"
+                "validate_as" : "int"
             }
         }
     ],
