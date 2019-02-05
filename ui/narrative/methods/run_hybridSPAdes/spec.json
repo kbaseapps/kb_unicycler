@@ -105,10 +105,10 @@
         },
         {
             "id": "dna_source",
-            "optional": false,
-            "advanced": false,
+            "optional": true,
+            "advanced": true,
             "allow_multiple": false,
-            "default_values": ["single_cell"],
+            "default_values": [],
             "field_type" : "dropdown",
             "dropdown_options":{
             "options": [
