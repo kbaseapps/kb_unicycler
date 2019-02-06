@@ -3,7 +3,7 @@
 #
 name: Assemble with HybridSPAdes - v3.13.0
 tooltip: |
-    Assemble reads using the SPAdes assembler.
+    Assemble reads using the HybridSPAdes assembler.
 screenshots: []
 
 icon: spades.png

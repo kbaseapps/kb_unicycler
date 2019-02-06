@@ -729,88 +729,88 @@ class SPAdesUtils:
         run_assemble: run the SPAdes assemble with given input parameters/options
         """
         exit_code = 1
-        if os.path.isfile(yaml_file):
-            log("The input data set yaml file exists at {}\n".format(yaml_file))
-            yf_dir, yf_nm = os.path.split(yaml_file)
+        if not os.path.isfile(yaml_file):
+            log("The input data set yaml file DOES NOT exist at {}\n".format(yaml_file))
+            return exit_code
 
-            mem = (psutil.virtual_memory().available / self.GB - self.MEMORY_OFFSET_GB)
-            if mem < self.MIN_MEMORY_GB:
-                raise ValueError(
-                    'Only ' + str(psutil.virtual_memory().available) +
-                    ' bytes of memory are available. The SPAdes wrapper will' +
-                    ' not run without at least ' +
-                    str(self.MIN_MEMORY_GB + self.MEMORY_OFFSET_GB) +
-                    ' gigabytes available')
+        log("The input data set yaml file exists at {}\n".format(yaml_file))
+        yf_dir, yf_nm = os.path.split(yaml_file)
 
-            if dna_source and dna_source == self.PARAM_IN_METAGENOME:
-                max_mem = self.MAX_MEMORY_GB_META_SPADES
-                max_threads = self.MAX_THREADS_META
-            else:
-                max_mem = self.MAX_MEMORY_GB_SPADES
-                max_threads = self.MAX_THREADS
+        mem = (psutil.virtual_memory().available / self.GB - self.MEMORY_OFFSET_GB)
+        if mem < self.MIN_MEMORY_GB:
+            raise ValueError(
+                'Only ' + str(psutil.virtual_memory().available) +
+                ' bytes of memory are available. The SPAdes wrapper will' +
+                ' not run without at least ' +
+                str(self.MIN_MEMORY_GB + self.MEMORY_OFFSET_GB) +
+                ' gigabytes available')
 
-            threads = min(max_threads, psutil.cpu_count() * self.THREADS_PER_CORE)
-
-            if mem > max_mem:
-                mem = max_mem
-
-            tmpdir = os.path.join(self.proj_dir, 'spades_tmp_dir')
-            if not os.path.exists(tmpdir):
-                os.makedirs(tmpdir)
-
-            a_cmd = [os.path.join(self.SPADES_BIN, 'spades.py')]
-            a_cmd += ['--threads', str(threads), '--memory', str(mem)]
-            a_cmd += ['--tmp-dir', tmpdir]
-            a_cmd += ['--dataset', yaml_file]
-
-            if kmer_sizes is not None:
-                a_cmd += ['-k ' + kmer_sizes]
-
-            if basic_opts is None:
-                basic_opts = ['-o', self.ASSEMBLE_RESULTS_DIR]
-            if isinstance(basic_opts, list):
-                a_cmd += basic_opts
-
-            if pipeline_opts and isinstance(pipeline_opts, list):
-                for p_opt in pipeline_opts:
-                    if p_opt == self.PARAM_IN_CAREFUL:
-                        a_cmd += ['--careful']
-                    if p_opt == self.PARAM_IN_ONLY_ERROR_CORR:
-                        a_cmd += ['--only-error-correction']
-                    if p_opt == self.PARAM_IN_ONLY_ASSEMBLER:
-                        a_cmd += ['--only-assembler']
-                    if p_opt == self.PARAM_IN_CONTINUE:
-                        a_cmd += ['--continue']
-                    if p_opt == self.PARAM_IN_DISABLE_GZIP:
-                        a_cmd += ['--disable-gzip-output']
-
-            # Last check of command options before the call
-            if '--meta' in a_cmd:
-                # you cannot specify --careful, --mismatch-correction
-                # or --cov-cutoff in metagenomic mode!
-                try:
-                    a_cmd.remove(self.PARAM_IN_CAREFUL)
-                    a_cmd.remove('mismatch-correction')
-                    a_cmd.remove('cov-cutoff')
-                except ValueError:
-                    pass
-
-            log("The SPAdes assembling command is:\n{}".format(' '.join(a_cmd)))
-            assemble_out_dir = os.path.join(self.proj_dir, self.ASSEMBLE_RESULTS_DIR)
-            if not os.path.exists(assemble_out_dir):
-                os.makedirs(assemble_out_dir)
-
-            p = subprocess.Popen(a_cmd, cwd=yf_dir, shell=False)
-            exit_code = p.wait()
-            log('Return code: ' + str(exit_code))
-
-            if p.returncode != 0:
-                raise ValueError('Error running spades.py, return code: ' +
-                                 str(p.returncode) + '\n')
-            else:
-                exit_code = p.returncode
+        if dna_source and dna_source == self.PARAM_IN_METAGENOME:
+            max_mem = self.MAX_MEMORY_GB_META_SPADES
+            max_threads = self.MAX_THREADS_META
         else:
-            log("The input data set yaml file {} is not found.".format(yaml_file))
+            max_mem = self.MAX_MEMORY_GB_SPADES
+            max_threads = self.MAX_THREADS
+
+        threads = min(max_threads, psutil.cpu_count() * self.THREADS_PER_CORE)
+
+        if mem > max_mem:
+            mem = max_mem
+
+        tmpdir = os.path.join(self.proj_dir, 'spades_tmp_dir')
+        if not os.path.exists(tmpdir):
+            os.makedirs(tmpdir)
+
+        a_cmd = [os.path.join(self.SPADES_BIN, 'spades.py')]
+        a_cmd += ['--threads', str(threads), '--memory', str(mem)]
+        a_cmd += ['--tmp-dir', tmpdir]
+        a_cmd += ['--dataset', yaml_file]
+
+        if kmer_sizes is not None:
+            a_cmd += ['-k ' + kmer_sizes]
+
+        if basic_opts is None:
+            basic_opts = ['-o', self.ASSEMBLE_RESULTS_DIR]
+        if isinstance(basic_opts, list):
+            a_cmd += basic_opts
+
+        if pipeline_opts and isinstance(pipeline_opts, list):
+            for p_opt in pipeline_opts:
+                if p_opt == self.PARAM_IN_CAREFUL:
+                    a_cmd += ['--careful']
+                if p_opt == self.PARAM_IN_ONLY_ERROR_CORR:
+                    a_cmd += ['--only-error-correction']
+                if p_opt == self.PARAM_IN_ONLY_ASSEMBLER:
+                    a_cmd += ['--only-assembler']
+                if p_opt == self.PARAM_IN_CONTINUE:
+                    a_cmd += ['--continue']
+                if p_opt == self.PARAM_IN_DISABLE_GZIP:
+                    a_cmd += ['--disable-gzip-output']
+
+        # Last check of command options before the call
+        if '--meta' in a_cmd:
+            # you cannot specify --careful, --mismatch-correction
+            # or --cov-cutoff in metagenomic mode!
+            try:
+                a_cmd.remove(self.PARAM_IN_CAREFUL)
+                a_cmd.remove('mismatch-correction')
+                a_cmd.remove('cov-cutoff')
+            except ValueError:
+                pass
+
+        log("**************The HybridSPAdes assembling command is:\n{}".format(' '.join(a_cmd)))
+        assemble_out_dir = os.path.join(self.proj_dir, self.ASSEMBLE_RESULTS_DIR)
+        if not os.path.exists(assemble_out_dir):
+            os.makedirs(assemble_out_dir)
+
+        p = subprocess.Popen(a_cmd, cwd=yf_dir, shell=False)
+        exit_code = p.wait()
+        log('Return code: ' + str(exit_code))
+
+        if p.returncode != 0:
+            raise ValueError('Error running spades.py, return code: ' + str(p.returncode) + '\n')
+        else:
+            exit_code = p.returncode
         return exit_code
 
     def save_assembly(self, contig_fa, wsname, a_name):
