@@ -445,28 +445,28 @@ class hybrid_SPAdesTest(unittest.TestCase):
                                   headers=header, allow_redirects=True).json()
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_fr_pair_kbfile")
+    # @unittest.skip("skipped test_fr_pair_kbfile")
     def test_fr_pair_kbfile(self):
 
         self.run_hybrid_success(
             ['frbasic'], 'frbasic_out')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_fr_pair_kbassy")
+    # @unittest.skip("skipped test_fr_pair_kbassy")
     def test_fr_pair_kbassy(self):
 
         self.run_hybrid_success(
             ['frbasic_kbassy'], 'frbasic_kbassy_out')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_interlaced_kbfile")
+    # @unittest.skip("skipped test_interlaced_kbfile")
     def test_interlaced_kbfile(self):
 
         self.run_hybrid_success(
             ['intbasic'], 'intbasic_out')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_interlaced_kbassy")
+    # @unittest.skip("skipped test_interlaced_kbassy")
     def test_interlaced_kbassy(self):
 
         self.run_hybrid_success(
@@ -474,63 +474,63 @@ class hybrid_SPAdesTest(unittest.TestCase):
             dna_source='')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_multiple")
+    # @unittest.skip("skipped test_multiple")
     def test_multiple(self):
         self.run_hybrid_success(
             ['intbasic_kbassy', 'frbasic'], 'multiple_out',
             dna_source='None')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_plasmid_kbfile")
+    # @unittest.skip("skipped test_plasmid_kbfile")
     def test_plasmid_kbfile(self):
         self.run_hybrid_success(
             ['plasmid_reads'], 'plasmid_out',
             dna_source='plasmid')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_multiple_single")
+    # @unittest.skip("skipped test_multiple_single")
     def test_multiple_single(self):
         self.run_hybrid_success(
             ['single_end', 'single_end2'], 'multiple_single_out',
             dna_source='None', lib_type='single')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_metagenome_kbfile")
+    # @unittest.skip("skipped test_metagenome_kbfile")
     def test_metagenome_kbfile(self):
         self.run_hybrid_success(
             ['meta'], 'metabasic_out',
             dna_source='metagenomic')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_multiple_pacbio_single")
+    # @unittest.skip("skipped test_multiple_pacbio_single")
     def test_multiple_pacbio_single(self):
         self.run_hybrid_success(
             ['single_end'], 'pacbio_single_out', longreadnames=['pacbio'],
             lib_type='single', long_reads_type='pacbio-clr', dna_source='None')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_multiple_pacbio_illumina")
+    # @unittest.skip("skipped test_multiple_pacbio_illumina")
     def test_multiple_pacbio_illumina(self):
         self.run_hybrid_success(
             ['intbasic_kbassy'], 'pacbio_multiple_out', longreadnames=['pacbio'],
             lib_type='single', long_reads_type='pacbio-clr', dna_source='None')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_pacbioccs_alone")
+    # @unittest.skip("skipped test_pacbioccs_alone")
     def test_pacbioccs_alone(self):
         self.run_hybrid_success(
             ['pacbioccs'], 'pacbioccs_alone_out', lib_type='single',
             dna_source='None')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_pacbioccs_single")
+    # @unittest.skip("skipped test_pacbioccs_single")
     def test_pacbioccs_single(self):
         self.run_hybrid_success(
             ['single_end'], 'pacbioccs_single_out', longreadnames=['pacbioccs'],
             lib_type='single', long_reads_type='pacbio-ccs', dna_source='None')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_multiple_pacbioccs_illumina")
+    # @unittest.skip("skipped test_multiple_pacbioccs_illumina")
     def test_multiple_pacbioccs_illumina(self):
         self.run_hybrid_success(
             ['intbasic_kbassy'], 'pacbioccs_multiple_out', longreadnames=['pacbioccs'],

@@ -34,7 +34,6 @@ class SPAdesAssembler(object):
     PARAM_IN_CS_NAME = 'output_contigset_name'
     SPAdes_PROJECT_DIR = 'spades_project_dir'
     SPAdes_final_scaffolds = 'scaffolds.fasta'  # resulting scaffolds sequences
-    SPAdes_final_contigs = 'contigs.fasta'  # resulting contigs
 
     def __init__(self, config, provenance):
         """
@@ -144,4 +143,4 @@ class SPAdesAssembler(object):
             assemble_ok = -1
 
         # 5. save the assembly to KBase and, if everything has gone well, create a report
-        return self._save_assembly(validated_params, assemble_ok, self.SPAdes_final_contigs)
+        return self._save_assembly(validated_params, assemble_ok)
