@@ -75,7 +75,6 @@ class hybrid_SPAdesTest(unittest.TestCase):
         cls.nodes_to_delete = []
         cls.handles_to_delete = []
         cls.setupTestData()
-        cls.setupHybridTestData()
         print('\n\n=============== Starting HybridSPAdes tests ==================')
 
     @classmethod
@@ -376,31 +375,6 @@ class hybrid_SPAdesTest(unittest.TestCase):
         print('Data staged.')
 
     @classmethod
-    def setupHybridTestData(cls):
-        print('Shock url ' + cls.shockURL)
-        # print('WS url ' + cls.wsClient.url)
-        print('Handle service url ' + cls.hs.url)
-        print('CPUs detected ' + str(psutil.cpu_count()))
-        print('Available memory ' + str(psutil.virtual_memory().available))
-        print('staging data')
-
-        # get file type from type
-        L8_reads = {'file': 'data/L8_Pig_Type2_ATGTAAGT.inter.fastq',
-                    'name': '',
-                    'type': ''}
-
-        # get nanopore reads
-        L8_np_reads = {'file': 'data/L8_Pig_Type2_BC03.single.fastq',
-                       'name': '',
-                       'type': ''}
-
-        cls.upload_reads('L8paired', {'single_genome': 1}, L8_reads)
-        cls.upload_reads('L8nanopore', {'single_genome': 1}, L8_np_reads,
-                         single_end=True, sequencing_tech="nanopore")
-
-        print('Hybrid data staged.')
-
-    @classmethod
     def make_ref(self, object_info):
         return str(object_info[6]) + '/' + str(object_info[0]) + \
             '/' + str(object_info[4])
@@ -568,13 +542,6 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.run_hybrid_success(
             ['single_end'], 'single_out',
             lib_type='single', dna_source='None')
-
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_L8_reads")
-    def test_L8_reads(self):
-        self.run_hybrid_success(
-            ['L8paired'], 'nanopore_multiple_out', longreadnames=['L8nanopore'],
-            lib_type='paired-end', long_reads_type='nanopore', dna_source='None')
 
     # ########################End of passed tests######################
 
@@ -1000,7 +967,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         run_exit_code = spades_utils.run_assemble(single_yaml_file, km_sizes, 'single_cell',
                                                   params1['basic_options'],
                                                   params1['pipeline_options'])
-        print('{} SPAdes assembling returns code= {}'.format(rds_name, run_exit_code))
+        print('{} HybridSPAdes assembling returns code= {}'.format(rds_name, run_exit_code))
         self.assertEqual(run_exit_code, 0)
         self.assertEqual(spades_prjdir, '/kb/module/work/tmp/spades_outputs/single_end')
         self.assertTrue(os.path.isdir(os.path.join(spades_assemble_dir, 'K21')))

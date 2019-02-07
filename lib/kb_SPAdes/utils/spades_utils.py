@@ -98,8 +98,8 @@ class SPAdesUtils:
             self.handle_url = config['handle-service-url']
 
         self.ws_client = Workspace(self.workspace_url, token=self.token)
-        self.ru = ReadsUtils(self.callback_url, token=self.token)
-        self.au = AssemblyUtil(self.callback_url, token=self.token)
+        self.ru = ReadsUtils(self.callback_url, token=self.token, service_ver='release')
+        self.au = AssemblyUtil(self.callback_url, token=self.token, service_ver='release')
         self.kbr = KBaseReport(self.callback_url)
         self.kbq = kb_quast(self.callback_url)
         self.proj_dir = prj_dir
@@ -400,17 +400,17 @@ class SPAdesUtils:
 
         return params
 
-    def generate_report(self, contig_file_name, params, out_dir, wsname):
+    def generate_report(self, fa_file_name, params, out_dir, wsname):
         """
         Generating and saving report
         """
         log('Generating and saving report')
 
-        contig_file_with_path = os.path.join(out_dir, contig_file_name)
-        fasta_stats = self._load_stats(contig_file_with_path)
+        fa_file_with_path = os.path.join(out_dir, fa_file_name)
+        fasta_stats = self._load_stats(fa_file_with_path)
         lengths = [fasta_stats[contig_id] for contig_id in fasta_stats]
 
-        assembly_ref = params[self.PARAM_IN_WS] + '/' + params[self.PARAM_IN_CS_NAME]
+        assembly_ref = wsname + '/' + params[self.PARAM_IN_CS_NAME]
 
         report_text = ''
         report_text += 'SPAdes results saved to: ' + wsname + '/' + out_dir + '\n'
@@ -427,7 +427,7 @@ class SPAdesUtils:
                             str(edges[c + 1]) + ' bp\n')
         print('Running QUAST')
         quastret = self.kbq.run_QUAST(
-            {'files': [{'path': contig_file_with_path, 'label': params[self.PARAM_IN_CS_NAME]}]})
+            {'files': [{'path': fa_file_with_path, 'label': params[self.PARAM_IN_CS_NAME]}]})
 
         output_files = self._generate_output_file_list(out_dir)
 
@@ -813,17 +813,24 @@ class SPAdesUtils:
             exit_code = p.returncode
         return exit_code
 
-    def save_assembly(self, contig_fa, wsname, a_name):
+    def save_assembly(self, fa_file_path, wsname, a_name, min_ctg_length=0):
         """
         save_assembly: save the assembly to KBase workspace
         """
-        if os.path.isfile(contig_fa):
+        if os.path.isfile(fa_file_path):
             log('Uploading FASTA file to Assembly...')
-            self.au.save_assembly_from_fasta(
-                            {'file': {'path': contig_fa},
+            if min_ctg_length > 0:
+                self.au.save_assembly_from_fasta(
+                            {'file': {'path': fa_file_path},
+                             'workspace_name': wsname,
+                             'assembly_name': a_name,
+                             'min_contig_length': min_ctg_length})
+            else:
+                self.au.save_assembly_from_fasta(
+                            {'file': {'path': fa_file_path},
                              'workspace_name': wsname,
                              'assembly_name': a_name})
         else:
-            log("The contig file {} is not found.".format(contig_fa))
+            log("The resulting sequence file {} is not found.".format(fa_file_path))
 
     # end of public methods

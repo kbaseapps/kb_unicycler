@@ -33,7 +33,7 @@ class SPAdesAssembler(object):
 
     PARAM_IN_CS_NAME = 'output_contigset_name'
     SPAdes_PROJECT_DIR = 'spades_project_dir'
-    SPAdes_final_scaffold_sequences = 'scaffolds.fasta'  # resulting scaffolds sequences
+    SPAdes_final_scaffolds = 'scaffolds.fasta'  # resulting scaffolds sequences
     SPAdes_final_contigs = 'contigs.fasta'  # resulting contigs
 
     def __init__(self, config, provenance):
@@ -57,7 +57,7 @@ class SPAdesAssembler(object):
         # END_CONSTRUCTOR
         pass
 
-    def _save_assembly(self, params, asmbl_ok, contig_fa_file):
+    def _save_assembly(self, params, asmbl_ok):
         """
         save_assembly: save the assembly to KBase and, if everything has gone well, create a report
         """
@@ -67,28 +67,38 @@ class SPAdesAssembler(object):
         }
 
         wsname = params['workspace_name']
-        fa_file_dir = self._find_file_path(self.proj_dir, contig_fa_file)
+        fa_file_dir = self._find_file_dir(self.proj_dir, self.SPAdes_final_scaffolds)
 
         if (asmbl_ok == 0 and fa_file_dir != ''):
             log('Found the directory {} that hosts the contig fasta file: {}'.format(
-                    fa_file_dir, contig_fa_file))
-            fa_file_path = os.path.join(fa_file_dir, contig_fa_file)
+                    fa_file_dir, self.SPAdes_final_scaffolds))
+            fa_file_path = os.path.join(fa_file_dir, self.SPAdes_final_scaffolds)
 
             log("Load assembly from fasta file {}...".format(fa_file_path))
-            self.s_utils.save_assembly(fa_file_path, wsname,
-                                       params[self.PARAM_IN_CS_NAME])
+            report_file = self.SPAdes_final_scaffolds
+            min_ctg_length = params.get('min_contig_length', 0)
+            if min_ctg_length > 0:
+                self.s_utils.save_assembly(fa_file_path, wsname,
+                                           params[self.PARAM_IN_CS_NAME],
+                                           min_ctg_length)
+                report_file += '.filtered.fa'
+            else:
+                self.s_utils.save_assembly(fa_file_path, wsname,
+                                           params[self.PARAM_IN_CS_NAME])
+
             if params['create_report'] == 1:
                 report_name, report_ref = self.s_utils.generate_report(
-                                            fa_file_path, params, fa_file_dir, wsname)
-                returnVal = {'report_name': report_name, 'report_ref': report_ref}
+                                        report_file, params, fa_file_dir, wsname)
+                returnVal = {'report_name': report_name,
+                             'report_ref': report_ref}
         else:
             log("run_hybrid_spades failed.")
 
         return returnVal
 
-    def _find_file_path(self, search_dir, search_file_name):
+    def _find_file_dir(self, search_dir, search_file_name):
         """
-        _find_file_path: search a given directory to find the given file with path
+        _find_file_dir: search a given directory to find immediate dir that hosts the given file
         """
         for dirName, subdirList, fileList in os.walk(search_dir):
             for fname in fileList:

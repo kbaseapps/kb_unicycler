@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * <p>Original spec-file type: HybridSPAdesParams</p>
  * <pre>
- * ------To run SPAdes 3.13.0 you need at least one library of the following types:------
+ * ------To run HybridSPAdes 3.13.0 you need at least one library of the following types:------
  *  1) Illumina paired-end/high-quality mate-pairs/unpaired reads
  *  2) IonTorrent paired-end/high-quality mate-pairs/unpaired reads
  *  3) PacBio CCS reads
@@ -33,9 +33,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * kmer_sizes - (optional) K-mer sizes, Default values: 21, 33, 55, 77, 99, 127
  *                  (all values must be odd, less than 128 and listed in ascending order)
  *                  In the absence of these values, K values are automatically selected.
+ * min_contig_length - integer to filter out contigs with length < min_contig_length
+ *                  from the HybridSPAdes output. Default value is 0 implying no filter.    
  * @optional dna_source
  * @optional pipeline_options
  * @optional kmer_sizes
+ * @optional min_contig_length
  * </pre>
  * 
  */
@@ -49,6 +52,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "dna_source",
     "pipeline_options",
     "kmer_sizes",
+    "min_contig_length",
     "create_report"
 })
 public class HybridSPAdesParams {
@@ -67,6 +71,8 @@ public class HybridSPAdesParams {
     private List<String> pipelineOptions;
     @JsonProperty("kmer_sizes")
     private List<Long> kmerSizes;
+    @JsonProperty("min_contig_length")
+    private java.lang.Long minContigLength;
     @JsonProperty("create_report")
     private java.lang.Long createReport;
     private Map<java.lang.String, Object> additionalProperties = new HashMap<java.lang.String, Object>();
@@ -176,6 +182,21 @@ public class HybridSPAdesParams {
         return this;
     }
 
+    @JsonProperty("min_contig_length")
+    public java.lang.Long getMinContigLength() {
+        return minContigLength;
+    }
+
+    @JsonProperty("min_contig_length")
+    public void setMinContigLength(java.lang.Long minContigLength) {
+        this.minContigLength = minContigLength;
+    }
+
+    public HybridSPAdesParams withMinContigLength(java.lang.Long minContigLength) {
+        this.minContigLength = minContigLength;
+        return this;
+    }
+
     @JsonProperty("create_report")
     public java.lang.Long getCreateReport() {
         return createReport;
@@ -203,7 +224,7 @@ public class HybridSPAdesParams {
 
     @Override
     public java.lang.String toString() {
-        return ((((((((((((((((((("HybridSPAdesParams"+" [workspaceName=")+ workspaceName)+", outputContigsetName=")+ outputContigsetName)+", readsLibraries=")+ readsLibraries)+", longReadsLibraries=")+ longReadsLibraries)+", dnaSource=")+ dnaSource)+", pipelineOptions=")+ pipelineOptions)+", kmerSizes=")+ kmerSizes)+", createReport=")+ createReport)+", additionalProperties=")+ additionalProperties)+"]");
+        return ((((((((((((((((((((("HybridSPAdesParams"+" [workspaceName=")+ workspaceName)+", outputContigsetName=")+ outputContigsetName)+", readsLibraries=")+ readsLibraries)+", longReadsLibraries=")+ longReadsLibraries)+", dnaSource=")+ dnaSource)+", pipelineOptions=")+ pipelineOptions)+", kmerSizes=")+ kmerSizes)+", minContigLength=")+ minContigLength)+", createReport=")+ createReport)+", additionalProperties=")+ additionalProperties)+"]");
     }
 
 }

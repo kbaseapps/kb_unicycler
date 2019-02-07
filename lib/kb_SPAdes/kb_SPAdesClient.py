@@ -74,7 +74,7 @@ class kb_SPAdes(object):
         """
         Run HybridSPAdes on paired end libraries with PacBio CLR and Oxford Nanopore reads
         :param params: instance of type "HybridSPAdesParams" (------To run
-           SPAdes 3.13.0 you need at least one library of the following
+           HybridSPAdes 3.13.0 you need at least one library of the following
            types:------ 1) Illumina paired-end/high-quality
            mate-pairs/unpaired reads 2) IonTorrent paired-end/high-quality
            mate-pairs/unpaired reads 3) PacBio CCS reads Version 3.13.0 of
@@ -94,30 +94,33 @@ class kb_SPAdes(object):
            (optional) K-mer sizes, Default values: 21, 33, 55, 77, 99, 127
            (all values must be odd, less than 128 and listed in ascending
            order) In the absence of these values, K values are automatically
-           selected. @optional dna_source @optional pipeline_options
-           @optional kmer_sizes) -> structure: parameter "workspace_name" of
-           String, parameter "output_contigset_name" of String, parameter
-           "reads_libraries" of list of type "ReadsParams" (parameter
-           groups--define attributes for specifying inputs with YAML data set
-           file (advanced) The following attributes are available: -
-           orientation ("fr", "rf", "ff") - type ("paired-end", "mate-pairs",
-           "hq-mate-pairs", "single", "pacbio", "nanopore", "sanger",
-           "trusted-contigs", "untrusted-contigs") - interlaced reads
-           (comma-separated list of files with interlaced reads) - left reads
-           (comma-separated list of files with left reads) - right reads
-           (comma-separated list of files with right reads) - single reads
-           (comma-separated list of files with single reads or unpaired reads
-           from paired library) - merged reads (comma-separated list of files
-           with merged reads)) -> structure: parameter "lib_ref" of type
-           "obj_ref" (An X/Y/Z style KBase object reference), parameter
-           "orientation" of String, parameter "lib_type" of String, parameter
-           "long_reads_libraries" of list of type "LongReadsParams" ->
-           structure: parameter "long_reads_ref" of type "obj_ref" (An X/Y/Z
-           style KBase object reference), parameter "long_reads_type" of
-           String, parameter "dna_source" of String, parameter
-           "pipeline_options" of list of String, parameter "kmer_sizes" of
-           list of Long, parameter "create_report" of type "bool" (A boolean.
-           0 = false, anything else = true.)
+           selected. min_contig_length - integer to filter out contigs with
+           length < min_contig_length from the HybridSPAdes output. Default
+           value is 0 implying no filter. @optional dna_source @optional
+           pipeline_options @optional kmer_sizes @optional min_contig_length)
+           -> structure: parameter "workspace_name" of String, parameter
+           "output_contigset_name" of String, parameter "reads_libraries" of
+           list of type "ReadsParams" (parameter groups--define attributes
+           for specifying inputs with YAML data set file (advanced) The
+           following attributes are available: - orientation ("fr", "rf",
+           "ff") - type ("paired-end", "mate-pairs", "hq-mate-pairs",
+           "single", "pacbio", "nanopore", "sanger", "trusted-contigs",
+           "untrusted-contigs") - interlaced reads (comma-separated list of
+           files with interlaced reads) - left reads (comma-separated list of
+           files with left reads) - right reads (comma-separated list of
+           files with right reads) - single reads (comma-separated list of
+           files with single reads or unpaired reads from paired library) -
+           merged reads (comma-separated list of files with merged reads)) ->
+           structure: parameter "lib_ref" of type "obj_ref" (An X/Y/Z style
+           KBase object reference), parameter "orientation" of String,
+           parameter "lib_type" of String, parameter "long_reads_libraries"
+           of list of type "LongReadsParams" -> structure: parameter
+           "long_reads_ref" of type "obj_ref" (An X/Y/Z style KBase object
+           reference), parameter "long_reads_type" of String, parameter
+           "dna_source" of String, parameter "pipeline_options" of list of
+           String, parameter "kmer_sizes" of list of Long, parameter
+           "min_contig_length" of Long, parameter "create_report" of type
+           "bool" (A boolean. 0 = false, anything else = true.)
         :returns: instance of type "SPAdesOutput" (Output parameters for
            SPAdes run. report_name - the name of the KBaseReport.Report
            workspace object. report_ref - the workspace reference of the
