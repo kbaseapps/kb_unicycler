@@ -380,8 +380,9 @@ class hybrid_SPAdesTest(unittest.TestCase):
             '/' + str(object_info[4])
 
     def run_hybrid_success(self, readnames, output_name, longreadnames=None,
-                           dna_source=None, kmer_sizes=None, orientation='fr',
-                           lib_type='paired-end', long_reads_type='pacbio-clr'):
+                           min_contig_length=0, dna_source=None, kmer_sizes=None,
+                           orientation='fr', lib_type='paired-end',
+                           long_reads_type='pacbio-clr'):
         """  
         run_hybrid_success: The main method to test all possible hybrid input data sets
         """
@@ -399,6 +400,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         params = {'workspace_name': self.getWsName(),
                   'reads_libraries': libs,
                   'output_contigset_name': output_name,
+                  'min_contig_length': min_contig_length,
                   'create_report': 1
                   }
 
@@ -429,6 +431,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
                          report['data']['objects_created'][0]['description'])
         self.assertIn('Assembled into ', report['data']['text_message'])
         self.assertIn('contigs', report['data']['text_message'])
+        print("**************Report Message*************\n")
+        print(report['data']['text_message'])
 
         assembly_ref = report['data']['objects_created'][0]['ref']
         assembly = self.wsClient.get_objects([{'ref': assembly_ref}])[0]
@@ -1108,3 +1112,19 @@ class hybrid_SPAdesTest(unittest.TestCase):
         ret = self.spades_assembler.run_hybrid_spades(params4)
         if params4.get('create_report', 0) == 1:
             self.assertReportAssembly(ret, output_name)
+
+        # test pairedEnd_cell reads with pacbio clr reads and min_contig_length
+        output_name = rds_name + '_' + rds_name2 + '_mcl_out'
+        params5 = {'workspace_name': self.getWsName(),
+                   'reads_libraries': [libs2],
+                   'long_reads_libraries': [libs4],
+                   'dna_source': dnasrc,
+                   'output_contigset_name': output_name,
+                   'min_contig_length': 500,
+                   'pipeline_options': pipeline_opts,
+                   'create_report': 1
+                   }
+        ret = self.spades_assembler.run_hybrid_spades(params5)
+        if params5.get('create_report', 0) == 1:
+            self.assertReportAssembly(ret, output_name)
+
