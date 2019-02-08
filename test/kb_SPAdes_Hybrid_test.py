@@ -1108,3 +1108,18 @@ class hybrid_SPAdesTest(unittest.TestCase):
         ret = self.spades_assembler.run_hybrid_spades(params5)
         if params5.get('create_report', 0) == 1:
             self.assertReportAssembly(ret, output_name)
+
+        # test pairedEnd_cell reads with pacbio clr reads and 0 min_contig_length
+        output_name = rds_name + '_' + rds_name2 + '_0mcl_out'
+        params6 = {'workspace_name': self.getWsName(),
+                   'reads_libraries': [libs2],
+                   'long_reads_libraries': [libs4],
+                   'dna_source': dnasrc,
+                   'output_contigset_name': output_name,
+                   'min_contig_length': 0,
+                   'pipeline_options': pipeline_opts,
+                   'create_report': 1
+                   }
+        ret = self.spades_assembler.run_hybrid_spades(params6)
+        if params6.get('create_report', 0) == 1:
+            self.assertReportAssembly(ret, output_name)
