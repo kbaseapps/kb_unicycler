@@ -314,14 +314,13 @@ class SPAdesUtils:
         if params.get(self.PARAM_IN_WS, None) is None:
             raise ValueError('Parameter {} is mandatory!'.format(self.PARAM_IN_WS))
         if self.INVALID_WS_NAME_RE.search(params[self.PARAM_IN_WS]):
-            raise ValueError('Invalid workspace name: {}.'.format(
-                             params[self.PARAM_IN_WS]))
+            raise ValueError('Invalid workspace name: {}.'.format(params[self.PARAM_IN_WS]))
 
         if params.get(self.PARAM_IN_CS_NAME, None) is None:
             raise ValueError('Parameter {} is mandatory!'.format(self.PARAM_IN_CS_NAME))
         if self.INVALID_WS_OBJ_NAME_RE.search(params[self.PARAM_IN_CS_NAME]):
             raise ValueError('Invalid workspace object name: {}.'.format(
-                             params[self.PARAM_IN_CS_NAME]))
+                params[self.PARAM_IN_CS_NAME]))
 
         if params.get(self.PARAM_IN_READS, None) is None:
             raise ValueError('Parameter {} is mandatory!'.format(self.PARAM_IN_READS))
@@ -476,7 +475,7 @@ class SPAdesUtils:
         """
         rds_params = copy.deepcopy(input_params)
         if rds_params.get(self.PARAM_IN_READS, None) is None:
-            return None
+            return ()  # an empty tuple
 
         wsname = rds_params[self.PARAM_IN_WS]
 
