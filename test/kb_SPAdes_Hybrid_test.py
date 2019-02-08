@@ -9,7 +9,6 @@ from ConfigParser import ConfigParser
 import psutil
 
 import requests
-from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from kb_SPAdes.kb_SPAdesImpl import kb_SPAdes
 from ReadsUtils.ReadsUtilsClient import ReadsUtils
@@ -18,7 +17,7 @@ from pprint import pprint
 import shutil
 import inspect
 
-from Workspace.WorkspaceClient import Workspace as Workspace
+from Workspace.WorkspaceClient import Workspace
 from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
 from kb_SPAdes.utils.spades_utils import SPAdesUtils
 
@@ -383,7 +382,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                            min_contig_length=0, dna_source=None, kmer_sizes=None,
                            orientation='fr', lib_type='paired-end',
                            long_reads_type='pacbio-clr'):
-        """  
+        """
         run_hybrid_success: The main method to test all possible hybrid input data sets
         """
         test_name = inspect.stack()[1][3]
@@ -444,9 +443,6 @@ class hybrid_SPAdesTest(unittest.TestCase):
         temp_handle_info = self.hs.hids_to_handles([assembly['data']['fasta_handle_ref']])
         assembly_fasta_node = temp_handle_info[0]['id']
         self.nodes_to_delete.append(assembly_fasta_node)
-        header = {"Authorization": "Oauth {0}".format(self.token)}
-        fasta_node = requests.get(self.shockURL + '/node/' + assembly_fasta_node,
-                                  headers=header, allow_redirects=True).json()
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_fr_pair_kbfile")
@@ -561,22 +557,6 @@ class hybrid_SPAdesTest(unittest.TestCase):
                         'rna',  # --rna
                         'iontorrent'  # --iontorrent
                         ]
-        # a list of read lib objects' names in the workspace
-        lib_nm_list = ['frbasic',
-                       'intbasic',
-                       'intbasic64',
-                       'pacbio',
-                       'pacbioccs',
-                       'iontorrent',
-                       'meta',
-                       'meta2',
-                       'meta_single_end',
-                       'reads_out',
-                       'frbasic_kbassy',
-                       'intbasic_kbassy',
-                       'single_end',
-                       'single_end2',
-                       'plasmid_reads']
 
         pipeline_opts = None
 
@@ -908,13 +888,14 @@ class hybrid_SPAdesTest(unittest.TestCase):
         # test data dirs from SPAdes installation
         spades_test_data_set_dir = '/opt/SPAdes-3.13.0-Linux/share/spades/'
         ecoli_test_data_subdir = 'test_dataset'
-        plasmid_test_data_subdir = 'test_dataset_plasmid'
-        truspades_test_data_subdir = 'test_dataset_truspades'
 
         ecoli1 = os.path.join(spades_test_data_set_dir,
                               ecoli_test_data_subdir, 'ecoli_1K_1.fq.gz')
         ecoli2 = os.path.join(spades_test_data_set_dir,
                               ecoli_test_data_subdir, 'ecoli_1K_2.fq.gz')
+        """
+        plasmid_test_data_subdir = 'test_dataset_plasmid'
+        truspades_test_data_subdir = 'test_dataset_truspades'
         pl1 = os.path.join(spades_test_data_set_dir,
                            plasmid_test_data_subdir, 'pl1.fq.gz')
         pl2 = os.path.join(spades_test_data_set_dir,
@@ -930,7 +911,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
 
         pyyaml2 = os.path.join(spades_test_data_set_dir, 'pyyaml2')
         pyyaml3 = os.path.join(spades_test_data_set_dir, 'pyyaml3')
-
+        """
         dna_src_list = ['single_cell',  # --sc
                         'metagenomic',  # --meta
                         'plasmid',  # --plasmid
@@ -1127,4 +1108,3 @@ class hybrid_SPAdesTest(unittest.TestCase):
         ret = self.spades_assembler.run_hybrid_spades(params5)
         if params5.get('create_report', 0) == 1:
             self.assertReportAssembly(ret, output_name)
-
