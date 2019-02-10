@@ -447,28 +447,24 @@ class hybrid_SPAdesTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_fr_pair_kbfile")
     def test_fr_pair_kbfile(self):
-
         self.run_hybrid_success(
             ['frbasic'], 'frbasic_out')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_fr_pair_kbassy")
     def test_fr_pair_kbassy(self):
-
         self.run_hybrid_success(
             ['frbasic_kbassy'], 'frbasic_kbassy_out')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_interlaced_kbfile")
     def test_interlaced_kbfile(self):
-
         self.run_hybrid_success(
             ['intbasic'], 'intbasic_out')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_interlaced_kbassy")
     def test_interlaced_kbassy(self):
-
         self.run_hybrid_success(
             ['intbasic_kbassy'], 'intbasic_kbassy_out',
             dna_source='')
@@ -1121,5 +1117,23 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'create_report': 1
                    }
         ret = self.spades_assembler.run_hybrid_spades(params6)
+        if params6.get('create_report', 0) == 1:
+            self.assertReportAssembly(ret, output_name)
+
+        # test metagenome_kbfile
+        output_name = 'metabasic_out1'
+        dnasrc = dna_src_list[1]
+        libs5 = {'lib_ref': self.staged['meta']['ref'],
+                 'orientation': 'fr',
+                 'lib_type': 'paired-end'}
+        params7 = {'workspace_name': self.getWsName(),
+                   'reads_libraries': [libs5],
+                   'dna_source': dnasrc,
+                   'output_contigset_name': output_name,
+                   'min_contig_length': 0,
+                   'pipeline_options': pipeline_opts,
+                   'create_report': 1
+                   }
+        ret = self.spades_assembler.run_hybrid_spades(params7)
         if params6.get('create_report', 0) == 1:
             self.assertReportAssembly(ret, output_name)
