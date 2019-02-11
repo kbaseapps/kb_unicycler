@@ -3,7 +3,7 @@
 #
 name: Assemble with HybridSPAdes - v3.13.0
 tooltip: |
-    Assemble reads using the SPAdes assembler.
+    Assemble reads using the HybridSPAdes assembler.
 screenshots: []
 
 icon: spades.png
@@ -67,6 +67,11 @@ parameters :
             Output ContigSet Name<font color=red>*</font>
         short-hint : |
             The name for the resulting ContigSet will be saved in KBase
+    min_contig_length :
+        ui-name : |
+            Minimum Contig Length
+        short-hint : |
+            The shortest contig to accept in the resulting assembly object
     dna_source :
         ui-name : |
             dna_source

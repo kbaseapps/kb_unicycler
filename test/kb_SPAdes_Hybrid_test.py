@@ -9,7 +9,6 @@ from ConfigParser import ConfigParser
 import psutil
 
 import requests
-from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from kb_SPAdes.kb_SPAdesImpl import kb_SPAdes
 from ReadsUtils.ReadsUtilsClient import ReadsUtils
@@ -18,7 +17,7 @@ from pprint import pprint
 import shutil
 import inspect
 
-from Workspace.WorkspaceClient import Workspace as Workspace
+from Workspace.WorkspaceClient import Workspace
 from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
 from kb_SPAdes.utils.spades_utils import SPAdesUtils
 
@@ -75,7 +74,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         cls.nodes_to_delete = []
         cls.handles_to_delete = []
         cls.setupTestData()
-        print('\n\n=============== Starting SPAdes tests ==================')
+        print('\n\n=============== Starting HybridSPAdes tests ==================')
 
     @classmethod
     def tearDownClass(cls):
@@ -380,9 +379,10 @@ class hybrid_SPAdesTest(unittest.TestCase):
             '/' + str(object_info[4])
 
     def run_hybrid_success(self, readnames, output_name, longreadnames=None,
-                           dna_source=None, kmer_sizes=None, orientation='fr',
-                           lib_type='paired-end', long_reads_type='pacbio-clr'):
-        """  
+                           min_contig_length=0, dna_source=None, kmer_sizes=None,
+                           orientation='fr', lib_type='paired-end',
+                           long_reads_type='pacbio-clr'):
+        """
         run_hybrid_success: The main method to test all possible hybrid input data sets
         """
         test_name = inspect.stack()[1][3]
@@ -399,12 +399,13 @@ class hybrid_SPAdesTest(unittest.TestCase):
         params = {'workspace_name': self.getWsName(),
                   'reads_libraries': libs,
                   'output_contigset_name': output_name,
+                  'min_contig_length': min_contig_length,
                   'create_report': 1
                   }
 
         if longreadnames:
             long_libs = [{'long_reads_ref': self.staged[n]['ref'],
-                            'long_reads_type': long_reads_type} for n in longreadnames]
+                          'long_reads_type': long_reads_type} for n in longreadnames]
             params['long_reads_libraries'] = long_libs
 
         if not (dna_source is None):
@@ -429,6 +430,8 @@ class hybrid_SPAdesTest(unittest.TestCase):
                          report['data']['objects_created'][0]['description'])
         self.assertIn('Assembled into ', report['data']['text_message'])
         self.assertIn('contigs', report['data']['text_message'])
+        print("**************Report Message*************\n")
+        print(report['data']['text_message'])
 
         assembly_ref = report['data']['objects_created'][0]['ref']
         assembly = self.wsClient.get_objects([{'ref': assembly_ref}])[0]
@@ -440,97 +443,90 @@ class hybrid_SPAdesTest(unittest.TestCase):
         temp_handle_info = self.hs.hids_to_handles([assembly['data']['fasta_handle_ref']])
         assembly_fasta_node = temp_handle_info[0]['id']
         self.nodes_to_delete.append(assembly_fasta_node)
-        header = {"Authorization": "Oauth {0}".format(self.token)}
-        fasta_node = requests.get(self.shockURL + '/node/' + assembly_fasta_node,
-                                  headers=header, allow_redirects=True).json()
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_fr_pair_kbfile")
+    # @unittest.skip("skipped test_fr_pair_kbfile")
     def test_fr_pair_kbfile(self):
-
         self.run_hybrid_success(
             ['frbasic'], 'frbasic_out')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_fr_pair_kbassy")
+    # @unittest.skip("skipped test_fr_pair_kbassy")
     def test_fr_pair_kbassy(self):
-
         self.run_hybrid_success(
             ['frbasic_kbassy'], 'frbasic_kbassy_out')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_interlaced_kbfile")
+    # @unittest.skip("skipped test_interlaced_kbfile")
     def test_interlaced_kbfile(self):
-
         self.run_hybrid_success(
             ['intbasic'], 'intbasic_out')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_interlaced_kbassy")
+    # @unittest.skip("skipped test_interlaced_kbassy")
     def test_interlaced_kbassy(self):
-
         self.run_hybrid_success(
             ['intbasic_kbassy'], 'intbasic_kbassy_out',
             dna_source='')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_multiple")
+    # @unittest.skip("skipped test_multiple")
     def test_multiple(self):
         self.run_hybrid_success(
             ['intbasic_kbassy', 'frbasic'], 'multiple_out',
             dna_source='None')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_plasmid_kbfile")
+    # @unittest.skip("skipped test_plasmid_kbfile")
     def test_plasmid_kbfile(self):
         self.run_hybrid_success(
             ['plasmid_reads'], 'plasmid_out',
             dna_source='plasmid')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_multiple_single")
+    # @unittest.skip("skipped test_multiple_single")
     def test_multiple_single(self):
         self.run_hybrid_success(
             ['single_end', 'single_end2'], 'multiple_single_out',
             dna_source='None', lib_type='single')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_metagenome_kbfile")
+    # @unittest.skip("skipped test_metagenome_kbfile")
     def test_metagenome_kbfile(self):
         self.run_hybrid_success(
             ['meta'], 'metabasic_out',
             dna_source='metagenomic')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_multiple_pacbio_single")
+    # @unittest.skip("skipped test_multiple_pacbio_single")
     def test_multiple_pacbio_single(self):
         self.run_hybrid_success(
             ['single_end'], 'pacbio_single_out', longreadnames=['pacbio'],
             lib_type='single', long_reads_type='pacbio-clr', dna_source='None')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_multiple_pacbio_illumina")
+    # @unittest.skip("skipped test_multiple_pacbio_illumina")
     def test_multiple_pacbio_illumina(self):
         self.run_hybrid_success(
             ['intbasic_kbassy'], 'pacbio_multiple_out', longreadnames=['pacbio'],
             lib_type='single', long_reads_type='pacbio-clr', dna_source='None')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_pacbioccs_alone")
+    # @unittest.skip("skipped test_pacbioccs_alone")
     def test_pacbioccs_alone(self):
         self.run_hybrid_success(
             ['pacbioccs'], 'pacbioccs_alone_out', lib_type='single',
             dna_source='None')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_pacbioccs_single")
+    # @unittest.skip("skipped test_pacbioccs_single")
     def test_pacbioccs_single(self):
         self.run_hybrid_success(
             ['single_end'], 'pacbioccs_single_out', longreadnames=['pacbioccs'],
             lib_type='single', long_reads_type='pacbio-ccs', dna_source='None')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_multiple_pacbioccs_illumina")
+    # @unittest.skip("skipped test_multiple_pacbioccs_illumina")
     def test_multiple_pacbioccs_illumina(self):
         self.run_hybrid_success(
             ['intbasic_kbassy'], 'pacbioccs_multiple_out', longreadnames=['pacbioccs'],
@@ -557,22 +553,6 @@ class hybrid_SPAdesTest(unittest.TestCase):
                         'rna',  # --rna
                         'iontorrent'  # --iontorrent
                         ]
-        # a list of read lib objects' names in the workspace
-        lib_nm_list = ['frbasic',
-                       'intbasic',
-                       'intbasic64',
-                       'pacbio',
-                       'pacbioccs',
-                       'iontorrent',
-                       'meta',
-                       'meta2',
-                       'meta_single_end',
-                       'reads_out',
-                       'frbasic_kbassy',
-                       'intbasic_kbassy',
-                       'single_end',
-                       'single_end2',
-                       'plasmid_reads']
 
         pipeline_opts = None
 
@@ -904,13 +884,14 @@ class hybrid_SPAdesTest(unittest.TestCase):
         # test data dirs from SPAdes installation
         spades_test_data_set_dir = '/opt/SPAdes-3.13.0-Linux/share/spades/'
         ecoli_test_data_subdir = 'test_dataset'
-        plasmid_test_data_subdir = 'test_dataset_plasmid'
-        truspades_test_data_subdir = 'test_dataset_truspades'
 
         ecoli1 = os.path.join(spades_test_data_set_dir,
                               ecoli_test_data_subdir, 'ecoli_1K_1.fq.gz')
         ecoli2 = os.path.join(spades_test_data_set_dir,
                               ecoli_test_data_subdir, 'ecoli_1K_2.fq.gz')
+        """
+        plasmid_test_data_subdir = 'test_dataset_plasmid'
+        truspades_test_data_subdir = 'test_dataset_truspades'
         pl1 = os.path.join(spades_test_data_set_dir,
                            plasmid_test_data_subdir, 'pl1.fq.gz')
         pl2 = os.path.join(spades_test_data_set_dir,
@@ -926,7 +907,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
 
         pyyaml2 = os.path.join(spades_test_data_set_dir, 'pyyaml2')
         pyyaml3 = os.path.join(spades_test_data_set_dir, 'pyyaml3')
-
+        """
         dna_src_list = ['single_cell',  # --sc
                         'metagenomic',  # --meta
                         'plasmid',  # --plasmid
@@ -967,7 +948,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         run_exit_code = spades_utils.run_assemble(single_yaml_file, km_sizes, 'single_cell',
                                                   params1['basic_options'],
                                                   params1['pipeline_options'])
-        print('{} SPAdes assembling returns code= {}'.format(rds_name, run_exit_code))
+        print('{} HybridSPAdes assembling returns code= {}'.format(rds_name, run_exit_code))
         self.assertEqual(run_exit_code, 0)
         self.assertEqual(spades_prjdir, '/kb/module/work/tmp/spades_outputs/single_end')
         self.assertTrue(os.path.isdir(os.path.join(spades_assemble_dir, 'K21')))
@@ -1107,4 +1088,52 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    }
         ret = self.spades_assembler.run_hybrid_spades(params4)
         if params4.get('create_report', 0) == 1:
+            self.assertReportAssembly(ret, output_name)
+
+        # test pairedEnd_cell reads with pacbio clr reads and min_contig_length
+        output_name = rds_name + '_' + rds_name2 + '_mcl_out'
+        params5 = {'workspace_name': self.getWsName(),
+                   'reads_libraries': [libs2],
+                   'long_reads_libraries': [libs4],
+                   'dna_source': dnasrc,
+                   'output_contigset_name': output_name,
+                   'min_contig_length': 500,
+                   'pipeline_options': pipeline_opts,
+                   'create_report': 1
+                   }
+        ret = self.spades_assembler.run_hybrid_spades(params5)
+        if params5.get('create_report', 0) == 1:
+            self.assertReportAssembly(ret, output_name)
+
+        # test pairedEnd_cell reads with pacbio clr reads and 0 min_contig_length
+        output_name = rds_name + '_' + rds_name2 + '_0mcl_out'
+        params6 = {'workspace_name': self.getWsName(),
+                   'reads_libraries': [libs2],
+                   'long_reads_libraries': [libs4],
+                   'dna_source': dnasrc,
+                   'output_contigset_name': output_name,
+                   'min_contig_length': 0,
+                   'pipeline_options': pipeline_opts,
+                   'create_report': 1
+                   }
+        ret = self.spades_assembler.run_hybrid_spades(params6)
+        if params6.get('create_report', 0) == 1:
+            self.assertReportAssembly(ret, output_name)
+
+        # test metagenome_kbfile
+        output_name = 'metabasic_out1'
+        dnasrc = dna_src_list[1]
+        libs5 = {'lib_ref': self.staged['meta']['ref'],
+                 'orientation': 'fr',
+                 'lib_type': 'paired-end'}
+        params7 = {'workspace_name': self.getWsName(),
+                   'reads_libraries': [libs5],
+                   'dna_source': dnasrc,
+                   'output_contigset_name': output_name,
+                   'min_contig_length': 0,
+                   'pipeline_options': pipeline_opts,
+                   'create_report': 1
+                   }
+        ret = self.spades_assembler.run_hybrid_spades(params7)
+        if params6.get('create_report', 0) == 1:
             self.assertReportAssembly(ret, output_name)

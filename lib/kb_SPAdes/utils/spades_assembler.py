@@ -33,8 +33,7 @@ class SPAdesAssembler(object):
 
     PARAM_IN_CS_NAME = 'output_contigset_name'
     SPAdes_PROJECT_DIR = 'spades_project_dir'
-    SPAdes_final_scaffold_sequences = 'scaffolds.fasta'  # resulting scaffolds sequences
-    SPAdes_final_contigs = 'contigs.fasta'  # resulting contigs
+    SPAdes_final_scaffolds = 'scaffolds.fasta'  # resulting scaffolds sequences
 
     def __init__(self, config, provenance):
         """
@@ -57,9 +56,9 @@ class SPAdesAssembler(object):
         # END_CONSTRUCTOR
         pass
 
-    def _save_assembly(self, params, asmbl_ok, contig_fa_file):
+    def _save_assembly(self, params):
         """
-        save_assembly: save the assembly to KBase and, if everything has gone well, create a report
+        _save_assembly: save the assembly to KBase and, if everything has gone well, create a report
         """
         returnVal = {
             "report_ref": None,
@@ -67,28 +66,35 @@ class SPAdesAssembler(object):
         }
 
         wsname = params['workspace_name']
-        fa_file_dir = self._find_file_path(self.proj_dir, contig_fa_file)
+        fa_file_dir = self._find_file_dir(self.proj_dir, self.SPAdes_final_scaffolds)
 
-        if (asmbl_ok == 0 and fa_file_dir != ''):
+        if fa_file_dir != '':
             log('Found the directory {} that hosts the contig fasta file: {}'.format(
-                    fa_file_dir, contig_fa_file))
-            fa_file_path = os.path.join(fa_file_dir, contig_fa_file)
+                    fa_file_dir, self.SPAdes_final_scaffolds))
+            fa_file_path = os.path.join(fa_file_dir, self.SPAdes_final_scaffolds)
 
             log("Load assembly from fasta file {}...".format(fa_file_path))
-            self.s_utils.save_assembly(fa_file_path, wsname,
-                                       params[self.PARAM_IN_CS_NAME])
+            report_file = self.SPAdes_final_scaffolds
+            min_ctg_length = params.get('min_contig_length', 0)
+            if min_ctg_length > 0:
+                self.s_utils.save_assembly(fa_file_path, wsname,
+                                           params[self.PARAM_IN_CS_NAME],
+                                           min_ctg_length)
+                report_file += '.filtered.fa'
+            else:
+                self.s_utils.save_assembly(fa_file_path, wsname,
+                                           params[self.PARAM_IN_CS_NAME])
+
             if params['create_report'] == 1:
                 report_name, report_ref = self.s_utils.generate_report(
-                                            fa_file_path, params, fa_file_dir, wsname)
-                returnVal = {'report_name': report_name, 'report_ref': report_ref}
-        else:
-            log("run_hybrid_spades failed.")
-
+                                        report_file, params, fa_file_dir, wsname)
+                returnVal = {'report_name': report_name,
+                             'report_ref': report_ref}
         return returnVal
 
-    def _find_file_path(self, search_dir, search_file_name):
+    def _find_file_dir(self, search_dir, search_file_name):
         """
-        _find_file_path: search a given directory to find the given file with path
+        _find_file_dir: search a given directory to find immediate dir that hosts the given file
         """
         for dirName, subdirList, fileList in os.walk(search_dir):
             for fname in fileList:
@@ -112,26 +118,30 @@ class SPAdesAssembler(object):
         """
         # 1. validate & process the input parameters
         validated_params = self.s_utils.check_spades_params(params)
+        assemble_ok = -1
 
-        # STEP 2: retrieve the reads data from input parameter
-        (sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs) \
-            = self.s_utils.get_hybrid_reads_info(validated_params)
+        # 2: retrieve the reads data from input paramete
+        hybrid_reads_info = self.s_utils.get_hybrid_reads_info(validated_params)
+        if hybrid_reads_info:  # UNPACKS the reads_info
+            (sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs) = \
+                hybrid_reads_info
 
-        # 3. create the yaml input data set file
-        yaml_file = self.s_utils.construct_yaml_dataset_file(sgl_rds, pe_rds, mp_rds,
-                                                             pb_ccs, pb_clr, np_rds, sgr_rds,
-                                                             tr_ctgs, ut_ctgs)
+            # 3. create the yaml input data set file
+            yaml_file = self.s_utils.construct_yaml_dataset_file(
+                sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs)
 
-        # 4. run the spades.py against the yaml file
-        if os.path.isfile(yaml_file):
-            basic_opts = validated_params.get('basic_options', None)
-            pipleline_opts = validated_params.get('pipeline_options', None)
-            km_sizes = validated_params.get('kmer_sizes', None)
-            dna_src = validated_params.get('dna_source', None)
-            assemble_ok = self.s_utils.run_assemble(yaml_file, km_sizes, dna_src,
-                                                    basic_opts, pipleline_opts)
-        else:
-            assemble_ok = -1
+            # 4. run the spades.py against the yaml file
+            if os.path.isfile(yaml_file):
+                basic_opts = validated_params.get('basic_options', None)
+                pipleline_opts = validated_params.get('pipeline_options', None)
+                km_sizes = validated_params.get('kmer_sizes', None)
+                dna_src = validated_params.get('dna_source', None)
+                assemble_ok = self.s_utils.run_assemble(yaml_file, km_sizes, dna_src,
+                                                        basic_opts, pipleline_opts)
 
         # 5. save the assembly to KBase and, if everything has gone well, create a report
-        return self._save_assembly(validated_params, assemble_ok, self.SPAdes_final_contigs)
+        if assemble_ok == 0:
+            return self._save_assembly(validated_params)
+        else:
+            log("run_hybrid_spades failed.")
+            return {"report_ref": None, "report_name": None}

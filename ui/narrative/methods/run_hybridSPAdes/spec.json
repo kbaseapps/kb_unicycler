@@ -105,13 +105,17 @@
         },
         {
             "id": "dna_source",
-            "optional": false,
-            "advanced": false,
+            "optional": true,
+            "advanced": true,
             "allow_multiple": false,
-            "default_values": ["single_cell"],
+            "default_values": ["standard"],
             "field_type" : "dropdown",
             "dropdown_options":{
             "options": [
+                {
+                    "value": "standard",
+                    "display": "standard"
+                },
                 {
                   "value": "single_cell",
                   "display": "single cell"
@@ -180,6 +184,18 @@
             }
         },
         {
+            "id": "min_contig_length",
+            "optional": true,
+            "advanced": true,
+            "allow_multiple": false,
+            "default_values": [ "500" ],
+            "field_type": "text",
+            "text_options": {
+                "validate_as" : "int",
+		        "min_int" : 0
+            }
+        },
+        {
             "id": "kmer_sizes",
             "optional": true,
             "advanced": true,
@@ -236,6 +252,10 @@
                 {
                     "input_parameter": "output_contigset_name",
                     "target_property": "output_contigset_name"
+                },
+                {
+                    "input_parameter": "min_contig_length",
+                    "target_property": "min_contig_length"
                 },
                 {
                     "input_parameter": "kmer_sizes",

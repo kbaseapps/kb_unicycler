@@ -245,6 +245,7 @@ HybridSPAdesParams is a reference to a hash where the following keys are defined
 	dna_source has a value which is a string
 	pipeline_options has a value which is a reference to a list where each element is a string
 	kmer_sizes has a value which is a reference to a list where each element is an int
+	min_contig_length has a value which is an int
 	create_report has a value which is a kb_SPAdes.bool
 ReadsParams is a reference to a hash where the following keys are defined:
 	lib_ref has a value which is a kb_SPAdes.obj_ref
@@ -275,6 +276,7 @@ HybridSPAdesParams is a reference to a hash where the following keys are defined
 	dna_source has a value which is a string
 	pipeline_options has a value which is a reference to a list where each element is a string
 	kmer_sizes has a value which is a reference to a list where each element is an int
+	min_contig_length has a value which is an int
 	create_report has a value which is a kb_SPAdes.bool
 ReadsParams is a reference to a hash where the following keys are defined:
 	lib_ref has a value which is a kb_SPAdes.obj_ref
@@ -786,7 +788,7 @@ long_reads_type has a value which is a string
 
 =item Description
 
-------To run SPAdes 3.13.0 you need at least one library of the following types:------
+------To run HybridSPAdes 3.13.0 you need at least one library of the following types:------
 1) Illumina paired-end/high-quality mate-pairs/unpaired reads
 2) IonTorrent paired-end/high-quality mate-pairs/unpaired reads
 3) PacBio CCS reads
@@ -805,10 +807,12 @@ pipeline_options - a list of string specifying how the SPAdes pipeline should be
 kmer_sizes - (optional) K-mer sizes, Default values: 21, 33, 55, 77, 99, 127
                  (all values must be odd, less than 128 and listed in ascending order)
                  In the absence of these values, K values are automatically selected.
-
+min_contig_length - integer to filter out contigs with length < min_contig_length
+                 from the HybridSPAdes output. Default value is 0 implying no filter.    
 @optional dna_source
 @optional pipeline_options
 @optional kmer_sizes
+@optional min_contig_length
 
 
 =item Definition
@@ -824,6 +828,7 @@ long_reads_libraries has a value which is a reference to a list where each eleme
 dna_source has a value which is a string
 pipeline_options has a value which is a reference to a list where each element is a string
 kmer_sizes has a value which is a reference to a list where each element is an int
+min_contig_length has a value which is an int
 create_report has a value which is a kb_SPAdes.bool
 
 </pre>
@@ -840,6 +845,7 @@ long_reads_libraries has a value which is a reference to a list where each eleme
 dna_source has a value which is a string
 pipeline_options has a value which is a reference to a list where each element is a string
 kmer_sizes has a value which is a reference to a list where each element is an int
+min_contig_length has a value which is an int
 create_report has a value which is a kb_SPAdes.bool
 
 

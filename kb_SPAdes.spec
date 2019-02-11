@@ -48,8 +48,6 @@ module kb_SPAdes {
         bool skip_error_correction;
     } SPAdesParams;
 
-
-
     /* An X/Y/Z style KBase object reference
     */
     typedef string obj_ref;
@@ -78,7 +76,7 @@ module kb_SPAdes {
     } LongReadsParams;
 
 
-    /*------To run SPAdes 3.13.0 you need at least one library of the following types:------
+    /*------To run HybridSPAdes 3.13.0 you need at least one library of the following types:------
     1) Illumina paired-end/high-quality mate-pairs/unpaired reads
     2) IonTorrent paired-end/high-quality mate-pairs/unpaired reads
     3) PacBio CCS reads
@@ -97,10 +95,12 @@ module kb_SPAdes {
     kmer_sizes - (optional) K-mer sizes, Default values: 21, 33, 55, 77, 99, 127
                      (all values must be odd, less than 128 and listed in ascending order)
                      In the absence of these values, K values are automatically selected.
-    
+    min_contig_length - integer to filter out contigs with length < min_contig_length
+                     from the HybridSPAdes output. Default value is 0 implying no filter.    
     @optional dna_source
     @optional pipeline_options
     @optional kmer_sizes
+    @optional min_contig_length
     */
 
     typedef structure {
@@ -112,9 +112,9 @@ module kb_SPAdes {
         string dna_source;
         list<string> pipeline_options;
         list<int> kmer_sizes;
+        int min_contig_length;
         bool create_report;
     } HybridSPAdesParams;
-
 
     /* Output parameters for SPAdes run.
 

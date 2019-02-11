@@ -12,7 +12,7 @@ import copy
 import json
 import psutil
 
-from Workspace.WorkspaceClient import Workspace as Workspace
+from Workspace.WorkspaceClient import Workspace
 from KBaseReport.KBaseReportClient import KBaseReport
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from kb_quast.kb_quastClient import kb_quast
@@ -41,6 +41,9 @@ def _mkdir_p(path):
 
 
 class SPAdesUtils:
+    """
+    Define the SPAdesUtils functions
+    """
     SPADES_VERSION = '3.13.0'
     SPADES_BIN = '/opt/SPAdes-' + SPADES_VERSION + '-Linux/bin'
 
@@ -95,8 +98,8 @@ class SPAdesUtils:
             self.handle_url = config['handle-service-url']
 
         self.ws_client = Workspace(self.workspace_url, token=self.token)
-        self.ru = ReadsUtils(self.callback_url, token=self.token)
-        self.au = AssemblyUtil(self.callback_url, token=self.token)
+        self.ru = ReadsUtils(self.callback_url, token=self.token, service_ver='release')
+        self.au = AssemblyUtil(self.callback_url, token=self.token, service_ver='release')
         self.kbr = KBaseReport(self.callback_url)
         self.kbq = kb_quast(self.callback_url)
         self.proj_dir = prj_dir
@@ -255,6 +258,47 @@ class SPAdesUtils:
             fasta_dict[contig_id] = sequence_len
         return fasta_dict
 
+    def _parse_single_reads(self, reads_type, reads_list):
+        """
+        _parse_single_reads: given the reads_type and a list of reads, return an object
+        defining the type and a list of fastq files.
+        """
+        single_reads_fqs = []
+        ret_obj = {}
+        if reads_list and isinstance(reads_list, list):
+            for rds in reads_list:
+                single_reads_fqs.append(rds['fwd_file'])
+        if single_reads_fqs:
+            ret_obj = {
+                "type": reads_type,
+                "single reads": single_reads_fqs
+            }
+
+        return ret_obj
+
+    def _parse_pair_reads(self, reads_type, reads_list):
+        """
+        _parse_pair_reads: given the reads_type and a list of reads, return an object
+        defining the type and a list of fastq files.
+        """
+        right_reads_fqs = []
+        left_reads_fqs = []
+        ret_obj = {}
+        if reads_list and isinstance(reads_list, list):
+            for rds in reads_list:
+                right_reads_fqs.append(rds['fwd_file'])
+                if rds.get('rev_file', None):
+                    left_reads_fqs.append(rds['rev_file'])
+            orent = reads_list[0]['orientation']
+
+        if right_reads_fqs:
+            ret_obj["right reads"] = right_reads_fqs
+            ret_obj["orientation"] = orent
+            ret_obj["type"] = reads_type
+        if left_reads_fqs:
+            ret_obj["left reads"] = left_reads_fqs
+
+        return ret_obj
     # end of private methods
 
     # public method definitions
@@ -270,14 +314,13 @@ class SPAdesUtils:
         if params.get(self.PARAM_IN_WS, None) is None:
             raise ValueError('Parameter {} is mandatory!'.format(self.PARAM_IN_WS))
         if self.INVALID_WS_NAME_RE.search(params[self.PARAM_IN_WS]):
-            raise ValueError('Invalid workspace name: {}.'.format(
-                             params[self.PARAM_IN_WS]))
+            raise ValueError('Invalid workspace name: {}.'.format(params[self.PARAM_IN_WS]))
 
         if params.get(self.PARAM_IN_CS_NAME, None) is None:
             raise ValueError('Parameter {} is mandatory!'.format(self.PARAM_IN_CS_NAME))
         if self.INVALID_WS_OBJ_NAME_RE.search(params[self.PARAM_IN_CS_NAME]):
             raise ValueError('Invalid workspace object name: {}.'.format(
-                             params[self.PARAM_IN_CS_NAME]))
+                params[self.PARAM_IN_CS_NAME]))
 
         if params.get(self.PARAM_IN_READS, None) is None:
             raise ValueError('Parameter {} is mandatory!'.format(self.PARAM_IN_READS))
@@ -312,7 +355,8 @@ class SPAdesUtils:
         else:
             params[self.PARAM_IN_DNA_SOURCE] = None
 
-        params['basic_options'] = ['-o', self.ASSEMBLE_RESULTS_DIR]  # a list of basic options
+        # a list of basic options0
+        params['basic_options'] = ['-o', self.ASSEMBLE_RESULTS_DIR]
         dna_src = params.get(self.PARAM_IN_DNA_SOURCE)
         if dna_src == self.PARAM_IN_SINGLE_CELL:
             params['basic_options'].append('--sc')
@@ -355,14 +399,17 @@ class SPAdesUtils:
 
         return params
 
-    def generate_report(self, contig_file_name, params, out_dir, wsname):
+    def generate_report(self, fa_file_name, params, out_dir, wsname):
+        """
+        Generating and saving report
+        """
         log('Generating and saving report')
 
-        contig_file_with_path = os.path.join(out_dir, contig_file_name)
-        fasta_stats = self._load_stats(contig_file_with_path)
+        fa_file_with_path = os.path.join(out_dir, fa_file_name)
+        fasta_stats = self._load_stats(fa_file_with_path)
         lengths = [fasta_stats[contig_id] for contig_id in fasta_stats]
 
-        assembly_ref = params[self.PARAM_IN_WS] + '/' + params[self.PARAM_IN_CS_NAME]
+        assembly_ref = wsname + '/' + params[self.PARAM_IN_CS_NAME]
 
         report_text = ''
         report_text += 'SPAdes results saved to: ' + wsname + '/' + out_dir + '\n'
@@ -379,7 +426,7 @@ class SPAdesUtils:
                             str(edges[c + 1]) + ' bp\n')
         print('Running QUAST')
         quastret = self.kbq.run_QUAST(
-            {'files': [{'path': contig_file_with_path, 'label': params[self.PARAM_IN_CS_NAME]}]})
+            {'files': [{'path': fa_file_with_path, 'label': params[self.PARAM_IN_CS_NAME]}]})
 
         output_files = self._generate_output_file_list(out_dir)
 
@@ -395,15 +442,14 @@ class SPAdesUtils:
                             ],
              'report_object_name': 'kb_spades_report_' + str(uuid.uuid4()),
              'workspace_name': params[self.PARAM_IN_WS]})
-        report_name = report_output['name']
-        report_ref = report_output['ref']
-        return report_name, report_ref
+
+        return report_output['name'], report_output['ref']
 
     def get_hybrid_reads_info(self, input_params):
         """
         get_hybrid_reads_info--from a list of ReadsParams structures fetches the corresponding
         reads info with the ReadsParams[lib_ref]
-        returns a tuple of nine reads data each is a list of the following structure:
+        returns None or a tuple of nine reads data each is a list of the following structure:
         {
                 'fwd_file': path_to_fastq_file,
                 'orientation': (default value is "fr" (forward-reverse) for paired-end libraries
@@ -428,6 +474,9 @@ class SPAdesUtils:
         }
         """
         rds_params = copy.deepcopy(input_params)
+        if rds_params.get(self.PARAM_IN_READS, None) is None:
+            return ()  # an empty tuple
+
         wsname = rds_params[self.PARAM_IN_WS]
 
         sgl_rds_data = []  # single
@@ -442,37 +491,33 @@ class SPAdesUtils:
 
         # a list of Illumina or IonTorrent paired-end/high-quality mate-pairs/unpaired reads
         rds_refs = []
-        if rds_params.get(self.PARAM_IN_READS, None):
-            rds_libs = rds_params[self.PARAM_IN_READS]
-            for rds_lib in rds_libs:
-                if rds_lib.get('lib_ref', None):
-                    rds_refs.append(rds_lib['lib_ref'])
-            kb_rds_data = self._get_kbreads_info(wsname, rds_refs)
 
-            for rds_lib in rds_libs:
-                for kb_d in kb_rds_data:
-                    if ('lib_ref' in rds_lib and rds_lib['lib_ref'] == kb_d['reads_ref']):
-                        if rds_lib['lib_type'] == 'single':
-                            # single end reads grouped params
-                            kb_d['orientation'] = None
-                            kb_d['lib_type'] = rds_lib['lib_type']
-                            sgl_rds_data.append(kb_d)
-                        elif rds_lib['lib_type'] == 'paired-end':
-                            # pairedEnd reads grouped params
-                            if rds_lib.get('orientation', None) is None:
-                                rds_lib['orientation'] = 'fr'
-                            kb_d['orientation'] = rds_lib['orientation']
-                            kb_d['lib_type'] = rds_lib['lib_type']
-                            pe_rds_data.append(kb_d)
-                        elif rds_lib['lib_type'] == '"mate-pairs':
-                            # mate-pairs reads grouped params
-                            if rds_lib.get('orientation', None) is None:
-                                rds_lib['orientation'] = 'rf'
-                            kb_d['orientation'] = rds_lib['orientation']
-                            kb_d['lib_type'] = rds_lib['lib_type']
-                            mp_rds_data.append(kb_d)
+        rds_libs = rds_params[self.PARAM_IN_READS]
+        for rds_lib in rds_libs:
+            if rds_lib.get('lib_ref', None):
+                rds_refs.append(rds_lib['lib_ref'])
+        kb_rds_data = self._get_kbreads_info(wsname, rds_refs)
 
-        # a list of a list of PacBio (CCS or CLR), Oxford Nanopore Sanger reads
+        for rds_lib in rds_libs:
+            for kb_d in kb_rds_data:
+                if 'lib_ref' in rds_lib and rds_lib['lib_ref'] == kb_d['reads_ref']:
+                    if rds_lib['lib_type'] == 'single':  # single end reads grouped params
+                        kb_d['orientation'] = None
+                        kb_d['lib_type'] = 'single'
+                        sgl_rds_data.append(kb_d)
+                    elif rds_lib['lib_type'] == 'paired-end':  # pairedEnd reads grouped params
+                        kb_d['orientation'] = ('fr' if rds_lib.get('orientation', None) is None
+                                               else rds_lib['orientation'])
+                        kb_d['lib_type'] = 'paired-end'
+                        pe_rds_data.append(kb_d)
+                    elif rds_lib['lib_type'] == 'mate-pairs':
+                        # mate-pairs reads grouped params
+                        kb_d['orientation'] = ('rf' if rds_lib.get('orientation', None) is None
+                                               else rds_lib['orientation'])
+                        kb_d['lib_type'] = 'mate-pairs'
+                        mp_rds_data.append(kb_d)
+
+        # a list of PacBio (CCS or CLR), Oxford Nanopore Sanger reads
         # and/or additional contigs
         long_rds_refs = []
         if rds_params.get(self.PARAM_IN_LONG_READS, None):
@@ -508,7 +553,7 @@ class SPAdesUtils:
         return (sgl_rds_data, pe_rds_data, mp_rds_data, pb_ccs_data, pb_clr_data, np_rds_data,
                 sgr_rds_data, tr_ctg_data, ut_ctg_data)
 
-    def construct_yaml_dataset_file(self, sgl_libs=[], pe_libs=[], mp_libs=[],
+    def construct_yaml_dataset_file(self, sgl_libs=None, pe_libs=None, mp_libs=None,
                                     pb_ccs=None, pb_clr=None, np_libs=None,
                                     sgr_libs=None, tr_ctgs=None, ut_ctgs=None):
         """
@@ -610,113 +655,57 @@ class SPAdesUtils:
         # generate the object array
         input_data_set = []
 
-        if sgl_libs and type(sgl_libs) == list and sgl_libs != []:
-            single_reads_fqs = []
-            for sgl in sgl_libs:
-                single_reads_fqs.append(sgl['fwd_file'])
+        if pe_libs:
+            pair_libs = self._parse_pair_reads('paired-end', pe_libs)
+            if pair_libs:
+                input_data_set.append(pair_libs)
 
-            input_data_set.append({
-                "type": "single",
-                "single reads": single_reads_fqs
-            })
+        if mp_libs:
+            pair_libs = self._parse_pair_reads('mate-pairs', mp_libs)
+            if pair_libs:
+                input_data_set.append(pair_libs)
 
-        if pe_libs and type(pe_libs) == list and pe_libs != []:
-            right_reads_fqs = []
-            left_reads_fqs = []
-            for pe in pe_libs:
-                right_reads_fqs.append(pe['fwd_file'])
-                if pe.get('rev_file', None):
-                    left_reads_fqs.append(pe['rev_file'])
-            orent = pe_libs[0]['orientation']
+        # for reads_type = 'single'
+        if sgl_libs:
+            single_libs = self._parse_single_reads("single", sgl_libs)
+            if single_libs:
+                input_data_set.append(single_libs)
 
-            input_data_set.append({
-                "orientation": orent,
-                "type": "paired-end",
-                "right reads": right_reads_fqs,
-                "left reads": left_reads_fqs
-            })
+        # for long_reads_type = 'pacbio-ccs', treated as type of 'single'
+        if pb_ccs:
+            single_libs = self._parse_single_reads("single", pb_ccs)
+            if single_libs:
+                input_data_set.append(single_libs)
 
-        if mp_libs and type(mp_libs) == list and mp_libs != []:
-            right_reads_fqs = []
-            left_reads_fqs = []
-            for mp in mp_libs:
-                right_reads_fqs.append(mp['fwd_file'])
-                if mp.get('rev_file', None):
-                    left_reads_fqs.append(mp['rev_file'])
-            orent = mp_libs[0]['orientation']
+        # for long_reads_type = 'pacbio-clr'
+        if pb_clr:
+            single_libs = self._parse_single_reads("pacbio", pb_clr)
+            if single_libs:
+                input_data_set.append(single_libs)
 
-            input_data_set.append({
-                "orientation": orent,
-                "type": "mate-pairs",
-                "right reads": right_reads_fqs,
-                "left reads": left_reads_fqs
-            })
+        # for long_reads_type = 'nanopore'
+        if np_libs:
+            single_libs = self._parse_single_reads("nanopore", np_libs)
+            if single_libs:
+                input_data_set.append(single_libs)
 
-        if pb_ccs and type(pb_ccs) == list and pb_ccs != []:
-            single_reads_fqs = []
-            pb_type = 'single'  # for long_reads_type = 'pacbio-ccs'
-            for ccs in pb_ccs:
-                single_reads_fqs.append(ccs['fwd_file'])
+        # for long_reads_type = 'sanger'
+        if sgr_libs:
+            single_libs = self._parse_single_reads("sanger", sgr_libs)
+            if single_libs:
+                input_data_set.append(single_libs)
 
-            input_data_set.append({
-                "type": pb_type,
-                "single reads": single_reads_fqs
-            })
+        # for long_reads_type = 'trusted-contigs'
+        if tr_ctgs:
+            single_libs = self._parse_single_reads("trusted-contigs", tr_ctgs)
+            if single_libs:
+                input_data_set.append(single_libs)
 
-        if pb_clr and type(pb_clr) == list and pb_clr != []:
-            single_reads_fqs = []
-            pb_type = 'pacbio'  # for long_reads_type = 'pacbio-clr'
-            for clr in pb_clr:
-                single_reads_fqs.append(clr['fwd_file'])
-
-            input_data_set.append({
-                "type": pb_type,
-                "single reads": single_reads_fqs
-            })
-
-        if np_libs and type(np_libs) == list and np_libs != []:
-            single_reads_fqs = []
-            np_type = 'nanopore'  # for long_reads_type = 'nanopore'
-            for npr in np_libs:
-                single_reads_fqs.append(npr['fwd_file'])
-
-            input_data_set.append({
-                "type": np_type,
-                "single reads": single_reads_fqs
-            })
-
-        if sgr_libs and type(sgr_libs) == list and sgr_libs != []:
-            single_reads_fqs = []
-            sgr_type = 'sanger'  # for long_reads_type = 'sanger'
-            for sgr in sgr_libs:
-                single_reads_fqs.append(sgr['fwd_file'])
-
-            input_data_set.append({
-                "type": sgr_type,
-                "single reads": single_reads_fqs
-            })
-
-        if tr_ctgs and type(tr_ctgs) == list and tr_ctgs != []:
-            single_reads_fqs = []
-            tr_type = 'trusted-contigs'  # for long_reads_type = 'trusted-contigs'
-            for trc in tr_ctgs:
-                single_reads_fqs.append(trc['fwd_file'])
-
-            input_data_set.append({
-                "type": tr_type,
-                "single reads": single_reads_fqs
-            })
-
-        if ut_ctgs and type(ut_ctgs) == list and ut_ctgs != []:
-            single_reads_fqs = []
-            ut_type = 'untrusted-contigs'  # for long_reads_type = 'untrusted-contigs'
-            for utc in ut_ctgs:
-                single_reads_fqs.append(utc['fwd_file'])
-
-            input_data_set.append({
-                "type": ut_type,
-                "single reads": single_reads_fqs
-            })
+        # for long_reads_type = 'untrusted-contigs'
+        if ut_ctgs:
+            single_libs = self._parse_single_reads("untrusted-contigs", ut_ctgs)
+            if single_libs:
+                input_data_set.append(single_libs)
 
         if input_data_set == []:
             print('Empty input data set!!')
@@ -739,99 +728,108 @@ class SPAdesUtils:
         run_assemble: run the SPAdes assemble with given input parameters/options
         """
         exit_code = 1
-        if os.path.isfile(yaml_file):
-            log("The input data set yaml file exists at {}\n".format(yaml_file))
-            yf_dir, yf_nm = os.path.split(yaml_file)
+        if not os.path.isfile(yaml_file):
+            log("The input data set yaml file DOES NOT exist at {}\n".format(yaml_file))
+            return exit_code
 
-            mem = (psutil.virtual_memory().available / self.GB - self.MEMORY_OFFSET_GB)
-            if mem < self.MIN_MEMORY_GB:
-                raise ValueError(
-                    'Only ' + str(psutil.virtual_memory().available) +
-                    ' bytes of memory are available. The SPAdes wrapper will' +
-                    ' not run without at least ' +
-                    str(self.MIN_MEMORY_GB + self.MEMORY_OFFSET_GB) +
-                    ' gigabytes available')
+        log("The input data set yaml file exists at {}\n".format(yaml_file))
+        yf_dir, yf_nm = os.path.split(yaml_file)
 
-            if dna_source and dna_source == self.PARAM_IN_METAGENOME:
-                max_mem = self.MAX_MEMORY_GB_META_SPADES
-                max_threads = self.MAX_THREADS_META
-            else:
-                max_mem = self.MAX_MEMORY_GB_SPADES
-                max_threads = self.MAX_THREADS
+        mem = (psutil.virtual_memory().available / self.GB - self.MEMORY_OFFSET_GB)
+        if mem < self.MIN_MEMORY_GB:
+            raise ValueError(
+                'Only ' + str(psutil.virtual_memory().available) +
+                ' bytes of memory are available. The SPAdes wrapper will' +
+                ' not run without at least ' +
+                str(self.MIN_MEMORY_GB + self.MEMORY_OFFSET_GB) +
+                ' gigabytes available')
 
-            threads = min(max_threads, psutil.cpu_count() * self.THREADS_PER_CORE)
-
-            if mem > max_mem:
-                mem = max_mem
-
-            tmpdir = os.path.join(self.proj_dir, 'spades_tmp_dir')
-            if not os.path.exists(tmpdir):
-                os.makedirs(tmpdir)
-
-            a_cmd = [os.path.join(self.SPADES_BIN, 'spades.py')]
-            a_cmd += ['--threads', str(threads), '--memory', str(mem)]
-            a_cmd += ['--tmp-dir', tmpdir]
-            a_cmd += ['--dataset', yaml_file]
-
-            if kmer_sizes is not None:
-                a_cmd += ['-k ' + kmer_sizes]
-
-            if not basic_opts:
-                basic_opts = ['-o', self.ASSEMBLE_RESULTS_DIR]
-            if type(basic_opts) == list and basic_opts != []:
-                a_cmd += basic_opts
-
-            if pipeline_opts:
-                if type(pipeline_opts) == list and pipeline_opts != []:
-                    for p_opt in pipeline_opts:
-                        if p_opt == self.PARAM_IN_CAREFUL:
-                            a_cmd += ['--careful']
-                        if p_opt == self.PARAM_IN_ONLY_ERROR_CORR:
-                            a_cmd += ['--only-error-correction']
-                        if p_opt == self.PARAM_IN_ONLY_ASSEMBLER:
-                            a_cmd += ['--only-assembler']
-                        if p_opt == self.PARAM_IN_CONTINUE:
-                            a_cmd += ['--continue']
-                        if p_opt == self.PARAM_IN_DISABLE_GZIP:
-                            a_cmd += ['--disable-gzip-output']
-
-            # Last check of command options before the call
-            if '--meta' in a_cmd:
-                # you cannot specify --careful, --mismatch-correction
-                # or --cov-cutoff in metagenomic mode!
-                try:
-                    a_cmd.remove(self.PARAM_IN_CAREFUL)
-                    a_cmd.remove('mismatch-correction')
-                    a_cmd.remove('cov-cutoff')
-                except ValueError:
-                    pass
-
-            log("The SPAdes assembling command is:\n{}".format(' '.join(a_cmd)))
-            assemble_out_dir = os.path.join(self.proj_dir, self.ASSEMBLE_RESULTS_DIR)
-            if not os.path.exists(assemble_out_dir):
-                os.makedirs(assemble_out_dir)
-
-            p = subprocess.Popen(a_cmd, cwd=yf_dir, shell=False)
-            exit_code = p.wait()
-            log('Return code: ' + str(exit_code))
-
-            if p.returncode != 0:
-                raise ValueError('Error running spades.py, return code: ' +
-                                 str(p.returncode) + '\n')
-            else:
-                exit_code = p.returncode
+        if dna_source and dna_source == self.PARAM_IN_METAGENOME:
+            max_mem = self.MAX_MEMORY_GB_META_SPADES
+            max_threads = self.MAX_THREADS_META
         else:
-            log("The input data set yaml file {} is not found.".format(yaml_file))
+            max_mem = self.MAX_MEMORY_GB_SPADES
+            max_threads = self.MAX_THREADS
+
+        threads = min(max_threads, psutil.cpu_count() * self.THREADS_PER_CORE)
+
+        if mem > max_mem:
+            mem = max_mem
+
+        tmpdir = os.path.join(self.proj_dir, 'spades_tmp_dir')
+        if not os.path.exists(tmpdir):
+            os.makedirs(tmpdir)
+
+        a_cmd = [os.path.join(self.SPADES_BIN, 'spades.py')]
+        a_cmd += ['--threads', str(threads), '--memory', str(mem)]
+        a_cmd += ['--tmp-dir', tmpdir]
+        a_cmd += ['--dataset', yaml_file]
+
+        if kmer_sizes is not None:
+            a_cmd += ['-k ' + kmer_sizes]
+
+        if basic_opts is None:
+            basic_opts = ['-o', self.ASSEMBLE_RESULTS_DIR]
+        if isinstance(basic_opts, list):
+            a_cmd += basic_opts
+
+        if pipeline_opts and isinstance(pipeline_opts, list):
+            for p_opt in pipeline_opts:
+                if p_opt == self.PARAM_IN_CAREFUL:
+                    a_cmd += ['--careful']
+                if p_opt == self.PARAM_IN_ONLY_ERROR_CORR:
+                    a_cmd += ['--only-error-correction']
+                if p_opt == self.PARAM_IN_ONLY_ASSEMBLER:
+                    a_cmd += ['--only-assembler']
+                if p_opt == self.PARAM_IN_CONTINUE:
+                    a_cmd += ['--continue']
+                if p_opt == self.PARAM_IN_DISABLE_GZIP:
+                    a_cmd += ['--disable-gzip-output']
+
+        # Last check of command options before the call
+        if '--meta' in a_cmd:
+            # you cannot specify --careful, --mismatch-correction
+            # or --cov-cutoff in metagenomic mode!
+            try:
+                a_cmd.remove(self.PARAM_IN_CAREFUL)
+                a_cmd.remove('mismatch-correction')
+                a_cmd.remove('cov-cutoff')
+            except ValueError:
+                pass
+
+        log("**************The HybridSPAdes assembling command is:\n{}".format(' '.join(a_cmd)))
+        assemble_out_dir = os.path.join(self.proj_dir, self.ASSEMBLE_RESULTS_DIR)
+        if not os.path.exists(assemble_out_dir):
+            os.makedirs(assemble_out_dir)
+
+        p = subprocess.Popen(a_cmd, cwd=yf_dir, shell=False)
+        exit_code = p.wait()
+        log('Return code: ' + str(exit_code))
+
+        if p.returncode != 0:
+            raise ValueError('Error running spades.py, return code: ' + str(p.returncode) + '\n')
+        else:
+            exit_code = p.returncode
         return exit_code
 
-    def save_assembly(self, contig_fa, wsname, a_name):
-        if os.path.isfile(contig_fa):
+    def save_assembly(self, fa_file_path, wsname, a_name, min_ctg_length=0):
+        """
+        save_assembly: save the assembly to KBase workspace
+        """
+        if os.path.isfile(fa_file_path):
             log('Uploading FASTA file to Assembly...')
-            self.au.save_assembly_from_fasta(
-                            {'file': {'path': contig_fa},
+            if min_ctg_length > 0:
+                self.au.save_assembly_from_fasta(
+                            {'file': {'path': fa_file_path},
+                             'workspace_name': wsname,
+                             'assembly_name': a_name,
+                             'min_contig_length': min_ctg_length})
+            else:
+                self.au.save_assembly_from_fasta(
+                            {'file': {'path': fa_file_path},
                              'workspace_name': wsname,
                              'assembly_name': a_name})
         else:
-            log("The contig file {} is not found.".format(contig_fa))
+            log("The resulting sequence file {} is not found.".format(fa_file_path))
 
     # end of public methods
