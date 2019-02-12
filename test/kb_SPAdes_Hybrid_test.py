@@ -11,13 +11,13 @@ import psutil
 import requests
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from kb_SPAdes.kb_SPAdesImpl import kb_SPAdes
-from ReadsUtils.ReadsUtilsClient import ReadsUtils
+from installed_clients.ReadsUtilsClient import ReadsUtils
 from kb_SPAdes.kb_SPAdesServer import MethodContext
 from pprint import pprint
 import shutil
 import inspect
 
-from Workspace.WorkspaceClient import Workspace
+from installed_clients.WorkspaceClient import Workspace
 from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
 from kb_SPAdes.utils.spades_utils import SPAdesUtils
 

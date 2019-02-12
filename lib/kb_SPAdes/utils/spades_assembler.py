@@ -3,7 +3,7 @@ import re
 import time
 import uuid
 
-from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
+from installed_clients.AssemblyUtilClient import AssemblyUtil
 from kb_SPAdes.utils.spades_utils import SPAdesUtils
 
 
