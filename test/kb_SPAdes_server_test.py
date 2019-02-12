@@ -8,7 +8,7 @@ from ConfigParser import ConfigParser
 import psutil
 
 import requests
-from installed_clients.WorkspaceClient import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
+from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 from biokbase.workspace.client import ServerError as WorkspaceError  # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from kb_SPAdes.kb_SPAdesImpl import kb_SPAdes
