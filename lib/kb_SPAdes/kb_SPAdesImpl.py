@@ -12,6 +12,7 @@ import subprocess
 import numpy as np
 import yaml
 import time
+from pprint import pformat
 
 from installed_clients.WorkspaceClient import Workspace
 from installed_clients.ReadsUtilsClient import ReadsUtils  # @IgnorePep8
