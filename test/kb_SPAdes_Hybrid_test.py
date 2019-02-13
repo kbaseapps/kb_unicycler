@@ -7,17 +7,16 @@ import json
 from os import environ
 from ConfigParser import ConfigParser
 import psutil
-
-import requests
-from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
-from kb_SPAdes.kb_SPAdesImpl import kb_SPAdes
-from ReadsUtils.ReadsUtilsClient import ReadsUtils
-from kb_SPAdes.kb_SPAdesServer import MethodContext
 from pprint import pprint
 import shutil
 import inspect
+import requests
 
-from Workspace.WorkspaceClient import Workspace
+from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
+from kb_SPAdes.kb_SPAdesImpl import kb_SPAdes
+from installed_clients.ReadsUtilsClient import ReadsUtils
+from kb_SPAdes.kb_SPAdesServer import MethodContext
+from installed_clients.WorkspaceClient import Workspace
 from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
 from kb_SPAdes.utils.spades_utils import SPAdesUtils
 

@@ -12,8 +12,8 @@ from biokbase.workspace.client import Workspace as workspaceService  # @Unresolv
 from biokbase.workspace.client import ServerError as WorkspaceError  # @UnresolvedImport @IgnorePep8
 from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
 from kb_SPAdes.kb_SPAdesImpl import kb_SPAdes
-from ReadsUtils.baseclient import ServerError
-from ReadsUtils.ReadsUtilsClient import ReadsUtils
+from installed_clients.baseclient import ServerError
+from installed_clients.ReadsUtilsClient import ReadsUtils
 from kb_SPAdes.kb_SPAdesServer import MethodContext
 from pprint import pprint
 import shutil

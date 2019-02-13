@@ -16,7 +16,7 @@ from biokbase import log
 import requests as _requests
 import random as _random
 import os
-from kb_SPAdes.authclient import KBaseAuth as _KBaseAuth
+from installed_clients.authclient import KBaseAuth as _KBaseAuth
 
 DEPLOY = 'KB_DEPLOYMENT_CONFIG'
 SERVICE = 'KB_SERVICE_NAME'

@@ -5,26 +5,22 @@ from __future__ import print_function
 import os
 import re
 import uuid
-from pprint import pformat, pprint
-from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
 import requests
 import json
 import psutil
 import subprocess
-# import hashlib
 import numpy as np
 import yaml
-# from gaprice_SPAdes_test.GenericClient import GenericClient, ServerError
-# from gaprice_SPAdes_test.kbdynclient import KBDynClient, ServerError
-from ReadsUtils.ReadsUtilsClient import ReadsUtils  # @IgnorePep8
-from ReadsUtils.baseclient import ServerError
-from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
-from KBaseReport.KBaseReportClient import KBaseReport
-# from KBaseReport.baseclient import ServerError as _RepError
-from kb_quast.kb_quastClient import kb_quast
-# from kb_quast.baseclient import ServerError as QUASTError
-from kb_ea_utils.kb_ea_utilsClient import kb_ea_utils
 import time
+from pprint import pformat
+
+from installed_clients.WorkspaceClient import Workspace
+from installed_clients.ReadsUtilsClient import ReadsUtils  # @IgnorePep8
+from installed_clients.baseclient import ServerError
+from installed_clients.AssemblyUtilClient import AssemblyUtil
+from installed_clients.KBaseReportClient import KBaseReport
+from installed_clients.kb_quastClient import kb_quast
+from installed_clients.kb_ea_utilsClient import kb_ea_utils
 
 from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
 
@@ -586,7 +582,7 @@ A coverage cutoff is not specified.
         obj_ids = []
         for r in params[self.PARAM_IN_LIB]:
             obj_ids.append({'ref': r if '/' in r else (wsname + '/' + r)})
-        ws = workspaceService(self.workspaceURL, token=token)
+        ws = Workspace(self.workspaceURL, token=token)
         ws_info = ws.get_object_info_new({'objects': obj_ids})
         reads_params = []
 
