@@ -1,7 +1,7 @@
 #
 # define display information
 #
-name: Assemble with SPAdes - v3.12.0
+name: Assemble with SPAdes - v3.13.0
 tooltip: |
     Assemble reads using the SPAdes assembler.
 screenshots: []

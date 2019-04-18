@@ -73,7 +73,7 @@
         "service-mapping": {
             "url": "",
             "name": "kb_SPAdes",
-            "method": "run_SPAdes",
+            "method": "run_metaSPAdes",
             "input_mapping": [
                 {
                     "narrative_system_variable": "workspace",
