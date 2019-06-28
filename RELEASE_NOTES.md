@@ -1,3 +1,7 @@
+### Version 1.2.3
+__Changes__
+- update docs
+
 ### Version 1.2.0
 __Changes__
 - updated to 3.13 and added hybrid spades feature
