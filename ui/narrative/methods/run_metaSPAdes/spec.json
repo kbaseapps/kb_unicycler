@@ -74,6 +74,8 @@
             "url": "",
             "name": "kb_SPAdes",
             "method": "run_metaSPAdes",
+            "resource_estimator_module": "kb_SPAdes",
+            "resource_estimator_method": "estimate_metaSPAdes_requirements",
             "input_mapping": [
                 {
                     "narrative_system_variable": "workspace",
