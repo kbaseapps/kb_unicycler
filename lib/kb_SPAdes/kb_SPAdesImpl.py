@@ -23,6 +23,7 @@ from installed_clients.kb_quastClient import kb_quast
 from installed_clients.kb_ea_utilsClient import kb_ea_utils
 
 from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
+from kb_SPAdes.utils.estimator import estimate_metaSPAdes_reqs
 
 
 class ShockException(Exception):
@@ -54,9 +55,9 @@ A coverage cutoff is not specified.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "1.2.0"
-    GIT_URL = "https://github.com/qzzhang/kb_SPAdes"
-    GIT_COMMIT_HASH = "5b7e88d6993728abc26c93cfef780ee7feb16c63"
+    VERSION = "1.2.3"
+    GIT_URL = "https://github.com/briehl/kb_SPAdes"
+    GIT_COMMIT_HASH = "17687df25126cf201693f5686224b4777de36f0b"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -817,6 +818,57 @@ A coverage cutoff is not specified.
                              'output is not type dict as required.')
         # return the results
         return [output]
+
+    def estimate_metaSPAdes_requirements(self, ctx, params):
+        """
+        :param params: instance of type "MetaSPAdesEstimatorParams" (params -
+           the params used to run metaSPAdes. use_defaults - (optional, def
+           0) if 1, just return the default requirements use_heuristic -
+           (optional, def 1) if 1, only use a heuristic based on the reads
+           metadata to perform estimates) -> structure: parameter "params" of
+           type "SPAdesParams" (Input parameters for running SPAdes.
+           workspace_name - the name of the workspace from which to take
+           input and store output. output_contigset_name - the name of the
+           output contigset read_libraries - a list of Illumina
+           PairedEndLibrary files in FASTQ or BAM format. dna_source -
+           (optional) the source of the DNA used for sequencing
+           'single_cell': DNA amplified from a single cell via MDA anything
+           else: Standard DNA sample from multiple cells. Default value is
+           None. min_contig_length - (optional) integer to filter out contigs
+           with length < min_contig_length from the SPAdes output. Default
+           value is 0 implying no filter. kmer_sizes - (optional) K-mer
+           sizes, Default values: 33, 55, 77, 99, 127 (all values must be
+           odd, less than 128 and listed in ascending order) In the absence
+           of these values, K values are automatically selected.
+           skip_error_correction - (optional) Assembly only (No error
+           correction). By default this is disabled.) -> structure: parameter
+           "workspace_name" of String, parameter "output_contigset_name" of
+           String, parameter "read_libraries" of list of type
+           "paired_end_lib" (The workspace object name of a PairedEndLibrary
+           file, whether of the KBaseAssembly or KBaseFile type.), parameter
+           "dna_source" of String, parameter "min_contig_length" of Long,
+           parameter "kmer_sizes" of list of Long, parameter
+           "skip_error_correction" of type "bool" (A boolean. 0 = false,
+           anything else = true.), parameter "use_defaults" of Long
+        :returns: instance of type "MetaSPAdesEstimate" (cpus - the number of
+           CPUs required for the run memory - the minimal amount of memory in
+           MB required for the run walltime - an estimate for walltime in
+           seconds for the run) -> structure: parameter "cpus" of Long,
+           parameter "memory" of Long, parameter "walltime" of Long
+        """
+        # ctx is the context object
+        # return variables are: results
+        #BEGIN estimate_metaSPAdes_requirements
+        ws = Workspace(self.workspaceURL, token=ctx["token"])
+        results = estimate_metaSPAdes_reqs(params["params"], ws, use_defaults=params.get("use_defaults", 0)==1)
+        #END estimate_metaSPAdes_requirements
+
+        # At some point might do deeper type checking...
+        if not isinstance(results, dict):
+            raise ValueError('Method estimate_metaSPAdes_requirements return value ' +
+                             'results is not type dict as required.')
+        # return the results
+        return [results]
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",

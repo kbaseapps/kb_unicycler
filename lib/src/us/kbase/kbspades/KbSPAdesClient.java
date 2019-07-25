@@ -223,6 +223,23 @@ public class KbSPAdesClient {
         return res.get(0);
     }
 
+    /**
+     * <p>Original spec-file function name: estimate_metaSPAdes_requirements</p>
+     * <pre>
+     * </pre>
+     * @param   params   instance of type {@link us.kbase.kbspades.MetaSPAdesEstimatorParams MetaSPAdesEstimatorParams}
+     * @return   parameter "results" of type {@link us.kbase.kbspades.MetaSPAdesEstimate MetaSPAdesEstimate}
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public MetaSPAdesEstimate estimateMetaSPAdesRequirements(MetaSPAdesEstimatorParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(params);
+        TypeReference<List<MetaSPAdesEstimate>> retType = new TypeReference<List<MetaSPAdesEstimate>>() {};
+        List<MetaSPAdesEstimate> res = caller.jsonrpcCall("kb_SPAdes.estimate_metaSPAdes_requirements", args, retType, true, true, jsonRpcContext, this.serviceVersion);
+        return res.get(0);
+    }
+
     public Map<String, Object> status(RpcContext... jsonRpcContext) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         TypeReference<List<Map<String, Object>>> retType = new TypeReference<List<Map<String, Object>>>() {};

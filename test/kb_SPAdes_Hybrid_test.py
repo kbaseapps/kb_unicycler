@@ -20,7 +20,6 @@ from installed_clients.WorkspaceClient import Workspace
 from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
 from kb_SPAdes.utils.spades_utils import SPAdesUtils
 
-
 class hybrid_SPAdesTest(unittest.TestCase):
 
     @classmethod

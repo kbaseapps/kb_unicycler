@@ -19,7 +19,6 @@ from pprint import pprint
 import shutil
 import inspect
 
-
 class gaprice_SPAdesTest(unittest.TestCase):
 
     @classmethod

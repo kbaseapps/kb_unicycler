@@ -456,6 +456,122 @@ Run SPAdes on paired end libraries for metagenomes
     }
 }
  
+
+
+=head2 estimate_metaSPAdes_requirements
+
+  $results = $obj->estimate_metaSPAdes_requirements($params)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$params is a kb_SPAdes.MetaSPAdesEstimatorParams
+$results is a kb_SPAdes.MetaSPAdesEstimate
+MetaSPAdesEstimatorParams is a reference to a hash where the following keys are defined:
+	params has a value which is a kb_SPAdes.SPAdesParams
+	use_defaults has a value which is an int
+SPAdesParams is a reference to a hash where the following keys are defined:
+	workspace_name has a value which is a string
+	output_contigset_name has a value which is a string
+	read_libraries has a value which is a reference to a list where each element is a kb_SPAdes.paired_end_lib
+	dna_source has a value which is a string
+	min_contig_length has a value which is an int
+	kmer_sizes has a value which is a reference to a list where each element is an int
+	skip_error_correction has a value which is a kb_SPAdes.bool
+paired_end_lib is a string
+bool is an int
+MetaSPAdesEstimate is a reference to a hash where the following keys are defined:
+	cpus has a value which is an int
+	memory has a value which is an int
+	walltime has a value which is an int
+
+</pre>
+
+=end html
+
+=begin text
+
+$params is a kb_SPAdes.MetaSPAdesEstimatorParams
+$results is a kb_SPAdes.MetaSPAdesEstimate
+MetaSPAdesEstimatorParams is a reference to a hash where the following keys are defined:
+	params has a value which is a kb_SPAdes.SPAdesParams
+	use_defaults has a value which is an int
+SPAdesParams is a reference to a hash where the following keys are defined:
+	workspace_name has a value which is a string
+	output_contigset_name has a value which is a string
+	read_libraries has a value which is a reference to a list where each element is a kb_SPAdes.paired_end_lib
+	dna_source has a value which is a string
+	min_contig_length has a value which is an int
+	kmer_sizes has a value which is a reference to a list where each element is an int
+	skip_error_correction has a value which is a kb_SPAdes.bool
+paired_end_lib is a string
+bool is an int
+MetaSPAdesEstimate is a reference to a hash where the following keys are defined:
+	cpus has a value which is an int
+	memory has a value which is an int
+	walltime has a value which is an int
+
+
+=end text
+
+=item Description
+
+
+
+=back
+
+=cut
+
+ sub estimate_metaSPAdes_requirements
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function estimate_metaSPAdes_requirements (received $n, expecting 1)");
+    }
+    {
+	my($params) = @args;
+
+	my @_bad_arguments;
+        (ref($params) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 1 \"params\" (value was \"$params\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to estimate_metaSPAdes_requirements:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'estimate_metaSPAdes_requirements');
+	}
+    }
+
+    my $url = $self->{url};
+    my $result = $self->{client}->call($url, $self->{headers}, {
+	    method => "kb_SPAdes.estimate_metaSPAdes_requirements",
+	    params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{error}->{code},
+					       method_name => 'estimate_metaSPAdes_requirements',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method estimate_metaSPAdes_requirements",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'estimate_metaSPAdes_requirements',
+				       );
+    }
+}
+ 
   
 sub status
 {
@@ -499,16 +615,16 @@ sub version {
             Bio::KBase::Exceptions::JSONRPC->throw(
                 error => $result->error_message,
                 code => $result->content->{code},
-                method_name => 'run_metaSPAdes',
+                method_name => 'estimate_metaSPAdes_requirements',
             );
         } else {
             return wantarray ? @{$result->result} : $result->result->[0];
         }
     } else {
         Bio::KBase::Exceptions::HTTP->throw(
-            error => "Error invoking method run_metaSPAdes",
+            error => "Error invoking method estimate_metaSPAdes_requirements",
             status_line => $self->{client}->status_line,
-            method_name => 'run_metaSPAdes',
+            method_name => 'estimate_metaSPAdes_requirements',
         );
     }
 }
@@ -887,6 +1003,86 @@ report_ref has a value which is a string
 a reference to a hash where the following keys are defined:
 report_name has a value which is a string
 report_ref has a value which is a string
+
+
+=end text
+
+=back
+
+
+
+=head2 MetaSPAdesEstimatorParams
+
+=over 4
+
+
+
+=item Description
+
+params - the params used to run metaSPAdes.
+use_defaults - (optional, def 0) if 1, just return the default requirements
+use_heuristic - (optional, def 1) if 1, only use a heuristic based on the reads metadata to perform estimates
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a hash where the following keys are defined:
+params has a value which is a kb_SPAdes.SPAdesParams
+use_defaults has a value which is an int
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a hash where the following keys are defined:
+params has a value which is a kb_SPAdes.SPAdesParams
+use_defaults has a value which is an int
+
+
+=end text
+
+=back
+
+
+
+=head2 MetaSPAdesEstimate
+
+=over 4
+
+
+
+=item Description
+
+cpus - the number of CPUs required for the run
+memory - the minimal amount of memory in MB required for the run
+walltime - an estimate for walltime in seconds for the run
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a hash where the following keys are defined:
+cpus has a value which is an int
+memory has a value which is an int
+walltime has a value which is an int
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a hash where the following keys are defined:
+cpus has a value which is an int
+memory has a value which is an int
+walltime has a value which is an int
 
 
 =end text

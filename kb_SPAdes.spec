@@ -138,5 +138,29 @@ module kb_SPAdes {
     /* Run SPAdes on paired end libraries for metagenomes */
     funcdef run_metaSPAdes(SPAdesParams params) returns(SPAdesOutput output)
         authentication required;
+
+    /*
+        params - the params used to run metaSPAdes.
+        use_defaults - (optional, def 0) if 1, just return the default requirements
+        use_heuristic - (optional, def 1) if 1, only use a heuristic based on the reads metadata to perform estimates
+    */
+    typedef structure {
+        SPAdesParams params;
+        int use_defaults;
+    } MetaSPAdesEstimatorParams;
+
+    /*
+        cpus - the number of CPUs required for the run
+        memory - the minimal amount of memory in MB required for the run
+        walltime - an estimate for walltime in seconds for the run
+    */
+    typedef structure {
+        int cpus;
+        int memory;
+        int walltime;
+    } MetaSPAdesEstimate;
+    
+    funcdef estimate_metaSPAdes_requirements(MetaSPAdesEstimatorParams params) returns 
+        (MetaSPAdesEstimate results) authentication required;
 };
 
