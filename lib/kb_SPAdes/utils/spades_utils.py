@@ -465,7 +465,7 @@ class SPAdesUtils:
         OR:
         {
                 'fwd_file': path_to_fastq_file,
-                'long_reads_type': ("pacbio-ccs", "pacbio-clr", "nanopore", "sanger",
+                'long_reads_type': ("pacbio_ccs", "pacbio_clr", "nanopore", "sanger",
                                     "trusted-contigs", "untrusted-contigs"),
                 'type': reads_type, # 'interleaved', 'paired', or 'single'
                 'seq_tech': sequencing_tech,
@@ -482,8 +482,8 @@ class SPAdesUtils:
         sgl_rds_data = []  # single
         pe_rds_data = []   # paired-end
         mp_rds_data = []   # mate-pairs
-        pb_ccs_data = []   # pacbio-ccs
-        pb_clr_data = []   # pacbio-clr
+        pb_ccs_data = []   # pacbio_ccs
+        pb_clr_data = []   # pacbio_clr
         np_rds_data = []   # nanopore
         sgr_rds_data = []  # sanger
         tr_ctg_data = []   # trusted-contigs
@@ -531,10 +531,10 @@ class SPAdesUtils:
                 for kb_ld in kb_lrds_data:
                     if ('long_reads_ref' in lrds_lib and
                             lrds_lib['long_reads_ref'] == kb_ld['reads_ref']):
-                        if lrds_lib['long_reads_type'] == 'pacbio-ccs':
+                        if lrds_lib['long_reads_type'] == 'pacbio_ccs':
                             kb_ld['long_reads_type'] = lrds_lib['long_reads_type']
                             pb_ccs_data.append(kb_ld)
-                        elif lrds_lib['long_reads_type'] == 'pacbio-clr':
+                        elif lrds_lib['long_reads_type'] == 'pacbio_clr':
                             kb_ld['long_reads_type'] = lrds_lib['long_reads_type']
                             pb_clr_data.append(kb_ld)
                         elif lrds_lib['long_reads_type'] == 'nanopore':
@@ -671,13 +671,13 @@ class SPAdesUtils:
             if single_libs:
                 input_data_set.append(single_libs)
 
-        # for long_reads_type = 'pacbio-ccs', treated as type of 'single'
+        # for long_reads_type = 'pacbio_ccs', treated as type of 'single'
         if pb_ccs:
             single_libs = self._parse_single_reads("single", pb_ccs)
             if single_libs:
                 input_data_set.append(single_libs)
 
-        # for long_reads_type = 'pacbio-clr'
+        # for long_reads_type = 'pacbio_clr'
         if pb_clr:
             single_libs = self._parse_single_reads("pacbio", pb_clr)
             if single_libs:
@@ -711,7 +711,8 @@ class SPAdesUtils:
             print('Empty input data set!!')
             return ''
 
-        pprint(input_data_set)
+        log('*******************Content to be written to yaml file:*****************')
+        log(json.dumps(input_data_set, indent=1))
         try:
             with open(yaml_file_path, 'w') as yaml_file:
                 json.dump(input_data_set, yaml_file)
