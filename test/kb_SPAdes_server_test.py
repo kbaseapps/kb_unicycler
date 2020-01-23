@@ -73,8 +73,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
             for node in cls.nodes_to_delete:
                 cls.delete_shock_node(node)
         if hasattr(cls, 'handles_to_delete'):
-            cls.hs.delete_handles(cls.hs.ids_to_handles(cls.handles_to_delete))
-            print('Deleted handles ' + str(cls.handles_to_delete))
+            if cls.handles_to_delete:
+                cls.hs.delete_handles(cls.hs.hids_to_handles(cls.handles_to_delete))
+                print('Deleted handles ' + str(cls.handles_to_delete))
 
     @classmethod
     def getWsName(cls):
@@ -288,7 +289,7 @@ class gaprice_SPAdesTest(unittest.TestCase):
     @classmethod
     def setupTestData(cls):
         print('Shock url ' + cls.shockURL)
-        print('WS url ' + cls.wsClient.url)
+        # print('WS url ' + cls.wsClient.url)
         # print('Handle service url ' + cls.hs.url)
         print('CPUs detected ' + str(psutil.cpu_count()))
         print('Available memory ' + str(psutil.virtual_memory().available))

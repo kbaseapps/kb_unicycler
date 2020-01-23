@@ -87,8 +87,9 @@ class hybrid_SPAdesTest(unittest.TestCase):
             for node in cls.nodes_to_delete:
                 cls.delete_shock_node(node)
         if hasattr(cls, 'handles_to_delete'):
-            cls.hs.delete_handles(cls.hs.ids_to_handles(cls.handles_to_delete))
-            print('Deleted handles ' + str(cls.handles_to_delete))
+            if cls.handles_to_delete:
+                cls.hs.delete_handles(cls.hs.hids_to_handles(cls.handles_to_delete))
+                print('Deleted handles ' + str(cls.handles_to_delete))
 
     @classmethod
     def getWsName(cls):
