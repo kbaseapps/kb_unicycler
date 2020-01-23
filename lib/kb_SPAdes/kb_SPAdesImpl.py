@@ -228,7 +228,7 @@ A coverage cutoff is not specified.
             os.makedirs(tmpdir)
 
         cmd = ['spades.py', '--threads', str(threads),
-               '--memory', str(mem), '-o', outdir, '--tmp-dir', tmpdir]
+               '--memory', str(int(mem)), '-o', outdir, '--tmp-dir', tmpdir]
 
         print("THE DNA SOURCE IS : " + str(dna_source))
         if dna_source == self.PARAM_IN_SINGLE_CELL:

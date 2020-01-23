@@ -762,7 +762,7 @@ class SPAdesUtils:
             os.makedirs(tmpdir)
 
         a_cmd = [os.path.join(self.SPADES_BIN, 'spades.py')]
-        a_cmd += ['--threads', str(threads), '--memory', str(mem)]
+        a_cmd += ['--threads', str(threads), '--memory', str(int(mem))]
         a_cmd += ['--tmp-dir', tmpdir]
         a_cmd += ['--dataset', yaml_file]
 
