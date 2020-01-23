@@ -9,9 +9,9 @@ MAINTAINER KBase Developer
 RUN echo "start building docker image"
 
 RUN apt-get update \
-    && apt-get -y install libboost-all-dev \
+    && apt-get -y install python3-dev \
     && apt-get -y install wget \
-    && apt-get -y install g++
+    && apt-get -y install gcc
 
 RUN pip install --upgrade pip \
     && pip3 install psutil \
