@@ -4,20 +4,21 @@ import os
 import time
 
 from os import environ
-from ConfigParser import ConfigParser
-import psutil
-
-import requests
-from biokbase.workspace.client import Workspace as workspaceService  # @UnresolvedImport @IgnorePep8
-from biokbase.workspace.client import ServerError as WorkspaceError  # @UnresolvedImport @IgnorePep8
-from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
-from kb_SPAdes.kb_SPAdesImpl import kb_SPAdes
-from installed_clients.baseclient import ServerError
-from installed_clients.ReadsUtilsClient import ReadsUtils
-from kb_SPAdes.kb_SPAdesServer import MethodContext
+from configparser import ConfigParser
 from pprint import pprint
+
+import psutil
+import requests
 import shutil
 import inspect
+
+from installed_clients.AbstractHandleClient import AbstractHandle as HandleService
+from installed_clients.WorkspaceClient import Workspace as workspaceService
+from installed_clients.baseclient import ServerError
+from installed_clients.ReadsUtilsClient import ReadsUtils
+
+from kb_SPAdes.kb_SPAdesImpl import kb_SPAdes
+from kb_SPAdes.kb_SPAdesServer import MethodContext
 
 
 class gaprice_SPAdesTest(unittest.TestCase):
@@ -72,8 +73,9 @@ class gaprice_SPAdesTest(unittest.TestCase):
             for node in cls.nodes_to_delete:
                 cls.delete_shock_node(node)
         if hasattr(cls, 'handles_to_delete'):
-            cls.hs.delete_handles(cls.hs.ids_to_handles(cls.handles_to_delete))
-            print('Deleted handles ' + str(cls.handles_to_delete))
+            if cls.handles_to_delete:
+                cls.hs.delete_handles(cls.hs.hids_to_handles(cls.handles_to_delete))
+                print('Deleted handles ' + str(cls.handles_to_delete))
 
     @classmethod
     def getWsName(cls):
@@ -287,8 +289,8 @@ class gaprice_SPAdesTest(unittest.TestCase):
     @classmethod
     def setupTestData(cls):
         print('Shock url ' + cls.shockURL)
-        print('WS url ' + cls.wsClient.url)
-        print('Handle service url ' + cls.hs.url)
+        # print('WS url ' + cls.wsClient.url)
+        # print('Handle service url ' + cls.hs.url)
         print('CPUs detected ' + str(psutil.cpu_count()))
         print('Available memory ' + str(psutil.virtual_memory().available))
         print('staging data')

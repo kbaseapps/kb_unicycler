@@ -1,3 +1,7 @@
+### Version 1.2.4
+__Changes__
+- matched the pacbio* strings from within the main code to the values in the ui dropdown
+
 ### Version 1.2.3
 __Changes__
 - update docs

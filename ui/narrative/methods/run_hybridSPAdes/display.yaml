@@ -6,7 +6,7 @@ tooltip: |
     Assemble reads using the HybridSPAdes assembler.
 screenshots: []
 
-icon: spades.png
+icon: hybridspades-blue.png
 
 #
 # define a set of similar methods that might be useful to the user

@@ -5,14 +5,14 @@ import time
 import json
 
 from os import environ
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 import psutil
 from pprint import pprint
 import shutil
 import inspect
 import requests
 
-from biokbase.AbstractHandle.Client import AbstractHandle as HandleService  # @UnresolvedImport @IgnorePep8
+from installed_clients.AbstractHandleClient import AbstractHandle as HandleService
 from kb_SPAdes.kb_SPAdesImpl import kb_SPAdes
 from installed_clients.ReadsUtilsClient import ReadsUtils
 from kb_SPAdes.kb_SPAdesServer import MethodContext
@@ -87,8 +87,9 @@ class hybrid_SPAdesTest(unittest.TestCase):
             for node in cls.nodes_to_delete:
                 cls.delete_shock_node(node)
         if hasattr(cls, 'handles_to_delete'):
-            cls.hs.delete_handles(cls.hs.ids_to_handles(cls.handles_to_delete))
-            print('Deleted handles ' + str(cls.handles_to_delete))
+            if cls.handles_to_delete:
+                cls.hs.delete_handles(cls.hs.hids_to_handles(cls.handles_to_delete))
+                print('Deleted handles ' + str(cls.handles_to_delete))
 
     @classmethod
     def getWsName(cls):
@@ -302,7 +303,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
     def setupTestData(cls):
         print('Shock url ' + cls.shockURL)
         # print('WS url ' + cls.wsClient.url)
-        print('Handle service url ' + cls.hs.url)
+        # print('Handle service url ' + cls.hs.url)
         print('CPUs detected ' + str(psutil.cpu_count()))
         print('Available memory ' + str(psutil.virtual_memory().available))
         print('staging data')
@@ -380,7 +381,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
     def run_hybrid_success(self, readnames, output_name, longreadnames=None,
                            min_contig_length=0, dna_source=None, kmer_sizes=None,
                            orientation='fr', lib_type='paired-end',
-                           long_reads_type='pacbio-clr'):
+                           long_reads_type='pacbio_clr'):
         """
         run_hybrid_success: The main method to test all possible hybrid input data sets
         """
@@ -501,14 +502,14 @@ class hybrid_SPAdesTest(unittest.TestCase):
     def test_multiple_pacbio_single(self):
         self.run_hybrid_success(
             ['single_end'], 'pacbio_single_out', longreadnames=['pacbio'],
-            lib_type='single', long_reads_type='pacbio-clr', dna_source='None')
+            lib_type='single', long_reads_type='pacbio_clr', dna_source='None')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_multiple_pacbio_illumina")
     def test_multiple_pacbio_illumina(self):
         self.run_hybrid_success(
             ['intbasic_kbassy'], 'pacbio_multiple_out', longreadnames=['pacbio'],
-            lib_type='single', long_reads_type='pacbio-clr', dna_source='None')
+            lib_type='single', long_reads_type='pacbio_clr', dna_source='None')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_pacbioccs_alone")
@@ -522,14 +523,14 @@ class hybrid_SPAdesTest(unittest.TestCase):
     def test_pacbioccs_single(self):
         self.run_hybrid_success(
             ['single_end'], 'pacbioccs_single_out', longreadnames=['pacbioccs'],
-            lib_type='single', long_reads_type='pacbio-ccs', dna_source='None')
+            lib_type='single', long_reads_type='pacbio_ccs', dna_source='None')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_multiple_pacbioccs_illumina")
     def test_multiple_pacbioccs_illumina(self):
         self.run_hybrid_success(
             ['intbasic_kbassy'], 'pacbioccs_multiple_out', longreadnames=['pacbioccs'],
-            lib_type='single', long_reads_type='pacbio-ccs', dna_source='None')
+            lib_type='single', long_reads_type='pacbio_ccs', dna_source='None')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_single_reads")
@@ -698,7 +699,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         rds_name2 = 'pacbio'
         output_name = rds_name + '_' + rds_name2 + '_out'
         libs4 = {'long_reads_ref': self.staged[rds_name2]['ref'],
-                 'long_reads_type': 'pacbio-clr'}
+                 'long_reads_type': 'pacbio_clr'}
         params4 = {'workspace_name': self.getWsName(),
                    'reads_libraries': [libs2],
                    'long_reads_libraries': [libs4],
@@ -727,7 +728,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertIn(rds_name, pe_rds[0]['reads_name'])
         self.assertIn('fwd.fastq', pe_rds[0]['fwd_file'])
         self.assertIn('rev.fastq', pe_rds[0]['rev_file'])
-        self.assertEqual(pb_clr[0]['long_reads_type'], 'pacbio-clr')
+        self.assertEqual(pb_clr[0]['long_reads_type'], 'pacbio_clr')
         self.assertEqual(pb_clr[0]['reads_ref'], self.staged[rds_name2]['ref'])
         self.assertEqual(pb_clr[0]['type'], 'single')
         self.assertEqual(pb_clr[0]['seq_tech'], u'PacBio CLR')
@@ -782,6 +783,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         else:
             self.assertIn('single reads', yaml_data[0])
             self.assertIn('type', yaml_data[0])
+            print(json.dumps(yaml_data, indent=1))
 
         # test pairedEnd_cell reads
         dnasrc = dna_src_list[0]
@@ -818,13 +820,14 @@ class hybrid_SPAdesTest(unittest.TestCase):
             self.assertIn('fwd.fastq', yaml_data[0]['right reads'][0])
             self.assertEqual(yaml_data[0]['orientation'], 'fr')
             self.assertEqual(yaml_data[0]['type'], 'paired-end')
+            print(json.dumps(yaml_data, indent=1))
 
         # test pairedEnd_cell reads with pacbio clr reads
         dnasrc = dna_src_list[0]
         rds_name2 = 'pacbio'
         output_name = rds_name + '_' + rds_name2 + '_out'
         libs4 = {'long_reads_ref': self.staged[rds_name2]['ref'],
-                 'long_reads_type': 'pacbio-clr'}
+                 'long_reads_type': 'pacbio_clr'}
         params4 = {'workspace_name': self.getWsName(),
                    'reads_libraries': [libs2],
                    'long_reads_libraries': [libs4],
@@ -856,6 +859,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
             self.assertNotIn('right reads', yaml_data[1])
             self.assertIn('single.fastq', yaml_data[1]['single reads'][0])
             self.assertEqual(yaml_data[1]['type'], 'pacbio')
+            print(json.dumps(yaml_data, indent=1))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_spades_utils_run_assemble")
@@ -1075,7 +1079,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         rds_name2 = 'pacbio'
         output_name = rds_name + '_' + rds_name2 + '_out'
         libs4 = {'long_reads_ref': self.staged[rds_name2]['ref'],
-                 'long_reads_type': 'pacbio-clr'}
+                 'long_reads_type': 'pacbio_clr'}
 
         params4 = {'workspace_name': self.getWsName(),
                    'reads_libraries': [libs2],

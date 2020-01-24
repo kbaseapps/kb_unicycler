@@ -1,22 +1,21 @@
-FROM kbase/kbase:sdkbase2.latest
+FROM kbase/sdkbase2:python
 MAINTAINER KBase Developer
 # -----------------------------------------
+# In this section, you can install any system dependencies required
+# to run your App.  For instance, you could place an apt-get update or
+# install line here, a git checkout to download code, or run any other
+# installation scripts.
 
-# Insert apt-get instructions here to install
-# any required dependencies for your module.
+RUN echo "start building docker image"
+
+RUN apt-get update \
+    && apt-get -y install python3-dev \
+    && apt-get -y install wget \
+    && apt-get -y install gcc
 
 RUN pip install --upgrade pip \
-    && pip install requests --upgrade \
-    && pip install 'requests[security]' --upgrade \
-    && pip install psutil \
-    && pip install pyyaml \
-    && pip install regex \
-    && apt-get -y update \
-    && apt-get install -y python-dev libffi-dev libssl-dev \
-    && pip install cffi --upgrade \
-    && pip install pyopenssl --upgrade \
-    && pip install ndg-httpsclient --upgrade \
-    && pip install pyasn1 --upgrade
+    && pip3 install psutil \
+    && python --version
 
 ENV SPADES_VERSION='3.13.0'
 
