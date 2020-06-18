@@ -29,36 +29,36 @@ suggestions:
 parameters :
     lib_ref :
         ui-name : |
-            Reads library<font color=red>*</font>
+            Reads library
         short-hint : |
             Reads libraries MUST HAVE Illumina/IonTorrent single, paired-end, and/or mate pair reads to use SPAdes.
 
     orientation:
         ui-name : |
-            Relative orientation of read-pairs<font color=red>*</font>
+            Relative orientation of read-pairs
         short-hint : |
             Two letter string for defining the relative orientation of the read pairs. Default is "fr" (forward-reverse) for paired-end libraries and "rf" (reverse-forward) for mate pair libraries.
     lib_type :
         ui-name : |
-            Reads type<font color=red>*</font>
+            Reads type
         short-hint : |
             Reads type for defining the reads in the parameter-group reads_libraries. Either "paired-end," "mate-pairs," "hq-mate-pairs," or "single."
 
     long_reads_ref :
         ui-name : |
-            Long reads library<font color=red>*</font>
+            Long reads library
         short-hint : |
             Long reads libraries for running hybridSPAdes.
 
     long_reads_type :
         ui-name : |
-            Long reads type<font color=red>*</font>
+            Long reads type
         short-hint : |
             Long reads type for defining the reads in the parameter-group long_reads_libraries. Either "pacbio_ccs," "pacbio_clr," "nanopore," "sanger," "trusted-contigs," or "untrusted-contigs."
 
     output_contigset_name :
         ui-name : |
-            Output ContigSet Name<font color=red>*</font>
+            Output ContigSet Name
         short-hint : |
             The name for the resulting ContigSet that will be saved in KBase.
 
@@ -89,7 +89,7 @@ parameters :
 parameter-groups :
     reads_libraries :
         ui-name : |
-            Reads libraries to be assembled<font color=red>*</font>
+            Reads libraries to be assembled
         short-hint : |
             A group of reads libraries defined as reads_lib, orientation, reads_type.
 

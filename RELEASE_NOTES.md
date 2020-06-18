@@ -1,3 +1,7 @@
+### Version 1.2.5
+__Changes__
+- removed HTML from input params to hybridSPAdes
+
 ### Version 1.2.4
 __Changes__
 - matched the pacbio* strings from within the main code to the values in the ui dropdown
