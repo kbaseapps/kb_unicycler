@@ -1,6 +1,6 @@
 /*
-A KBase module: kb_SPAdes
-A wrapper for the SPAdes assembler with hybrid features supported.
+A KBase module: kb_unicycler
+A wrapper for the unicycler assembler with hybrid features supported.
 http://bioinf.spbau.ru/spades
 
 Always runs in careful mode.
@@ -11,7 +11,7 @@ A coverage cutoff is not specified.
 
 */
 
-module kb_SPAdes {
+module kb_unicycler {
 
     /* A boolean. 0 = false, anything else = true. */
     typedef int bool;
@@ -21,32 +21,12 @@ module kb_SPAdes {
     */
     typedef string paired_end_lib;
 
-    /* Input parameters for running SPAdes.
+    /* Input parameters for running unicycler.
     workspace_name - the name of the workspace from which to take input
                      and store output.
     output_contigset_name - the name of the output contigset
     read_libraries - a list of Illumina PairedEndLibrary files in FASTQ or BAM format.
-    dna_source - (optional) the source of the DNA used for sequencing 'single_cell': DNA
-                     amplified from a single cell via MDA anything else: Standard
-                     DNA sample from multiple cells. Default value is None.
-    min_contig_length - (optional) integer to filter out contigs with length < min_contig_length
-                     from the SPAdes output. Default value is 0 implying no filter.
-    kmer_sizes - (optional) K-mer sizes, Default values: 33, 55, 77, 99, 127
-                     (all values must be odd, less than 128 and listed in ascending order)
-                     In the absence of these values, K values are automatically selected.
-    skip_error_correction - (optional) Assembly only (No error correction).
-                     By default this is disabled.
     */
-
-    typedef structure {
-        string workspace_name;
-        string output_contigset_name;
-        list<paired_end_lib> read_libraries;
-        string dna_source;
-        int min_contig_length;
-        list<int> kmer_sizes;
-        bool skip_error_correction;
-    } SPAdesParams;
 
     /* An X/Y/Z style KBase object reference
     */
@@ -114,9 +94,9 @@ module kb_SPAdes {
         list<int> kmer_sizes;
         int min_contig_length;
         bool create_report;
-    } HybridSPAdesParams;
+    } UnicyclerParams;
 
-    /* Output parameters for SPAdes run.
+    /* Output parameters for Unicycler run.
 
     report_name - the name of the KBaseReport.Report workspace object.
     report_ref - the workspace reference of the report.
@@ -125,18 +105,10 @@ module kb_SPAdes {
     typedef structure {
         string report_name;
         string report_ref;
-    } SPAdesOutput;
+    } UnicyclerOutput;
     
-    /* Run SPAdes on paired end libraries */
-    funcdef run_SPAdes(SPAdesParams params) returns(SPAdesOutput output)
-        authentication required;
-
-    /* Run HybridSPAdes on paired end libraries with PacBio CLR and Oxford Nanopore reads*/
-    funcdef run_HybridSPAdes(HybridSPAdesParams params) returns(SPAdesOutput output)
-        authentication required;
-
-    /* Run SPAdes on paired end libraries for metagenomes */
-    funcdef run_metaSPAdes(SPAdesParams params) returns(SPAdesOutput output)
+    /* Run Unicycler on paired end libraries with PacBio CLR and Oxford Nanopore reads*/
+    funcdef run_unicycler(UnicyclerParams params) returns(UnicyclerOutput output)
         authentication required;
 };
 

@@ -1,4 +1,4 @@
-# kb_SPAdes
+# kb_unicycler
 ---
 
-Wrapper for the SPAdes assembler.
+Wrapper for the Unicycler assembler, forked from kb_SPAdes.
