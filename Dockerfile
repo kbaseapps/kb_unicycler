@@ -12,7 +12,12 @@ RUN apt-get update \
     && apt-get -y install python3-dev \
     && apt-get -y install wget \
     && apt-get -y install gcc \
+    && apt-get -y install cmake \
+    && apt-get -y install build-essential \
+    && apt-get -y install zlib1g-dev \
     && apt-get -y install bowtie \
+    && apt-get -y install bowtie2 \
+    && apt-get -y install ncbi-blast+ \
     && apt-get -y install samtools
 
 RUN pip install --upgrade pip \
@@ -30,21 +35,29 @@ RUN cd /opt \
     && rm SPAdes-${SPADES_VERSION}-Linux.tar.gz
 
 RUN cd /opt \
-    && wget https://github.com/rrwick/Unicycler/archive/v${UNICYCLER_VERSION}.tar.gz \
-    && tar -xvzf v${UNICYCLER_VERSION}.tar.gz \
-    && rm v${UNICYCLER_VERSION}.tar.gz
-
-RUN cd /opt \
     && wget https://github.com/lbcb-sci/racon/releases/download/${RACON_VERSION}/racon-v${RACON_VERSION}.tar.gz \
     && tar -xvzf racon-v${RACON_VERSION}.tar.gz \
-    && rm racon-v${RACON_VERSION}.tar.gz
+    && rm racon-v${RACON_VERSION}.tar.gz \
+    && cd racon-v${RACON_VERSION} \
+    && cmake -DCMAKE_BUILD_TYPE=Release \
+    && make
 
 RUN cd /opt/ \
     && mkdir pilon \
     && cd pilon \
-    && wget https://github.com/broadinstitute/pilon/releases/download/v${PILON_VERSION}/pilon-${PILON_VERSION}.jar
+    && wget https://github.com/broadinstitute/pilon/releases/download/v${PILON_VERSION}/pilon-${PILON_VERSION}.jar \
+    && echo '#!/bin/bash' > pilon \
+    && echo "java -Xmx64G -jar /opt/pilon/pilon-${PILON_VERSION}.jar \$@" >> pilon \
+    && chmod +x pilon
 
-ENV PATH $PATH:/opt/SPAdes-${SPADES_VERSION}-Linux/bin:/opt/racon-v${RACON_VERSION}/bin
+ENV PATH $PATH:/opt/SPAdes-${SPADES_VERSION}-Linux/bin:/opt/racon-v${RACON_VERSION}/bin:/opt/pilon/
+
+RUN cd /opt \
+    && wget https://github.com/rrwick/Unicycler/archive/v${UNICYCLER_VERSION}.tar.gz \
+    && tar -xvzf v${UNICYCLER_VERSION}.tar.gz \
+    && rm v${UNICYCLER_VERSION}.tar.gz \
+    && cd Unicycler-${UNICYCLER_VERSION} \
+    && python3 setup.py install
 
 # -----------------------------------------
 
