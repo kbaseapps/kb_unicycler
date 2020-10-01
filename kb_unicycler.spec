@@ -34,6 +34,7 @@ module kb_unicycler {
     */
 
     typedef structure {
+
         string workspace_name;
         string output_contigset_name;
         list<paired_lib> short_paired_libraries;

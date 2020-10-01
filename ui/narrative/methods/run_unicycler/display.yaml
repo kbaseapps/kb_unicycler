@@ -37,7 +37,7 @@ parameters :
         ui-name : |
             Unpaired Short Reads Library
         short-hint : |
-	    Short unpaired reads libraries for running Unicycler (optional)
+            Short unpaired reads libraries for running Unicycler (optional)
 
     long_reads_library :
         ui-name : |
