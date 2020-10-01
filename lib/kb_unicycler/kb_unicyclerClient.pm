@@ -1,4 +1,4 @@
-package kb_SPAdes::kb_SPAdesClient;
+package kb_unicycler::kb_unicyclerClient;
 
 use JSON::RPC::Client;
 use POSIX;
@@ -21,20 +21,13 @@ our $VERSION = "0.1.0";
 
 =head1 NAME
 
-kb_SPAdes::kb_SPAdesClient
+kb_unicycler::kb_unicyclerClient
 
 =head1 DESCRIPTION
 
 
-A KBase module: kb_SPAdes
-A wrapper for the SPAdes assembler with hybrid features supported.
-http://bioinf.spbau.ru/spades
-
-Always runs in careful mode.
-Runs 3 threads / CPU.
-Maximum memory use is set to available memory - 1G.
-Autodetection is used for the PHRED quality offset and k-mer sizes.
-A coverage cutoff is not specified.
+A KBase module: kb_unicycler
+A wrapper for the unicycler assembler
 
 
 =cut
@@ -45,7 +38,7 @@ sub new
     
 
     my $self = {
-	client => kb_SPAdes::kb_SPAdesClient::RpcClient->new,
+	client => kb_unicycler::kb_unicyclerClient::RpcClient->new,
 	url => $url,
 	headers => [],
     };
@@ -116,9 +109,9 @@ sub new
 
 
 
-=head2 run_SPAdes
+=head2 run_unicycler
 
-  $output = $obj->run_SPAdes($params)
+  $output = $obj->run_unicycler($params)
 
 =over 4
 
@@ -127,19 +120,20 @@ sub new
 =begin html
 
 <pre>
-$params is a kb_SPAdes.SPAdesParams
-$output is a kb_SPAdes.SPAdesOutput
-SPAdesParams is a reference to a hash where the following keys are defined:
+$params is a kb_unicycler.UnicyclerParams
+$output is a kb_unicycler.UnicyclerOutput
+UnicyclerParams is a reference to a hash where the following keys are defined:
 	workspace_name has a value which is a string
 	output_contigset_name has a value which is a string
-	read_libraries has a value which is a reference to a list where each element is a kb_SPAdes.paired_end_lib
-	dna_source has a value which is a string
+	short_paired_libraries has a value which is a reference to a list where each element is a kb_unicycler.paired_lib
+	short_unpaired_libraries has a value which is a reference to a list where each element is a kb_unicycler.unpaired_lib
+	long_reads_library has a value which is a string
 	min_contig_length has a value which is an int
-	kmer_sizes has a value which is a reference to a list where each element is an int
-	skip_error_correction has a value which is a kb_SPAdes.bool
-paired_end_lib is a string
-bool is an int
-SPAdesOutput is a reference to a hash where the following keys are defined:
+	num_linear_seqs has a value which is an int
+	bridging_mode has a value which is a string
+paired_lib is a string
+unpaired_lib is a string
+UnicyclerOutput is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
 	report_ref has a value which is a string
 
@@ -149,19 +143,20 @@ SPAdesOutput is a reference to a hash where the following keys are defined:
 
 =begin text
 
-$params is a kb_SPAdes.SPAdesParams
-$output is a kb_SPAdes.SPAdesOutput
-SPAdesParams is a reference to a hash where the following keys are defined:
+$params is a kb_unicycler.UnicyclerParams
+$output is a kb_unicycler.UnicyclerOutput
+UnicyclerParams is a reference to a hash where the following keys are defined:
 	workspace_name has a value which is a string
 	output_contigset_name has a value which is a string
-	read_libraries has a value which is a reference to a list where each element is a kb_SPAdes.paired_end_lib
-	dna_source has a value which is a string
+	short_paired_libraries has a value which is a reference to a list where each element is a kb_unicycler.paired_lib
+	short_unpaired_libraries has a value which is a reference to a list where each element is a kb_unicycler.unpaired_lib
+	long_reads_library has a value which is a string
 	min_contig_length has a value which is an int
-	kmer_sizes has a value which is a reference to a list where each element is an int
-	skip_error_correction has a value which is a kb_SPAdes.bool
-paired_end_lib is a string
-bool is an int
-SPAdesOutput is a reference to a hash where the following keys are defined:
+	num_linear_seqs has a value which is an int
+	bridging_mode has a value which is a string
+paired_lib is a string
+unpaired_lib is a string
+UnicyclerOutput is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
 	report_ref has a value which is a string
 
@@ -170,13 +165,13 @@ SPAdesOutput is a reference to a hash where the following keys are defined:
 
 =item Description
 
-Run SPAdes on paired end libraries
+Run Unicycler
 
 =back
 
 =cut
 
- sub run_SPAdes
+ sub run_unicycler
 {
     my($self, @args) = @_;
 
@@ -185,7 +180,7 @@ Run SPAdes on paired end libraries
     if ((my $n = @args) != 1)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function run_SPAdes (received $n, expecting 1)");
+							       "Invalid argument count for function run_unicycler (received $n, expecting 1)");
     }
     {
 	my($params) = @args;
@@ -193,265 +188,31 @@ Run SPAdes on paired end libraries
 	my @_bad_arguments;
         (ref($params) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 1 \"params\" (value was \"$params\")");
         if (@_bad_arguments) {
-	    my $msg = "Invalid arguments passed to run_SPAdes:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    my $msg = "Invalid arguments passed to run_unicycler:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-								   method_name => 'run_SPAdes');
+								   method_name => 'run_unicycler');
 	}
     }
 
     my $url = $self->{url};
     my $result = $self->{client}->call($url, $self->{headers}, {
-	    method => "kb_SPAdes.run_SPAdes",
+	    method => "kb_unicycler.run_unicycler",
 	    params => \@args,
     });
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
 					       code => $result->content->{error}->{code},
-					       method_name => 'run_SPAdes',
+					       method_name => 'run_unicycler',
 					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
 	}
     } else {
-        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method run_SPAdes",
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method run_unicycler",
 					    status_line => $self->{client}->status_line,
-					    method_name => 'run_SPAdes',
-				       );
-    }
-}
- 
-
-
-=head2 run_HybridSPAdes
-
-  $output = $obj->run_HybridSPAdes($params)
-
-=over 4
-
-=item Parameter and return types
-
-=begin html
-
-<pre>
-$params is a kb_SPAdes.HybridSPAdesParams
-$output is a kb_SPAdes.SPAdesOutput
-HybridSPAdesParams is a reference to a hash where the following keys are defined:
-	workspace_name has a value which is a string
-	output_contigset_name has a value which is a string
-	reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-	long_reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.LongReadsParams
-	dna_source has a value which is a string
-	pipeline_options has a value which is a reference to a list where each element is a string
-	kmer_sizes has a value which is a reference to a list where each element is an int
-	min_contig_length has a value which is an int
-	create_report has a value which is a kb_SPAdes.bool
-ReadsParams is a reference to a hash where the following keys are defined:
-	lib_ref has a value which is a kb_SPAdes.obj_ref
-	orientation has a value which is a string
-	lib_type has a value which is a string
-obj_ref is a string
-LongReadsParams is a reference to a hash where the following keys are defined:
-	long_reads_ref has a value which is a kb_SPAdes.obj_ref
-	long_reads_type has a value which is a string
-bool is an int
-SPAdesOutput is a reference to a hash where the following keys are defined:
-	report_name has a value which is a string
-	report_ref has a value which is a string
-
-</pre>
-
-=end html
-
-=begin text
-
-$params is a kb_SPAdes.HybridSPAdesParams
-$output is a kb_SPAdes.SPAdesOutput
-HybridSPAdesParams is a reference to a hash where the following keys are defined:
-	workspace_name has a value which is a string
-	output_contigset_name has a value which is a string
-	reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-	long_reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.LongReadsParams
-	dna_source has a value which is a string
-	pipeline_options has a value which is a reference to a list where each element is a string
-	kmer_sizes has a value which is a reference to a list where each element is an int
-	min_contig_length has a value which is an int
-	create_report has a value which is a kb_SPAdes.bool
-ReadsParams is a reference to a hash where the following keys are defined:
-	lib_ref has a value which is a kb_SPAdes.obj_ref
-	orientation has a value which is a string
-	lib_type has a value which is a string
-obj_ref is a string
-LongReadsParams is a reference to a hash where the following keys are defined:
-	long_reads_ref has a value which is a kb_SPAdes.obj_ref
-	long_reads_type has a value which is a string
-bool is an int
-SPAdesOutput is a reference to a hash where the following keys are defined:
-	report_name has a value which is a string
-	report_ref has a value which is a string
-
-
-=end text
-
-=item Description
-
-Run HybridSPAdes on paired end libraries with PacBio CLR and Oxford Nanopore reads
-
-=back
-
-=cut
-
- sub run_HybridSPAdes
-{
-    my($self, @args) = @_;
-
-# Authentication: required
-
-    if ((my $n = @args) != 1)
-    {
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function run_HybridSPAdes (received $n, expecting 1)");
-    }
-    {
-	my($params) = @args;
-
-	my @_bad_arguments;
-        (ref($params) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 1 \"params\" (value was \"$params\")");
-        if (@_bad_arguments) {
-	    my $msg = "Invalid arguments passed to run_HybridSPAdes:\n" . join("", map { "\t$_\n" } @_bad_arguments);
-	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-								   method_name => 'run_HybridSPAdes');
-	}
-    }
-
-    my $url = $self->{url};
-    my $result = $self->{client}->call($url, $self->{headers}, {
-	    method => "kb_SPAdes.run_HybridSPAdes",
-	    params => \@args,
-    });
-    if ($result) {
-	if ($result->is_error) {
-	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{error}->{code},
-					       method_name => 'run_HybridSPAdes',
-					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
-					      );
-	} else {
-	    return wantarray ? @{$result->result} : $result->result->[0];
-	}
-    } else {
-        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method run_HybridSPAdes",
-					    status_line => $self->{client}->status_line,
-					    method_name => 'run_HybridSPAdes',
-				       );
-    }
-}
- 
-
-
-=head2 run_metaSPAdes
-
-  $output = $obj->run_metaSPAdes($params)
-
-=over 4
-
-=item Parameter and return types
-
-=begin html
-
-<pre>
-$params is a kb_SPAdes.SPAdesParams
-$output is a kb_SPAdes.SPAdesOutput
-SPAdesParams is a reference to a hash where the following keys are defined:
-	workspace_name has a value which is a string
-	output_contigset_name has a value which is a string
-	read_libraries has a value which is a reference to a list where each element is a kb_SPAdes.paired_end_lib
-	dna_source has a value which is a string
-	min_contig_length has a value which is an int
-	kmer_sizes has a value which is a reference to a list where each element is an int
-	skip_error_correction has a value which is a kb_SPAdes.bool
-paired_end_lib is a string
-bool is an int
-SPAdesOutput is a reference to a hash where the following keys are defined:
-	report_name has a value which is a string
-	report_ref has a value which is a string
-
-</pre>
-
-=end html
-
-=begin text
-
-$params is a kb_SPAdes.SPAdesParams
-$output is a kb_SPAdes.SPAdesOutput
-SPAdesParams is a reference to a hash where the following keys are defined:
-	workspace_name has a value which is a string
-	output_contigset_name has a value which is a string
-	read_libraries has a value which is a reference to a list where each element is a kb_SPAdes.paired_end_lib
-	dna_source has a value which is a string
-	min_contig_length has a value which is an int
-	kmer_sizes has a value which is a reference to a list where each element is an int
-	skip_error_correction has a value which is a kb_SPAdes.bool
-paired_end_lib is a string
-bool is an int
-SPAdesOutput is a reference to a hash where the following keys are defined:
-	report_name has a value which is a string
-	report_ref has a value which is a string
-
-
-=end text
-
-=item Description
-
-Run SPAdes on paired end libraries for metagenomes
-
-=back
-
-=cut
-
- sub run_metaSPAdes
-{
-    my($self, @args) = @_;
-
-# Authentication: required
-
-    if ((my $n = @args) != 1)
-    {
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function run_metaSPAdes (received $n, expecting 1)");
-    }
-    {
-	my($params) = @args;
-
-	my @_bad_arguments;
-        (ref($params) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 1 \"params\" (value was \"$params\")");
-        if (@_bad_arguments) {
-	    my $msg = "Invalid arguments passed to run_metaSPAdes:\n" . join("", map { "\t$_\n" } @_bad_arguments);
-	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-								   method_name => 'run_metaSPAdes');
-	}
-    }
-
-    my $url = $self->{url};
-    my $result = $self->{client}->call($url, $self->{headers}, {
-	    method => "kb_SPAdes.run_metaSPAdes",
-	    params => \@args,
-    });
-    if ($result) {
-	if ($result->is_error) {
-	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{error}->{code},
-					       method_name => 'run_metaSPAdes',
-					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
-					      );
-	} else {
-	    return wantarray ? @{$result->result} : $result->result->[0];
-	}
-    } else {
-        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method run_metaSPAdes",
-					    status_line => $self->{client}->status_line,
-					    method_name => 'run_metaSPAdes',
+					    method_name => 'run_unicycler',
 				       );
     }
 }
@@ -466,7 +227,7 @@ sub status
     }
     my $url = $self->{url};
     my $result = $self->{client}->call($url, $self->{headers}, {
-        method => "kb_SPAdes.status",
+        method => "kb_unicycler.status",
         params => \@args,
     });
     if ($result) {
@@ -491,7 +252,7 @@ sub status
 sub version {
     my ($self) = @_;
     my $result = $self->{client}->call($self->{url}, $self->{headers}, {
-        method => "kb_SPAdes.version",
+        method => "kb_unicycler.version",
         params => [],
     });
     if ($result) {
@@ -499,16 +260,16 @@ sub version {
             Bio::KBase::Exceptions::JSONRPC->throw(
                 error => $result->error_message,
                 code => $result->content->{code},
-                method_name => 'run_metaSPAdes',
+                method_name => 'run_unicycler',
             );
         } else {
             return wantarray ? @{$result->result} : $result->result->[0];
         }
     } else {
         Bio::KBase::Exceptions::HTTP->throw(
-            error => "Error invoking method run_metaSPAdes",
+            error => "Error invoking method run_unicycler",
             status_line => $self->{client}->status_line,
-            method_name => 'run_metaSPAdes',
+            method_name => 'run_unicycler',
         );
     }
 }
@@ -534,10 +295,10 @@ sub _validate_version {
         );
     }
     if ($sMinor > $cMinor) {
-        warn "New client version available for kb_SPAdes::kb_SPAdesClient\n";
+        warn "New client version available for kb_unicycler::kb_unicyclerClient\n";
     }
     if ($sMajor == 0) {
-        warn "kb_SPAdes::kb_SPAdesClient version is $svr_version. API subject to change.\n";
+        warn "kb_unicycler::kb_unicyclerClient version is $svr_version. API subject to change.\n";
     }
 }
 
@@ -545,38 +306,7 @@ sub _validate_version {
 
 
 
-=head2 bool
-
-=over 4
-
-
-
-=item Description
-
-A boolean. 0 = false, anything else = true.
-
-
-=item Definition
-
-=begin html
-
-<pre>
-an int
-</pre>
-
-=end html
-
-=begin text
-
-an int
-
-=end text
-
-=back
-
-
-
-=head2 paired_end_lib
+=head2 paired_lib
 
 =over 4
 
@@ -608,7 +338,7 @@ a string
 
 
 
-=head2 SPAdesParams
+=head2 unpaired_lib
 
 =over 4
 
@@ -616,68 +346,8 @@ a string
 
 =item Description
 
-Input parameters for running SPAdes.
-workspace_name - the name of the workspace from which to take input
-                 and store output.
-output_contigset_name - the name of the output contigset
-read_libraries - a list of Illumina PairedEndLibrary files in FASTQ or BAM format.
-dna_source - (optional) the source of the DNA used for sequencing 'single_cell': DNA
-                 amplified from a single cell via MDA anything else: Standard
-                 DNA sample from multiple cells. Default value is None.
-min_contig_length - (optional) integer to filter out contigs with length < min_contig_length
-                 from the SPAdes output. Default value is 0 implying no filter.
-kmer_sizes - (optional) K-mer sizes, Default values: 33, 55, 77, 99, 127
-                 (all values must be odd, less than 128 and listed in ascending order)
-                 In the absence of these values, K values are automatically selected.
-skip_error_correction - (optional) Assembly only (No error correction).
-                 By default this is disabled.
-
-
-=item Definition
-
-=begin html
-
-<pre>
-a reference to a hash where the following keys are defined:
-workspace_name has a value which is a string
-output_contigset_name has a value which is a string
-read_libraries has a value which is a reference to a list where each element is a kb_SPAdes.paired_end_lib
-dna_source has a value which is a string
-min_contig_length has a value which is an int
-kmer_sizes has a value which is a reference to a list where each element is an int
-skip_error_correction has a value which is a kb_SPAdes.bool
-
-</pre>
-
-=end html
-
-=begin text
-
-a reference to a hash where the following keys are defined:
-workspace_name has a value which is a string
-output_contigset_name has a value which is a string
-read_libraries has a value which is a reference to a list where each element is a kb_SPAdes.paired_end_lib
-dna_source has a value which is a string
-min_contig_length has a value which is an int
-kmer_sizes has a value which is a reference to a list where each element is an int
-skip_error_correction has a value which is a kb_SPAdes.bool
-
-
-=end text
-
-=back
-
-
-
-=head2 obj_ref
-
-=over 4
-
-
-
-=item Description
-
-An X/Y/Z style KBase object reference
+The workspace object name of a SingleEndLibrary file, whether of the
+KBaseAssembly or KBaseFile type.
 
 
 =item Definition
@@ -700,7 +370,7 @@ a string
 
 
 
-=head2 ReadsParams
+=head2 UnicyclerParams
 
 =over 4
 
@@ -708,111 +378,21 @@ a string
 
 =item Description
 
-parameter groups--define attributes for specifying inputs with YAML data set file (advanced)
-The following attributes are available:
-
-     - orientation ("fr", "rf", "ff")
-     - type ("paired-end", "mate-pairs", "hq-mate-pairs", "single", "pacbio", "nanopore", "sanger", "trusted-contigs", "untrusted-contigs")
-     - interlaced reads (comma-separated list of files with interlaced reads)
-     - left reads (comma-separated list of files with left reads)
-     - right reads (comma-separated list of files with right reads)
-     - single reads (comma-separated list of files with single reads or unpaired reads from paired library)
-     - merged reads (comma-separated list of files with merged reads)
-
-
-=item Definition
-
-=begin html
-
-<pre>
-a reference to a hash where the following keys are defined:
-lib_ref has a value which is a kb_SPAdes.obj_ref
-orientation has a value which is a string
-lib_type has a value which is a string
-
-</pre>
-
-=end html
-
-=begin text
-
-a reference to a hash where the following keys are defined:
-lib_ref has a value which is a kb_SPAdes.obj_ref
-orientation has a value which is a string
-lib_type has a value which is a string
-
-
-=end text
-
-=back
-
-
-
-=head2 LongReadsParams
-
-=over 4
-
-
-
-=item Definition
-
-=begin html
-
-<pre>
-a reference to a hash where the following keys are defined:
-long_reads_ref has a value which is a kb_SPAdes.obj_ref
-long_reads_type has a value which is a string
-
-</pre>
-
-=end html
-
-=begin text
-
-a reference to a hash where the following keys are defined:
-long_reads_ref has a value which is a kb_SPAdes.obj_ref
-long_reads_type has a value which is a string
-
-
-=end text
-
-=back
-
-
-
-=head2 HybridSPAdesParams
-
-=over 4
-
-
-
-=item Description
-
-------To run HybridSPAdes 3.13.0 you need at least one library of the following types:------
-1) Illumina paired-end/high-quality mate-pairs/unpaired reads
-2) IonTorrent paired-end/high-quality mate-pairs/unpaired reads
-3) PacBio CCS reads
-Version 3.13.0 of SPAdes supports paired-end reads, mate-pairs and unpaired reads.
-SPAdes can take as input several paired-end and mate-pair libraries simultaneously.
+To run Unicycler, you need at least one short read paired
+end library, and optional unpaired reads (divided into short and
+long.  All reads of the same time must be combined into a single
+file.
 
 workspace_name - the name of the workspace from which to take input
                  and store output.
 output_contigset_name - the name of the output contigset
-read_libraries - a list of Illumina or IonTorrent paired-end/high-quality mate-pairs/unpaired reads
-long_reads_libraries - a list of PacBio, Oxford Nanopore Sanger reads and/or additional contigs
-dna_source - the source of the DNA used for sequencing 'single_cell': DNA
-                 amplified from a single cell via MDA anything else: Standard
-                 DNA sample from multiple cells. Default value is None.
-pipeline_options - a list of string specifying how the SPAdes pipeline should be run
-kmer_sizes - (optional) K-mer sizes, Default values: 21, 33, 55, 77, 99, 127
-                 (all values must be odd, less than 128 and listed in ascending order)
-                 In the absence of these values, K values are automatically selected.
-min_contig_length - integer to filter out contigs with length < min_contig_length
-                 from the HybridSPAdes output. Default value is 0 implying no filter.    
-@optional dna_source
-@optional pipeline_options
-@optional kmer_sizes
+short_paired_libraries - a list of short, paired end reads libraries
+short_unpaired_libraries - a list of short, paired end reads libraries
+long_reads_libraries - a list of long reads
+
 @optional min_contig_length
+@optional num_linear_seqs
+@optional bridging_mode
 
 
 =item Definition
@@ -823,13 +403,12 @@ min_contig_length - integer to filter out contigs with length < min_contig_lengt
 a reference to a hash where the following keys are defined:
 workspace_name has a value which is a string
 output_contigset_name has a value which is a string
-reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-long_reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.LongReadsParams
-dna_source has a value which is a string
-pipeline_options has a value which is a reference to a list where each element is a string
-kmer_sizes has a value which is a reference to a list where each element is an int
+short_paired_libraries has a value which is a reference to a list where each element is a kb_unicycler.paired_lib
+short_unpaired_libraries has a value which is a reference to a list where each element is a kb_unicycler.unpaired_lib
+long_reads_library has a value which is a string
 min_contig_length has a value which is an int
-create_report has a value which is a kb_SPAdes.bool
+num_linear_seqs has a value which is an int
+bridging_mode has a value which is a string
 
 </pre>
 
@@ -840,13 +419,12 @@ create_report has a value which is a kb_SPAdes.bool
 a reference to a hash where the following keys are defined:
 workspace_name has a value which is a string
 output_contigset_name has a value which is a string
-reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.ReadsParams
-long_reads_libraries has a value which is a reference to a list where each element is a kb_SPAdes.LongReadsParams
-dna_source has a value which is a string
-pipeline_options has a value which is a reference to a list where each element is a string
-kmer_sizes has a value which is a reference to a list where each element is an int
+short_paired_libraries has a value which is a reference to a list where each element is a kb_unicycler.paired_lib
+short_unpaired_libraries has a value which is a reference to a list where each element is a kb_unicycler.unpaired_lib
+long_reads_library has a value which is a string
 min_contig_length has a value which is an int
-create_report has a value which is a kb_SPAdes.bool
+num_linear_seqs has a value which is an int
+bridging_mode has a value which is a string
 
 
 =end text
@@ -855,7 +433,7 @@ create_report has a value which is a kb_SPAdes.bool
 
 
 
-=head2 SPAdesOutput
+=head2 UnicyclerOutput
 
 =over 4
 
@@ -863,10 +441,9 @@ create_report has a value which is a kb_SPAdes.bool
 
 =item Description
 
-Output parameters for SPAdes run.
-
-    report_name - the name of the KBaseReport.Report workspace object.
-    report_ref - the workspace reference of the report.
+Output parameters for Unicycler run.
+report_name - the name of the KBaseReport.Report workspace object.
+report_ref - the workspace reference of the report.
 
 
 =item Definition
@@ -897,7 +474,7 @@ report_ref has a value which is a string
 
 =cut
 
-package kb_SPAdes::kb_SPAdesClient::RpcClient;
+package kb_unicycler::kb_unicyclerClient::RpcClient;
 use base 'JSON::RPC::Client';
 use POSIX;
 use strict;
