@@ -13,15 +13,12 @@ import inspect
 import requests
 
 from installed_clients.AbstractHandleClient import AbstractHandle as HandleService
-from kb_SPAdes.kb_SPAdesImpl import kb_SPAdes
+from kb_unicycler.kb_unicyclerImpl import kb_unicycler
 from installed_clients.ReadsUtilsClient import ReadsUtils
-from kb_SPAdes.kb_SPAdesServer import MethodContext
+from kb_unicycler.kb_unicyclerServer import MethodContext
 from installed_clients.WorkspaceClient import Workspace
-from kb_SPAdes.utils.spades_assembler import SPAdesAssembler
-from kb_SPAdes.utils.spades_utils import SPAdesUtils
 
-
-class hybrid_SPAdesTest(unittest.TestCase):
+class unicyclerTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -33,7 +30,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         cls.ctx = MethodContext(None)
         cls.ctx.update({'token': cls.token,
                         'provenance': [
-                            {'service': 'kb_SPAdes',
+                            {'service': 'kb_unicycler',
                              'method': 'please_never_use_it_in_production',
                              'method_params': []
                              }],
@@ -42,7 +39,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
         cls.cfg = {}
         config = ConfigParser()
         config.read(config_file)
-        for nameval in config.items('kb_SPAdes'):
+        for nameval in config.items('kb_unicycler'):
             cls.cfg[nameval[0]] = nameval[1]
         cls.cfg["SDK_CALLBACK_URL"] = cls.callbackURL
         cls.cfg["KB_AUTH_TOKEN"] = cls.token
@@ -53,27 +50,25 @@ class hybrid_SPAdesTest(unittest.TestCase):
         # cls.wsClient = workspaceService(cls.wsURL, token=cls.token)
         cls.wsClient = Workspace(cls.wsURL, token=cls.token)
         wssuffix = int(time.time() * 1000)
-        wsName = "test_kb_SPAdes_" + str(wssuffix)
+        wsName = "test_kb_unicycler_" + str(wssuffix)
         cls.wsinfo = cls.wsClient.create_workspace({'workspace': wsName})
         print('created workspace ' + cls.getWsName())
 
-        cls.SPAdes_PROJECT_DIR = 'spades_outputs'
+        cls.PROJECT_DIR = 'unicycler_outputs'
         cls.scratch = cls.cfg['scratch']
         if not os.path.exists(cls.scratch):
             os.makedirs(cls.scratch)
-        cls.spades_prjdir = os.path.join(cls.scratch, cls.SPAdes_PROJECT_DIR)
-        if not os.path.exists(cls.spades_prjdir):
-            os.makedirs(cls.spades_prjdir)
-        cls.spades_assembler = SPAdesAssembler(cls.cfg, cls.ctx.provenance)
-        cls.spades_utils = SPAdesUtils(cls.spades_prjdir, cls.cfg)
-        cls.serviceImpl = kb_SPAdes(cls.cfg)
+        cls.prjdir = os.path.join(cls.scratch, cls.PROJECT_DIR)
+        if not os.path.exists(cls.prjdir):
+            os.makedirs(cls.prjdir)
+        cls.serviceImpl = kb_unicycler(cls.cfg)
 
         cls.readUtilsImpl = ReadsUtils(cls.callbackURL, token=cls.token)
         cls.staged = {}
         cls.nodes_to_delete = []
         cls.handles_to_delete = []
         cls.setupTestData()
-        print('\n\n=============== Starting HybridSPAdes tests ==================')
+        print('\n\n=============== Starting Unicycler tests ==================')
 
     @classmethod
     def tearDownClass(cls):
@@ -414,7 +409,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
             else:
                 params['dna_source'] = dna_source
 
-        ret = self.getImpl().run_HybridSPAdes(self.ctx, params)[0]
+        ret = self.getImpl().run_Unicycler(self.ctx, params)[0]
         if params.get('create_report', 0) == 1:
             self.assertReportAssembly(ret, output_name)
 
@@ -937,9 +932,9 @@ class hybrid_SPAdesTest(unittest.TestCase):
                    'create_report': 0
                    }
 
-        spades_prjdir = os.path.join(self.spades_prjdir, rds_name)
-        spades_assemble_dir = os.path.join(spades_prjdir, 'assemble_results')
-        spades_utils = SPAdesUtils(spades_prjdir, self.cfg)
+        prjdir = os.path.join(self.prjdir, rds_name)
+        spades_assemble_dir = os.path.join(prjdir, 'assemble_results')
+        spades_utils = SPAdesUtils(prjdir, self.cfg)
         params1 = spades_utils.check_spades_params(params1)
 
         (sgl_rds, pe_rds, mp_rds, pb_ccs, pb_clr, np_rds, sgr_rds, tr_ctgs, ut_ctgs) \
@@ -951,9 +946,9 @@ class hybrid_SPAdesTest(unittest.TestCase):
         run_exit_code = spades_utils.run_assemble(single_yaml_file, km_sizes, 'single_cell',
                                                   params1['basic_options'],
                                                   params1['pipeline_options'])
-        print('{} HybridSPAdes assembling returns code= {}'.format(rds_name, run_exit_code))
+        print('{} Unicycler assembling returns code= {}'.format(rds_name, run_exit_code))
         self.assertEqual(run_exit_code, 0)
-        self.assertEqual(spades_prjdir, '/kb/module/work/tmp/spades_outputs/single_end')
+        self.assertEqual(prjdir, '/kb/module/work/tmp/spades_outputs/single_end')
         self.assertTrue(os.path.isdir(os.path.join(spades_assemble_dir, 'K21')))
         self.assertTrue(os.path.isdir(os.path.join(spades_assemble_dir, 'K33')))
         self.assertTrue(os.path.isdir(os.path.join(spades_assemble_dir, 'K55')))
@@ -969,14 +964,14 @@ class hybrid_SPAdesTest(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir, 'contigs.fasta')))
         self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir, 'contigs.paths')))
         self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir, 'dataset.info')))
-        self.assertTrue(os.path.isfile(os.path.join(self.spades_prjdir, 'input_data_set.yaml')))
+        self.assertTrue(os.path.isfile(os.path.join(self.prjdir, 'input_data_set.yaml')))
         self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir, 'params.txt')))
         self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir, 'scaffolds.fasta')))
         self.assertTrue(os.path.isfile(os.path.join(spades_assemble_dir,
                         'corrected', 'corrected.yaml')))
 
         # testing with SPAdes test reads from installation
-        yaml_file_path = os.path.join(self.spades_prjdir, 'test_data_set.yaml')
+        yaml_file_path = os.path.join(self.prjdir, 'test_data_set.yaml')
         ecoli_ymal_data = [
             {
                 'orientation': 'fr',
@@ -984,7 +979,7 @@ class hybrid_SPAdesTest(unittest.TestCase):
                 'right reads': [ecoli1],
                 'left reads': [ecoli2]
             }]
-        basic_opts = ['-o', self.spades_prjdir]
+        basic_opts = ['-o', self.prjdir]
         ecoli_exit_code = 1
         try:
             with open(yaml_file_path, 'w') as yaml_file:
@@ -995,35 +990,35 @@ class hybrid_SPAdesTest(unittest.TestCase):
         else:
             ecoli_exit_code = self.spades_utils.run_assemble(yaml_file_path, km_sizes,
                                                              'single_cell', basic_opts)
-        spades_prjdir = self.spades_prjdir
+        prjdir = self.prjdir
         self.assertEqual(ecoli_exit_code, 0)
-        self.assertEqual(spades_prjdir, '/kb/module/work/tmp/spades_outputs')
-        self.assertTrue(os.path.isdir(os.path.join(spades_prjdir, 'K21')))
-        self.assertTrue(os.path.isdir(os.path.join(spades_prjdir, 'K33')))
-        self.assertTrue(os.path.isdir(os.path.join(spades_prjdir, 'K55')))
-        self.assertTrue(os.path.isdir(os.path.join(spades_prjdir, 'corrected')))
-        self.assertTrue(os.path.isdir(os.path.join(spades_prjdir, 'misc')))
-        self.assertTrue(os.path.isdir(os.path.join(spades_prjdir, 'tmp')))
-        self.assertTrue(os.path.isdir(os.path.join(spades_prjdir, 'mismatch_corrector')))
-        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'spades.log')))
-        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'assembly_graph.fastg')))
-        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir,
+        self.assertEqual(prjdir, '/kb/module/work/tmp/spades_outputs')
+        self.assertTrue(os.path.isdir(os.path.join(prjdir, 'K21')))
+        self.assertTrue(os.path.isdir(os.path.join(prjdir, 'K33')))
+        self.assertTrue(os.path.isdir(os.path.join(prjdir, 'K55')))
+        self.assertTrue(os.path.isdir(os.path.join(prjdir, 'corrected')))
+        self.assertTrue(os.path.isdir(os.path.join(prjdir, 'misc')))
+        self.assertTrue(os.path.isdir(os.path.join(prjdir, 'tmp')))
+        self.assertTrue(os.path.isdir(os.path.join(prjdir, 'mismatch_corrector')))
+        self.assertTrue(os.path.isfile(os.path.join(prjdir, 'spades.log')))
+        self.assertTrue(os.path.isfile(os.path.join(prjdir, 'assembly_graph.fastg')))
+        self.assertTrue(os.path.isfile(os.path.join(prjdir,
                         'assembly_graph_with_scaffolds.gfa')))
-        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'before_rr.fasta')))
-        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'contigs.fasta')))
-        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'contigs.paths')))
-        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'dataset.info')))
-        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'test_data_set.yaml')))
-        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'params.txt')))
-        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir, 'scaffolds.fasta')))
-        self.assertTrue(os.path.isfile(os.path.join(spades_prjdir,
+        self.assertTrue(os.path.isfile(os.path.join(prjdir, 'before_rr.fasta')))
+        self.assertTrue(os.path.isfile(os.path.join(prjdir, 'contigs.fasta')))
+        self.assertTrue(os.path.isfile(os.path.join(prjdir, 'contigs.paths')))
+        self.assertTrue(os.path.isfile(os.path.join(prjdir, 'dataset.info')))
+        self.assertTrue(os.path.isfile(os.path.join(prjdir, 'test_data_set.yaml')))
+        self.assertTrue(os.path.isfile(os.path.join(prjdir, 'params.txt')))
+        self.assertTrue(os.path.isfile(os.path.join(prjdir, 'scaffolds.fasta')))
+        self.assertTrue(os.path.isfile(os.path.join(prjdir,
                         'corrected', 'corrected.yaml')))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_spades_assembler_run_hybrid_spades")
     def test_spades_assembler_run_hybrid_spades(self):
         """
-        test_spades_utils_run_HybridSPAdes: given different params,
+        test_spades_utils_run_Unicycler: given different params,
         create a yaml file and then run hybrid SPAdes against the params
         """
         dna_src_list = ['single_cell',  # --sc
