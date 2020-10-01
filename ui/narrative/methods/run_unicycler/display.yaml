@@ -39,11 +39,11 @@ parameters :
         short-hint : |
 	    Short unpaired reads libraries for running Unicycler (optional)
 
-    long_reads_libraries :
+    long_reads_library :
         ui-name : |
             Long Reads Library
         short-hint : |
-            Long reads libraries for running Unicycler (optional)
+            Long reads library for running Unicycler (optional)
 
     output_contigset_name :
         ui-name : |
@@ -65,24 +65,22 @@ parameters :
 
     bridging_mode :
         ui-name : |
-            Expected Number of Linear Contigs
+            Threshold for bridging contigs
         short-hint : |
-            The expected number of linear (i.e. non-circular) sequences in the underlying sequence (default: 0)
+            conservative = smaller contigs, lowest misassembly rate, normal = moderate contig size and misassembly rate, bold = longest contigs, higher misassembly rate (default: normal)
 
 description : |
-    <p>This is a KBase wrapper for <a href="http://cab.spbu.ru/software/spades/"> HYBRIDSPADES: an algorithm for hybrid assembly of short and long reads</a>. This program constructs the assembly graph from short reads using SPAdes, then maps long reads to that assembly graph, using the consensus to close any gaps[2].</p>
+    <p>This is a KBase wrapper for <a href="https://github.com/rrwick/Unicycler"> Unicycler, an assembly pipeline for bacterial genomes</a>. Unicycler can assemble Illumina-only read sets where it functions as a SPAdes-optimiser. It can also assembly long-read-only sets (PacBio or Nanopore) where it runs a miniasm+Racon pipeline. For the best possible assemblies, give it both Illumina reads and long reads, and it will conduct a hybrid assembly.
 
-    <p>SPAdes – St. Petersburg genome assembler – is an assembly toolkit containing various assembly pipelines. This <a href=”http://cab.spbu.ru/software/spades/”>manual</a> will help you to install and run SPAdes. SPAdes version 3.13.0 was released under GPLv2 on October 11, 2018.</p>
-
-    <p>More information regarding the intricacies of HybridSPAdes can be found in the publications at the bottom of this App detail page.</p>
+    <p>More details on Unicycler can be found in publication [1] at the bottom of this App detail page, and details of how it is used to assemble bacterial genomes can be found in publication [2].</p>
 
 publications :
     -
         display-text : |
-            [1] Nurk S, Bankevich A, Antipov D, Gurevich A, Korobeynikov A, Lapidus A, et al. Assembling Genomes and Mini-metagenomes from Highly Chimeric Reads. In: Deng M, Jiang R, Sun F, Zhang X, editors. Research in Computational Molecular Biology. Springer Berlin Heidelberg; 2013. pp. 158–170.Nurk, Bankevich et al., 2013. doi: 10.1007/978-3-642-37195-0_13
-        link: https://link.springer.com/chapter/10.1007%2F978-3-642-37195-0_13
+            [1] Wick RR, Judd LM, Gorrie CL, Holt KE. Unicycler: resolving bacterial genome assemblies from short and long sequencing reads. PLoS Comput Biol 2017. doi: 10.1371/journal.pcbi.1005595
+        link: http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005595
 
     -
         display-text : |
-            [2] Antipov D, Korobeynikov A, McLean J, Pevzner P. HYBRIDSPADES: an algorithm for hybrid assembly of short and long reads. Bioinformatics. 2016;32. 1009-1015. doi: 10.1093/bioinformatics/btv688
-        link: https://academic.oup.com/bioinformatics/article/32/7/1009/1743807
+            [2] Wick RR, Judd LM, Gorrie CL, Holt KE. Completing bacterial genome assemblies with multiplex MinION sequencing. Microb Genom 2017. doi: 10.1099/mgen.0.000132
+        link: https://www.microbiologyresearch.org/content/journal/mgen/10.1099/mgen.0.000132

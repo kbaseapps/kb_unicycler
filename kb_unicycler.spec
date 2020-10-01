@@ -38,7 +38,7 @@ module kb_unicycler {
         string output_contigset_name;
         list<paired_lib> short_paired_libraries;
         list<unpaired_lib> short_unpaired_libraries;
-        list<unpaired_lib> long_reads_libraries;
+        string long_reads_library;
 
         int min_contig_length;
         int num_linear_seqs;
