@@ -1,5 +1,23 @@
 # -*- coding: utf-8 -*-
 #BEGIN_HEADER
+from __future__ import print_function
+import os
+import re
+import uuid
+import requests
+import json
+import psutil
+import subprocess
+import numpy as np
+import yaml
+import time
+from pprint import pformat
+
+from installed_clients.WorkspaceClient import Workspace
+from installed_clients.ReadsUtilsClient import ReadsUtils  # @IgnorePep8
+from installed_clients.baseclient import ServerError
+from installed_clients.AssemblyUtilClient import AssemblyUtil
+from installed_clients.KBaseReportClient import KBaseReport
 #END_HEADER
 
 
@@ -30,6 +48,17 @@ A wrapper for the unicycler assembler
     # be found
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
+        self.cfg = config
+        self.cfg['SDK_CALLBACK_URL'] = os.environ['SDK_CALLBACK_URL']
+        self.cfg['KB_AUTH_TOKEN'] = os.environ['KB_AUTH_TOKEN']
+        self.callbackURL = self.cfg['SDK_CALLBACK_URL']
+        self.log('Callback URL: ' + self.callbackURL)
+        self.workspaceURL = config[self.URL_WS]
+        self.shockURL = config[self.URL_SHOCK]
+        self.catalogURL = config[self.URL_KB_END] + '/catalog'
+        self.scratch = os.path.abspath(config['scratch'])
+        if not os.path.exists(self.scratch):
+            os.makedirs(self.scratch)
         #END_CONSTRUCTOR
         pass
 
@@ -66,6 +95,9 @@ A wrapper for the unicycler assembler
         # ctx is the context object
         # return variables are: output
         #BEGIN run_unicycler
+        self.log('Running run_unicycler with params:\n{}'.format(
+                 json.dumps(params, indent=1)))
+        
         #END run_unicycler
 
         # At some point might do deeper type checking...
