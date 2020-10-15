@@ -12,6 +12,7 @@ import numpy as np
 import yaml
 import time
 from pprint import pformat
+import sys
 
 from installed_clients.WorkspaceClient import Workspace
 from installed_clients.ReadsUtilsClient import ReadsUtils  # @IgnorePep8
@@ -416,10 +417,12 @@ A wrapper for the unicycler assembler
         provenance = [{}]
         if 'provenance' in ctx:
             provenance = ctx['provenance']
+        if 'input_ws_objects' not in provenance[0]:
+            provenance[0]['input_ws_objects'] = []
         provenance[0]['input_ws_objects'].extend(params['short_paired_libraries'])
-        if 'short_unpaired_libraries' in params:
+        if 'short_unpaired_libraries' in params and params['short_unpaired_libraries'] is not None:
             provenance[0]['input_ws_objects'].extend(params['short_unpaired_libraries'])
-        if 'long_reads_library' in params:
+        if 'long_reads_library' in params and params['long_reads_library'] is not None:
             provenance[0]['input_ws_objects'].append(params['long_reads_library'])
 
         # download, split, and recombine short paired libraries
@@ -428,12 +431,12 @@ A wrapper for the unicycler assembler
         cmd = 'unicycler -1 '+short1+' -2 '+short2
         
         # download and combine short unpaired libraries
-        if 'short_unpaired_libraries' in params:
+        if 'short_unpaired_libraries' in params and params['short_unpaired_libraries'] is not None:
             unpaired = download_short_unpaired(console, token, params['short_unpaired_libraries'])
             cmd += ' -s '+unpaired
 
         # download long library
-        if 'long_reads_library' in params:
+        if 'long_reads_library' in params and params['long_reads_library'] is not None:
             longLib = download_long(console, token, params['long_reads_library'])
             cmd += ' -l '+longLib
 
