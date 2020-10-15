@@ -1,7 +1,7 @@
-SERVICE = kb_spades
+SERVICE = kb_unicycler
 SERVICE_CAPS = kb_unicycler
 SPEC_FILE = kb_unicycler.spec
-URL = https://kbase.us/services/kb_spades
+URL = https://kbase.us/services/kb_unicycler
 DIR = $(shell pwd)
 LIB_DIR = lib
 SCRIPTS_DIR = scripts
