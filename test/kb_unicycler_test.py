@@ -383,7 +383,6 @@ class unicyclerTest(unittest.TestCase):
         """
         test_name = inspect.stack()[1][3]
         print('\n**** starting expected success test: ' + test_name + ' *****')
-        print('   libs: ' + str(readnames))
 
         print("SHORT_PAIRED: " + str(short_paired_libraries))
         print("SHORT_UNPAIRED: " + str(short_unpaired_libraries))
@@ -400,9 +399,8 @@ class unicyclerTest(unittest.TestCase):
                   'bridging_mode': bridging_mode
                   }
 
-        ret = self.getImpl().run_Unicycler(self.ctx, params)[0]
-        if params.get('create_report', 0) == 1:
-            self.assertReportAssembly(ret, output_contigset_name)
+        ret = self.getImpl().run_unicycler(self.ctx, params)[0]
+        self.assertReportAssembly(ret, output_contigset_name)
 
     def assertReportAssembly(self, ret_obj, assembly_name):
         """
@@ -433,89 +431,58 @@ class unicyclerTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_fr_pair_kbfile")
     def test_fr_pair_kbfile(self):
-        self.run_hybrid_success(
+        self.run_unicycler(
             ['frbasic'], 'frbasic_out')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_fr_pair_kbassy")
     def test_fr_pair_kbassy(self):
-        self.run_hybrid_success(
+        self.run_unicycler(
             ['frbasic_kbassy'], 'frbasic_kbassy_out')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_interlaced_kbfile")
     def test_interlaced_kbfile(self):
-        self.run_hybrid_success(
+        self.run_unicycler(
             ['intbasic'], 'intbasic_out')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_interlaced_kbassy")
     def test_interlaced_kbassy(self):
-        self.run_hybrid_success(
-            ['intbasic_kbassy'], 'intbasic_kbassy_out',
-            dna_source='')
+        self.run_unicycler(
+            ['intbasic_kbassy'], 'intbasic_kbassy_out')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_multiple")
     def test_multiple(self):
-        self.run_hybrid_success(
-            ['intbasic_kbassy', 'frbasic'], 'multiple_out',
-            dna_source='None')
+        self.run_unicycler(
+            ['intbasic_kbassy', 'frbasic'], 'multiple_out')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_plasmid_kbfile")
     def test_plasmid_kbfile(self):
-        self.run_hybrid_success(
-            ['plasmid_reads'], 'plasmid_out',
-            dna_source='plasmid')
+        self.run_unicycler(
+            ['plasmid_reads'], 'plasmid_out')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_multiple_single")
-    def test_multiple_single(self):
-        self.run_hybrid_success(
-            ['single_end', 'single_end2'], 'multiple_single_out',
-            dna_source='None', lib_type='single')
+    def test_multiple_with_single(self):
+        self.run_unicycler(
+            ['intbasic_kbassy', 'frbasic'], 'multiple_with_single_out',
+            short_unpaired_libraries = ['single_end'])
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_multiple_pacbio_single")
     def test_multiple_pacbio_single(self):
-        self.run_hybrid_success(
-            ['single_end'], 'pacbio_single_out', longreadnames=['pacbio'],
-            lib_type='single', long_reads_type='pacbio_clr', dna_source='None')
-
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_multiple_pacbio_illumina")
-    def test_multiple_pacbio_illumina(self):
-        self.run_hybrid_success(
-            ['intbasic_kbassy'], 'pacbio_multiple_out', longreadnames=['pacbio'],
-            lib_type='single', long_reads_type='pacbio_clr', dna_source='None')
-
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_pacbioccs_alone")
-    def test_pacbioccs_alone(self):
-        self.run_hybrid_success(
-            ['pacbioccs'], 'pacbioccs_alone_out', lib_type='single',
-            dna_source='None')
+        self.run_unicycler(
+            ['intbasic_kbassy', 'frbasic'], 'multiple_pacbio_single_out',
+            long_reads_library = 'pacbio')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_pacbioccs_single")
-    def test_pacbioccs_single(self):
-        self.run_hybrid_success(
-            ['single_end'], 'pacbioccs_single_out', longreadnames=['pacbioccs'],
-            lib_type='single', long_reads_type='pacbio_ccs', dna_source='None')
-
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_multiple_pacbioccs_illumina")
-    def test_multiple_pacbioccs_illumina(self):
-        self.run_hybrid_success(
-            ['intbasic_kbassy'], 'pacbioccs_multiple_out', longreadnames=['pacbioccs'],
-            lib_type='single', long_reads_type='pacbio_ccs', dna_source='None')
-
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_single_reads")
-    def test_single_reads(self):
-        self.run_hybrid_success(
-            ['single_end'], 'single_out',
-            lib_type='single', dna_source='None')
+    def test_pacbioccs_multiple(self):
+        self.run_unicycler(
+            ['intbasic_kbassy'], 'pacbioccs_multiple_out',
+            long_reads_library=['pacbioccs'])
 
     # ########################End of passed tests######################
