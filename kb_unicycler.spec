@@ -26,7 +26,7 @@ module kb_unicycler {
     output_contigset_name - the name of the output contigset
     short_paired_libraries - a list of short, paired end reads libraries
     short_unpaired_libraries - a list of short, paired end reads libraries
-    long_reads_libraries - a list of long reads
+    long_reads_library - a long reads library
 
     @optional min_contig_length
     @optional num_linear_seqs

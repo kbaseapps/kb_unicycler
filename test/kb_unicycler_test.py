@@ -340,29 +340,29 @@ class unicyclerTest(unittest.TestCase):
                          single_end=True, sequencing_tech="PacBio CLR")
         cls.upload_reads('pacbioccs', {'single_genome': 1}, pacbio_ccs_reads,
                          single_end=True, sequencing_tech="PacBio CCS")
-        cls.upload_reads('iontorrent', {'single_genome': 1}, iontorrent_reads,
-                         single_end=True, sequencing_tech="IonTorrent")
-        cls.upload_reads('reads_out', {'read_orientation_outward': 1}, int_reads)
+        #cls.upload_reads('iontorrent', {'single_genome': 1}, iontorrent_reads,
+        #                 single_end=True, sequencing_tech="IonTorrent")
+        # cls.upload_reads('reads_out', {'read_orientation_outward': 1}, int_reads)
         cls.upload_assembly('frbasic_kbassy', {}, fwd_reads, rev_reads=rev_reads, kbase_assy=True)
         cls.upload_assembly('intbasic_kbassy', {}, int_reads, kbase_assy=True)
         cls.upload_reads('single_end', {}, fwd_reads, single_end=True)
         cls.upload_reads('single_end2', {}, rev_reads, single_end=True)
         cls.upload_reads('plasmid_reads', {'single_genome': 1},
                          plasmid1_reads, rev_reads=plasmid2_reads)
-        shutil.copy2('data/small.forward.fq', 'data/small.forward.bad')
+        # shutil.copy2('data/small.forward.fq', 'data/small.forward.bad')
         bad_fn_reads = {'file': 'data/small.forward.bad',
                         'name': '',
                         'type': ''}
-        cls.upload_assembly('bad_shk_name', {}, bad_fn_reads)
+        # cls.upload_assembly('bad_shk_name', {}, bad_fn_reads)
         bad_fn_reads['file'] = 'data/small.forward.fq'
         bad_fn_reads['name'] = 'file.terrible'
-        cls.upload_assembly('bad_file_name', {}, bad_fn_reads)
+        # cls.upload_assembly('bad_file_name', {}, bad_fn_reads)
         bad_fn_reads['name'] = 'small.forward.fastq'
         bad_fn_reads['type'] = 'xls'
-        cls.upload_assembly('bad_file_type', {}, bad_fn_reads)
-        cls.upload_assembly('bad_node', {}, fwd_reads)
-        cls.delete_shock_node(cls.nodes_to_delete.pop())
-        cls.upload_empty_data('empty')
+        # cls.upload_assembly('bad_file_type', {}, bad_fn_reads)
+        # cls.upload_assembly('bad_node', {}, fwd_reads)
+        # cls.delete_shock_node(cls.nodes_to_delete.pop())
+        # cls.upload_empty_data('empty')
         print('Data staged.')
 
     @classmethod
@@ -483,6 +483,6 @@ class unicyclerTest(unittest.TestCase):
     def test_pacbioccs_multiple(self):
         self.run_unicycler(
             ['intbasic_kbassy'], 'pacbioccs_multiple_out',
-            long_reads_library=['pacbioccs'])
+            long_reads_library= 'pacbioccs')
 
     # ########################End of passed tests######################
