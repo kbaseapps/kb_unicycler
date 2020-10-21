@@ -53,7 +53,7 @@ A wrapper for the unicycler assembler
         sys.stdout.flush()
 
     # from kb_SPAdes/utils/spades_utils.py:
-    def _load_stats(self, console, input_file_name):
+    def load_stats(self, console, input_file_name):
         log(console, 'Starting conversion of FASTA to KBaseGenomeAnnotations.Assembly')
         log(console, 'Building Object.')
         if not os.path.isfile(input_file_name):
@@ -89,9 +89,9 @@ A wrapper for the unicycler assembler
         return fasta_dict
 
     # from kb_SPAdes/utils/spades_utils.py:
-    def _mkdir_p(path):
+    def mkdir_p(self, path):
         """
-        _mkdir_p: make directory for given path
+        mkdir_p: make directory for given path
         """
         if not path:
             return
@@ -104,9 +104,9 @@ A wrapper for the unicycler assembler
                 raise
 
     # from kb_SPAdes/utils/spades_utils.py:
-    def _zip_folder(self, folder_path, output_path):
+    def zip_folder(self, folder_path, output_path):
         """
-        _zip_folder: Zip the contents of an entire folder (with that folder included
+        zip_folder: Zip the contents of an entire folder (with that folder included
         in the archive). Empty subfolders could be included in the archive as well
         if the commented portion is used.
         """
@@ -123,7 +123,7 @@ A wrapper for the unicycler assembler
         print("{} created successfully.".format(output_path))
 
     # from kb_SPAdes/utils/spades_utils.py:
-    def _generate_output_file_list(self, console, out_dir):
+    def generate_output_file_list(self, console, out_dir):
         """
         _generate_output_file_list: zip result files and generate file_links for report
         """
@@ -132,9 +132,9 @@ A wrapper for the unicycler assembler
         output_files = list()
 
         output_directory = os.path.join(self.scratch, str(uuid.uuid4()))
-        _mkdir_p(output_directory)
+        self.mkdir_p(output_directory)
         unicycler_output = os.path.join(output_directory, 'unicycler_output.zip')
-        self._zip_folder(out_dir, unicycler_output)
+        self.zip_folder(out_dir, unicycler_output)
 
         output_files.append({'path': unicycler_output,
                              'name': os.path.basename(unicycler_output),
@@ -152,7 +152,7 @@ A wrapper for the unicycler assembler
         self.log('Generating and saving report')
 
         fa_file_with_path = os.path.join(out_dir, fa_file_name)
-        fasta_stats = self._load_stats(console, fa_file_with_path)
+        fasta_stats = self.load_stats(console, fa_file_with_path)
         lengths = [fasta_stats[contig_id] for contig_id in fasta_stats]
 
         assembly_ref = wsname + '/' + params['output_contigset_name']
@@ -178,7 +178,7 @@ A wrapper for the unicycler assembler
         # delete assembly file to keep it out of zip
         os.remove(fa_file_with_path)
 
-        output_files = self._generate_output_file_list(out_dir)
+        output_files = self.generate_output_file_list(out_dir)
 
         print('Saving report')
         reportClient = KBaseReport(self.callbackURL)
@@ -198,9 +198,9 @@ A wrapper for the unicycler assembler
 
 
     # get short paired reads, and combine into forward and reverse files
-    def download_short_paired(self, console, token, short_paired_libraries):
+    def download_short_paired(self, console, token, wsname, short_paired_libraries):
         try:
-            ruClient = RUClient(url=self.callback_url, token=token)
+            ruClient = ReadsUtils(url=self.callbackURL, token=token)
             
             # first, unpack any ReadsSets into the actual PairedEndLibrary referencs
             reads_refs = []
@@ -211,15 +211,17 @@ A wrapper for the unicycler assembler
                 raise ValueError("unable to instantiate wsClient. "+str(e))
             
             [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple           
-            for lib_ref in params['short_paired_libraries']:
+            for lib in short_paired_libraries:
                 try:
-                    lib_obj_info = wsClient.get_object_info_new({'objects':[{'ref':lib_ref}]})[0]
+                    obj_id = {'ref': lib if '/' in lib else (wsname + '/' + lib)}
+                    lib_obj_info = wsClient.get_object_info_new({'objects':[obj_id]})[0]
                     lib_obj_type = lib_obj_info[TYPE_I]
                     lib_obj_type = re.sub ('-[0-9]+\.[0-9]+$', "", lib_obj_type)  # remove trailing version
+                    lib_ref = str(lib_obj_info[WSID_I])+'/'+str(lib_obj_info[OBJID_I])+'/'+str(lib_obj_info[VERSION_I])
                     if lib_obj_type == 'KBaseSets.ReadsSet':
                         # unpack it
                         try:
-                            setAPIClient = SetAPI(url=self.serviceWizardURL, token=ctx['token'])
+                            setAPIClient = SetAPI(url=self.serviceWizardURL, token=token)
                             self.log(console,'getting reads set '+lib_ref)
                             readsSet = setAPIClient.get_reads_set_v1({'ref':lib_ref,'include_item_info':1})
                         except Exception as e:
@@ -230,7 +232,7 @@ A wrapper for the unicycler assembler
                         # use other reads objects "as is"
                         reads_refs.append(lib_ref)
                 except Exception as e:
-                    raise ValueError('Unable to get read library object: (' + str(lib_ref) +')' + str(e))
+                    raise ValueError('Unable to get read library object: (' + str(lib) +')' + str(e))
 
             # download all reads refs in one call, in separate files
             self.log(console,"Getting short paired end reads.\n");
@@ -239,11 +241,12 @@ A wrapper for the unicycler assembler
             
             # combine outputs
             short_fwd_path = os.path.join(self.scratch,"short_fwd_"+str(uuid.uuid4())+".fastq")
-            short_rvs_path = os.path.join(self.scratch,"short_rvs_"+str(uuid.uuid4())+".fastq")
+            short_rev_path = os.path.join(self.scratch,"short_rev_"+str(uuid.uuid4())+".fastq")
             self.log(console,"Combining short paired end reads.\n");
 
             for reads_ref in reads_refs:
                 files = result['files'][reads_ref]['files']
+                self.log(console,'files = '+pformat(files))
 
                 if 'fwd' in files:
                     path = files['fwd']
@@ -258,13 +261,13 @@ A wrapper for the unicycler assembler
                         raise ValueError('Error running '+cmd)
                     os.remove(path)
                 else:
-                    raise ValueError('File '+short_paired_library+' missing forward reads file')
-                if 'rvs' in files:
-                    path = files['rvs']
+                    raise ValueError('File '+reads_ref+' missing forward reads file')
+                if 'rev' in files:
+                    path = files['rev']
                     if path.endswith('.gz'):
-                        cmd = 'gzip -dc '+path+' >> '+short_rvs_path
+                        cmd = 'gzip -dc '+path+' >> '+short_rev_path
                     else:
-                        cmd = 'cat '+path+' >> '+short_rvs_path
+                        cmd = 'cat '+path+' >> '+short_rev_path
                     self.log(console,"command: "+cmd)
                     cmdProcess = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
                     cmdProcess.wait()
@@ -272,27 +275,60 @@ A wrapper for the unicycler assembler
                         raise ValueError('Error running '+cmd)
                     os.remove(path)
                 else:
-                    raise ValueError('File '+short_paired_library+' missing reverse reads file')
+                    raise ValueError('File '+reads_ref+' missing reverse reads file')
 
         except Exception as e:
             raise ValueError('Unable to download short paired reads\n' + str(e))
         
-        return [short_fwd_path, short_rvs_path]
+        return short_fwd_path, short_rev_path
 
-    # get short paired reads, and combine into one file
-    def download_short_unpaired(self, console, token, short_unpaired_libraries):
+    # get short unpaired reads, and combine into one file
+    def download_short_unpaired(self, console, token, wsname, short_unpaired_libraries):
         try:
             self.log(console,"Getting short unpaired reads.\n");
-            ruClient = RUClient(url=self.callback_url, token=token)
-            result = ruClient.download_reads ({'read_libraries': short_unpaired_libraries,
+            ruClient = ReadsUtils(url=self.callbackURL, token=token)
+
+            # first, unpack any ReadsSets into the actual SingleEndLibrary referencs
+            reads_refs = []
+            # object info
+            try:
+                wsClient = Workspace(self.workspaceURL, token=token)
+            except Exception as e:
+                raise ValueError("unable to instantiate wsClient. "+str(e))
+            
+            [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple           
+            for lib in short_unpaired_libraries:
+                try:
+                    obj_id = {'ref': lib if '/' in lib else (wsname + '/' + lib)}
+                    lib_obj_info = wsClient.get_object_info_new({'objects':[obj_id]})[0]
+                    lib_obj_type = lib_obj_info[TYPE_I]
+                    lib_obj_type = re.sub ('-[0-9]+\.[0-9]+$', "", lib_obj_type)  # remove trailing version
+                    lib_ref = str(lib_obj_info[WSID_I])+'/'+str(lib_obj_info[OBJID_I])+'/'+str(lib_obj_info[VERSION_I])
+                    if lib_obj_type == 'KBaseSets.ReadsSet':
+                        # unpack it
+                        try:
+                            setAPIClient = SetAPI(url=self.serviceWizardURL, token=token)
+                            self.log(console,'getting reads set '+lib_ref)
+                            readsSet = setAPIClient.get_reads_set_v1({'ref':lib_ref,'include_item_info':1})
+                        except Exception as e:
+                            raise ValueError('SetAPI FAILURE: Unable to get read library set object: (' + lib_ref+ ')\n' + str(e))
+                        for readsLibrary in readsSet['data']['items']:
+                            reads_refs.append(readsLibrary['ref'])
+                    else:
+                        # use other reads objects "as is"
+                        reads_refs.append(lib_ref)
+                except Exception as e:
+                    raise ValueError('Unable to get read library object: (' + str(lib) +')' + str(e))
+
+            result = ruClient.download_reads ({'read_libraries': reads_refs,
                                                'interleaved': 'false'})
             # combine outputs
             short_unpaired_path = os.path.join(self.scratch,"short_unpaired_"+str(uuid.uuid4())+".fastq")
                                        
             self.log(console,"Combining short unpaired reads.\n");
 
-            for short_unpaired_library in short_unpaired_libraries:
-                files = result['files'][short_unpaired_library]['files']
+            for reads_ref in reads_refs:
+                files = result['files'][reads_ref]['files']
 
                 if 'fwd' in files:
                     path = files['fwd']
@@ -307,14 +343,14 @@ A wrapper for the unicycler assembler
                         raise ValueError('Error running '+cmd)
                     os.remove(path)
                 else:
-                    raise ValueError('File '+short_unpaired_library+' missing forward reads file')
+                    raise ValueError('File '+reads_ref+' missing forward reads file')
 
         except Exception as e:
             raise ValueError('Unable to download short unpaired reads\n' + str(e))
         return short_unpaired_path
 
     # get long reads
-    def download_long(self, console, token, lib_ref):
+    def download_long(self, console, token, wsname, lib):
         try:
             # object info
             try:
@@ -324,23 +360,25 @@ A wrapper for the unicycler assembler
 
             [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple           
 
-            lib_obj_info = wsClient.get_object_info_new({'objects':[{'ref':lib_ref}]})[0]
+            obj_id = {'ref': lib if '/' in lib else (wsname + '/' + lib)}
+            lib_obj_info = wsClient.get_object_info_new({'objects':[obj_id]})[0]
             lib_obj_type = lib_obj_info[TYPE_I]
             lib_obj_type = re.sub ('-[0-9]+\.[0-9]+$', "", lib_obj_type)  # remove trailing version
+            lib_ref = str(lib_obj_info[WSID_I])+'/'+str(lib_obj_info[OBJID_I])+'/'+str(lib_obj_info[VERSION_I])
             if lib_obj_type == 'KBaseGenomes.ContigSet' or lib_obj_type == 'KBaseGenomeAnnotations.Assembly':
                 # download using assembly util / data file util
                 self.log(console,"Getting long reads (from contigs object).\n");
-                auClient = AssemblyUtil(url=self.callback_url, token=token)
-                dfuClient = DataFileUtil(url=self.callback_url, token=token)
+                auClient = AssemblyUtil(url=self.callbackURL, token=token)
+                dfuClient = DataFileUtil(url=self.callbackURL, token=token)
                 contigFile = auClient.get_assembly_as_fasta({'ref':lib_ref}).get('path')
                 long_reads_path = dfuClient.unpack_file({'file_path': contig_file})['file_path']
 
             else:
-                ruClient = RUClient(url=self.callback_url, token=token)
+                ruClient = ReadsUtils(url=self.callbackURL, token=token)
                 self.log(console,"Getting long reads (from reads library object).\n");
-                result = ruClient.download_reads ({'read_libraries': [long_library],
+                result = ruClient.download_reads ({'read_libraries': [lib_ref],
                                                    'interleaved': 'false'})
-                long_reads_path = result['files'][short_unpaired_library]['files']['fwd']
+                long_reads_path = result['files'][lib_ref]['files']['fwd']
 
         except Exception as e:
             raise ValueError('Unable to download long reads\n' + str(e))
@@ -401,6 +439,7 @@ A wrapper for the unicycler assembler
         console = []
         self.log(console, 'Running run_unicycler with params:\n{}'.format(
             json.dumps(params, indent=1)))
+        token = self.cfg['KB_AUTH_TOKEN']
 
         # param checks
         required_params = [ 'workspace_name',
@@ -426,28 +465,29 @@ A wrapper for the unicycler assembler
             provenance[0]['input_ws_objects'].append(params['long_reads_library'])
 
         # download, split, and recombine short paired libraries
-        [short1, short2] = download_short_paired(console, token, params['short_paired_libraries'])
+        short1, short2 = self.download_short_paired(console, token, params['workspace_name'], params['short_paired_libraries'])
         # build command line
         cmd = 'unicycler -1 '+short1+' -2 '+short2
         
         # download and combine short unpaired libraries
         if 'short_unpaired_libraries' in params and params['short_unpaired_libraries'] is not None:
-            unpaired = download_short_unpaired(console, token, params['short_unpaired_libraries'])
+            unpaired = self.download_short_unpaired(console, token, params['workspace_name'], params['short_unpaired_libraries'])
             cmd += ' -s '+unpaired
 
         # download long library
         if 'long_reads_library' in params and params['long_reads_library'] is not None:
-            longLib = download_long(console, token, params['long_reads_library'])
+            longLib = self.download_long(console, token, params['workspace_name'], params['long_reads_library'])
             cmd += ' -l '+longLib
 
         # other params
-        cmd += ' --min_fasta_length '+params['min_contig_length']
-        cmd += ' --linear_seqs '+params['num_linear_seqs']
-        cmd += ' --mode '+params['bridging_mode']
+        cmd += ' --min_fasta_length '+str(params['min_contig_length'])
+        cmd += ' --linear_seqs '+str(params['num_linear_seqs'])
+        cmd += ' --mode '+str(params['bridging_mode'])
         cmd += ' --keep 0'
 
         # output directory
         outputDir = os.path.join(self.scratch,"unicycler_"+str(uuid.uuid4()))
+        self.mkdir_p(outputDir)
         cmd += ' -o '+outputDir
 
         # run it
