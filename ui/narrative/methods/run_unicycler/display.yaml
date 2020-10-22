@@ -31,7 +31,7 @@ parameters :
         ui-name : |
             Paired End Short Reads Library
         short-hint : |
-            Unicycler requires at least one paired end short reads library
+            Unicycler requires at least one paired end short reads library, or a long reads library
 
     short_unpaired_libraries :
         ui-name : |

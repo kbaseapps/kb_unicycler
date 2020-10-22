@@ -12,7 +12,7 @@
     "parameters": [ 
         {
             "id": "short_paired_libraries",
-            "optional": false,
+            "optional": true,
             "advanced": false,
             "allow_multiple": true,
             "default_values": [ "" ],

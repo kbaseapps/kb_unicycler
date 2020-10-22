@@ -444,7 +444,6 @@ A wrapper for the unicycler assembler
         # param checks
         required_params = [ 'workspace_name',
                             'output_contigset_name',
-                            'short_paired_libraries',
                             'min_contig_length',
                             'num_linear_seqs',
                             'bridging_mode' ]
@@ -452,22 +451,31 @@ A wrapper for the unicycler assembler
             if required_param not in params or params[required_param] == None:
                 raise ValueError ("Must define required param: '"+required_param+"'")
 
+        # needs either short paired or long
+        if ('short_paired_libraries' not in params or params['short_paired_libraries' == None]) and ('long_reads_library' not in params or params['long_reads_library'] == None):
+            raise ValueError ("Must define either short_paired_libraries or long_reads_library")
+
         # load provenance
         provenance = [{}]
         if 'provenance' in ctx:
             provenance = ctx['provenance']
         if 'input_ws_objects' not in provenance[0]:
             provenance[0]['input_ws_objects'] = []
-        provenance[0]['input_ws_objects'].extend(params['short_paired_libraries'])
+
+        if 'short_paired_libraries' in params and params['short_paired_libraries'] is not None:
+            provenance[0]['input_ws_objects'].extend(params['short_paired_libraries'])
         if 'short_unpaired_libraries' in params and params['short_unpaired_libraries'] is not None:
             provenance[0]['input_ws_objects'].extend(params['short_unpaired_libraries'])
         if 'long_reads_library' in params and params['long_reads_library'] is not None:
             provenance[0]['input_ws_objects'].append(params['long_reads_library'])
 
-        # download, split, and recombine short paired libraries
-        short1, short2 = self.download_short_paired(console, token, params['workspace_name'], params['short_paired_libraries'])
         # build command line
-        cmd = 'unicycler -1 '+short1+' -2 '+short2
+        cmd = 'unicycler'
+
+        # download, split, and recombine short paired libraries
+        if 'short_paired_libraries' in params and params['short_paired_libraries'] is not None:
+            short1, short2 = self.download_short_paired(console, token, params['workspace_name'], params['short_paired_libraries'])
+            cmd += ' -1 '+short1+' -2 '+short2
         
         # download and combine short unpaired libraries
         if 'short_unpaired_libraries' in params and params['short_unpaired_libraries'] is not None:
