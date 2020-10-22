@@ -303,66 +303,23 @@ class unicyclerTest(unittest.TestCase):
         print('Available memory ' + str(psutil.virtual_memory().available))
         print('staging data')
 
-        # get file type from type
-        fwd_reads = {'file': 'data/small.forward.fq',
-                     'name': 'test_fwd.fastq',
+        fwd_reads = {'file': 'data/short_reads_1.fastq.gz',
+                     'name': 'short_reads_1.fastq.gz',
                      'type': 'fastq'}
-        # get file type from handle file name
-        rev_reads = {'file': 'data/small.reverse.fq',
-                     'name': 'test_rev.FQ',
+        rev_reads = {'file': 'data/short_reads_2.fastq.gz',
+                     'name': 'short_reads_2.fastq.gz',
                      'type': ''}
-        # get file type from shock node file name
-        int_reads = {'file': 'data/interleaved.fq',
-                     'name': '',
+        long_reads_low_depth = {'file': 'data/long_reads_low_depth.fastq.gz',
+                     'name': 'long_reads_low_depth.fastq.gz',
                      'type': ''}
-        int64_reads = {'file': 'data/interleaved64.fq',
-                       'name': '',
-                       'type': ''}
-        pacbio_reads = {'file': 'data/pacbio_filtered_small.fastq.gz',
-                        'name': '',
-                        'type': ''}
-        pacbio_ccs_reads = {'file': 'data/pacbioCCS_small.fastq.gz',
-                            'name': '',
-                            'type': ''}
-        iontorrent_reads = {'file': 'data/IonTorrent_single.fastq.gz',
-                            'name': '',
-                            'type': ''}
-        plasmid1_reads = {'file': 'data/pl1.fq.gz',
-                          'name': '',
-                          'type': ''}
-        plasmid2_reads = {'file': 'data/pl2.fq.gz',
-                          'name': '',
-                          'type': ''}
-        cls.upload_reads('frbasic', {}, fwd_reads, rev_reads=rev_reads)
-        cls.upload_reads('intbasic', {'single_genome': 1}, int_reads)
-        cls.upload_reads('intbasic64', {'single_genome': 1}, int64_reads)
-        cls.upload_reads('pacbio', {'single_genome': 1}, pacbio_reads,
-                         single_end=True, sequencing_tech="PacBio CLR")
-        cls.upload_reads('pacbioccs', {'single_genome': 1}, pacbio_ccs_reads,
-                         single_end=True, sequencing_tech="PacBio CCS")
-        #cls.upload_reads('iontorrent', {'single_genome': 1}, iontorrent_reads,
-        #                 single_end=True, sequencing_tech="IonTorrent")
-        # cls.upload_reads('reads_out', {'read_orientation_outward': 1}, int_reads)
-        cls.upload_assembly('frbasic_kbassy', {}, fwd_reads, rev_reads=rev_reads, kbase_assy=True)
-        cls.upload_assembly('intbasic_kbassy', {}, int_reads, kbase_assy=True)
-        cls.upload_reads('single_end', {}, fwd_reads, single_end=True)
-        cls.upload_reads('single_end2', {}, rev_reads, single_end=True)
-        cls.upload_reads('plasmid_reads', {'single_genome': 1},
-                         plasmid1_reads, rev_reads=plasmid2_reads)
-        # shutil.copy2('data/small.forward.fq', 'data/small.forward.bad')
-        bad_fn_reads = {'file': 'data/small.forward.bad',
-                        'name': '',
-                        'type': ''}
-        # cls.upload_assembly('bad_shk_name', {}, bad_fn_reads)
-        bad_fn_reads['file'] = 'data/small.forward.fq'
-        bad_fn_reads['name'] = 'file.terrible'
-        # cls.upload_assembly('bad_file_name', {}, bad_fn_reads)
-        bad_fn_reads['name'] = 'small.forward.fastq'
-        bad_fn_reads['type'] = 'xls'
-        # cls.upload_assembly('bad_file_type', {}, bad_fn_reads)
-        # cls.upload_assembly('bad_node', {}, fwd_reads)
-        # cls.delete_shock_node(cls.nodes_to_delete.pop())
-        # cls.upload_empty_data('empty')
+        long_reads_high_depth = {'file': 'data/long_reads_high_depth.fastq.gz',
+                     'name': 'long_reads_high_depth.fastq.gz',
+                     'type': ''}
+        cls.upload_reads('shigella_short', {'single_genome': 1}, fwd_reads, rev_reads=rev_reads)
+        cls.upload_reads('shigella_long_low', {'single_genome': 1}, long_reads_low_depth,
+                         single_end=True, sequencing_tech="PacBio")
+        cls.upload_reads('shigella_long_high', {'single_genome': 1}, long_reads_high_depth,
+                         single_end=True, sequencing_tech="PacBio")
         print('Data staged.')
 
     @classmethod
@@ -371,8 +328,8 @@ class unicyclerTest(unittest.TestCase):
             '/' + str(object_info[4])
 
     def run_unicycler(self,
-                      short_paired_libraries,
                       output_contigset_name,
+                      short_paired_libraries=None,
                       short_unpaired_libraries=None,
                       long_reads_library=None,
                       min_contig_length=100,
@@ -429,60 +386,29 @@ class unicyclerTest(unittest.TestCase):
         self.nodes_to_delete.append(assembly_fasta_node)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_fr_pair_kbfile")
-    def test_fr_pair_kbfile(self):
-        self.run_unicycler(
-            ['frbasic'], 'frbasic_out')
+    # @unittest.skip("skipped test test_shigella_short_kbfile")
+    def test_shigella_short_kbfile(self):
+        self.run_unicycler( 'shigella_short_out',
+                            short_paired_libraries=['shigella_short'])
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_fr_pair_kbassy")
-    def test_fr_pair_kbassy(self):
-        self.run_unicycler(
-            ['frbasic_kbassy'], 'frbasic_kbassy_out')
+    # @unittest.skip("skipped test test_shigella_long_kbfile")
+    def test_shigella_long_kbfile(self):
+        self.run_unicycler( 'shigella_long_out',
+                            long_library='shigella_long_high')
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_interlaced_kbfile")
-    def test_interlaced_kbfile(self):
-        self.run_unicycler(
-            ['intbasic'], 'intbasic_out')
+    # @unittest.skip("skipped test test_shigella_hybrid_low_kbfile")
+    def test_shigella_hybrid_low_kbfile(self):
+        self.run_unicycler( 'shigella_hybrid_low_out',
+                            short_paired_libraries=['shigella_short'],
+                            long_library='shigella_long_low')
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_interlaced_kbassy")
-    def test_interlaced_kbassy(self):
-        self.run_unicycler(
-            ['intbasic_kbassy'], 'intbasic_kbassy_out')
-
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_multiple")
-    def test_multiple(self):
-        self.run_unicycler(
-            ['intbasic_kbassy', 'frbasic'], 'multiple_out')
-
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_plasmid_kbfile")
-    def test_plasmid_kbfile(self):
-        self.run_unicycler(
-            ['plasmid_reads'], 'plasmid_out')
-
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_multiple_single")
-    def test_multiple_with_single(self):
-        self.run_unicycler(
-            ['intbasic_kbassy', 'frbasic'], 'multiple_with_single_out',
-            short_unpaired_libraries = ['single_end'])
-
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_multiple_pacbio_single")
-    def test_multiple_pacbio_single(self):
-        self.run_unicycler(
-            ['intbasic_kbassy', 'frbasic'], 'multiple_pacbio_single_out',
-            long_reads_library = 'pacbio')
-
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_pacbioccs_single")
-    def test_pacbioccs_multiple(self):
-        self.run_unicycler(
-            ['intbasic_kbassy'], 'pacbioccs_multiple_out',
-            long_reads_library= 'pacbioccs')
+    # @unittest.skip("skipped test test_shigella_hybrid_high_kbfile")
+    def test_shigella_hybrid_high_kbfile(self):
+        self.run_unicycler( 'shigella_hybrid_high_out',
+                            short_paired_libraries=['shigella_short'],
+                            long_library='shigella_long_high')
 
     # ########################End of passed tests######################

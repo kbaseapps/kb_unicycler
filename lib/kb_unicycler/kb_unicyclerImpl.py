@@ -484,6 +484,7 @@ A wrapper for the unicycler assembler
         cmd += ' --linear_seqs '+str(params['num_linear_seqs'])
         cmd += ' --mode '+str(params['bridging_mode'])
         cmd += ' --keep 0'
+        cmd += ' --no_correct' # for debugging
 
         # output directory
         outputDir = os.path.join(self.scratch,"unicycler_"+str(uuid.uuid4()))
@@ -493,6 +494,8 @@ A wrapper for the unicycler assembler
         # run it
         self.log(console,"command: "+cmd)
         cmdProcess = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        for line in cmdProcess.stdout:
+            self.log(console,line.decode("utf-8").rstrip())
         cmdProcess.wait()
         if cmdProcess.returncode != 0:
             raise ValueError('Error running '+cmd)
