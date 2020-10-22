@@ -11,6 +11,7 @@ import subprocess
 import numpy as np
 import yaml
 import time
+import zipfile
 from pprint import pformat
 import sys
 
@@ -54,8 +55,8 @@ A wrapper for the unicycler assembler
 
     # from kb_SPAdes/utils/spades_utils.py:
     def load_stats(self, console, input_file_name):
-        log(console, 'Starting conversion of FASTA to KBaseGenomeAnnotations.Assembly')
-        log(console, 'Building Object.')
+        self.log(console, 'Starting conversion of FASTA to KBaseGenomeAnnotations.Assembly')
+        self.log(console, 'Building Object.')
         if not os.path.isfile(input_file_name):
             raise Exception('The input file name {0} is not a file!'.format(input_file_name))
         with open(input_file_name, 'r') as input_file_handle:
@@ -127,7 +128,7 @@ A wrapper for the unicycler assembler
         """
         _generate_output_file_list: zip result files and generate file_links for report
         """
-        log(console, 'start packing result files')
+        self.log(console, 'start packing result files')
 
         output_files = list()
 
@@ -149,7 +150,7 @@ A wrapper for the unicycler assembler
         """
         Generating and saving report
         """
-        self.log('Generating and saving report')
+        self.log(console, 'Generating and saving report')
 
         fa_file_with_path = os.path.join(out_dir, fa_file_name)
         fasta_stats = self.load_stats(console, fa_file_with_path)
@@ -170,7 +171,7 @@ A wrapper for the unicycler assembler
         for c in range(bins):
             report_text += ('   ' + str(counts[c]) + '\t--\t' + str(edges[c]) + ' to ' +
                             str(edges[c + 1]) + ' bp\n')
-        print('Running QUAST')
+        self.log(console,'Running QUAST')
         kbq = kb_quast(self.callbackURL)
         quastret = kbq.run_QUAST(
             {'files': [{'path': fa_file_with_path, 'label': params['output_contigset_name']}]})
@@ -178,9 +179,9 @@ A wrapper for the unicycler assembler
         # delete assembly file to keep it out of zip
         os.remove(fa_file_with_path)
 
-        output_files = self.generate_output_file_list(out_dir)
+        output_files = self.generate_output_file_list(console, out_dir)
 
-        print('Saving report')
+        self.log(console,'Saving report')
         reportClient = KBaseReport(self.callbackURL)
         report_output = reportClient.create_extended_report(
             {'message': report_text,
@@ -510,8 +511,8 @@ A wrapper for the unicycler assembler
 
         # save assembly
         try:
-            contigsPath = os.join(outputDir,'assembly.fa')
-            auClient = AssemblyUtil(self.callbackURL, token=self.token, service_ver='release')
+            contigsPath = os.path.join(outputDir,'assembly.fasta')
+            auClient = AssemblyUtil(url=self.callbackURL, token=token, service_ver='release')
             auClient.save_assembly_from_fasta(
                 {'file': {'path': contigsPath },
                  'workspace_name': params['workspace_name'],
