@@ -1,3 +1,0 @@
-Note the files in this directory are used for testing purposes.
-interleaved.fq : is interleaved (paired end), note it uses Phred offset of 64
-small.forward.fq and small.reverse.fq : (together are paired end, individually can be used as a single end), note it uses Phred offset 33.

@@ -29,10 +29,15 @@ ENV SPADES_VERSION='3.13.2'
 ENV RACON_VERSION='1.4.13'
 ENV PILON_VERSION='1.23'
 
+# use conda version of SPAdes instead of authors' version,
+# because spades-hammer from the latter crashes on some linux distros,
+# including Debian and Arch
 RUN cd /opt \
-    && wget http://cab.spbu.ru/files/release${SPADES_VERSION}/SPAdes-${SPADES_VERSION}-Linux.tar.gz \
-    && tar -xvzf SPAdes-${SPADES_VERSION}-Linux.tar.gz \
-    && rm SPAdes-${SPADES_VERSION}-Linux.tar.gz
+    && wget https://anaconda.org/bioconda/spades/${SPADES_VERSION}/download/linux-64/spades-${SPADES_VERSION}-h2d02072_0.tar.bz2 \
+    && mkdir spades-${SPADES_VERSION} \
+    && cd spades-${SPADES_VERSION} \
+    && tar -xvjf ../spades-${SPADES_VERSION}-h2d02072_0.tar.bz2 \
+    && rm ../spades-${SPADES_VERSION}-h2d02072_0.tar.bz2
 
 RUN cd /opt \
     && wget https://github.com/lbcb-sci/racon/releases/download/${RACON_VERSION}/racon-v${RACON_VERSION}.tar.gz \
@@ -50,7 +55,7 @@ RUN cd /opt/ \
     && echo "java -Xmx64G -jar /opt/pilon/pilon-${PILON_VERSION}.jar \$@" >> pilon \
     && chmod +x pilon
 
-ENV PATH $PATH:/opt/SPAdes-${SPADES_VERSION}-Linux/bin:/opt/racon-v${RACON_VERSION}/bin:/opt/pilon/
+ENV PATH $PATH:/opt/spades-${SPADES_VERSION}/bin:/opt/racon-v${RACON_VERSION}/bin:/opt/pilon/
 
 RUN cd /opt \
     && wget https://github.com/rrwick/Unicycler/archive/v${UNICYCLER_VERSION}.tar.gz \
