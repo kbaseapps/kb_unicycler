@@ -452,7 +452,7 @@ A wrapper for the unicycler assembler
                 raise ValueError ("Must define required param: '"+required_param+"'")
 
         # needs either short paired or long
-        if ('short_paired_libraries' not in params or params['short_paired_libraries' == None]) and ('long_reads_library' not in params or params['long_reads_library'] == None):
+        if ('short_paired_libraries' not in params or params['short_paired_libraries'] == None) and ('long_reads_library' not in params or params['long_reads_library'] == None):
             raise ValueError ("Must define either short_paired_libraries or long_reads_library")
 
         # load provenance
