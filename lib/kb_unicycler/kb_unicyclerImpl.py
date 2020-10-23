@@ -449,11 +449,11 @@ A wrapper for the unicycler assembler
                             'num_linear_seqs',
                             'bridging_mode' ]
         for required_param in required_params:
-            if required_param not in params or params[required_param] == None:
+            if required_param not in params or params[required_param] is None:
                 raise ValueError ("Must define required param: '"+required_param+"'")
 
         # needs either short paired or long
-        if ('short_paired_libraries' not in params or params['short_paired_libraries'] == None) and ('long_reads_library' not in params or params['long_reads_library'] == None):
+        if ('short_paired_libraries' not in params or params['short_paired_libraries'] is None or params['short_paired_libraries'][0] is None) and ('long_reads_library' not in params or params['long_reads_library'] is None):
             raise ValueError ("Must define either short_paired_libraries or long_reads_library")
 
         # load provenance
@@ -463,9 +463,9 @@ A wrapper for the unicycler assembler
         if 'input_ws_objects' not in provenance[0]:
             provenance[0]['input_ws_objects'] = []
 
-        if 'short_paired_libraries' in params and params['short_paired_libraries'] is not None:
+        if 'short_paired_libraries' in params and params['short_paired_libraries'] is not None and params['short_paired_libraries'][0] is not None:
             provenance[0]['input_ws_objects'].extend(params['short_paired_libraries'])
-        if 'short_unpaired_libraries' in params and params['short_unpaired_libraries'] is not None:
+        if 'short_unpaired_libraries' in params and params['short_unpaired_libraries'] is not None and params['short_unpaired_libraries'][0] is not None:
             provenance[0]['input_ws_objects'].extend(params['short_unpaired_libraries'])
         if 'long_reads_library' in params and params['long_reads_library'] is not None:
             provenance[0]['input_ws_objects'].append(params['long_reads_library'])
@@ -474,12 +474,12 @@ A wrapper for the unicycler assembler
         cmd = 'unicycler'
 
         # download, split, and recombine short paired libraries
-        if 'short_paired_libraries' in params and params['short_paired_libraries'] is not None:
+        if 'short_paired_libraries' in params and params['short_paired_libraries'] is not None and params['short_paired_libraries'][0] is not None:
             short1, short2 = self.download_short_paired(console, token, params['workspace_name'], params['short_paired_libraries'])
             cmd += ' -1 '+short1+' -2 '+short2
         
         # download and combine short unpaired libraries
-        if 'short_unpaired_libraries' in params and params['short_unpaired_libraries'] is not None:
+        if 'short_unpaired_libraries' in params and params['short_unpaired_libraries'] is not None and params['short_unpaired_libraries'][0] is not None:
             unpaired = self.download_short_unpaired(console, token, params['workspace_name'], params['short_unpaired_libraries'])
             cmd += ' -s '+unpaired
 
