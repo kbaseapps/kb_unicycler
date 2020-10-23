@@ -2,7 +2,7 @@ module-name:
     kb_unicycler
 
 module-description:
-    Unicycler wrapper - https://github.com/rrwick/Unicycler - Running Unicycler 0.4.8 and SPAdes 3.13.0
+    Unicycler wrapper - https://github.com/rrwick/Unicycler - Running Unicycler 0.4.8 and SPAdes 3.13.2
 
 service-language:
     python
