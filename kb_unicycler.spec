@@ -4,6 +4,8 @@ A wrapper for the unicycler assembler
 */
 
 module kb_unicycler {
+    /* A boolean. 0 = false, other = true. */
+    typedef int boolean;
 
     /* The workspace object name of a PairedEndLibrary file, whether of the
        KBaseAssembly or KBaseFile type.
@@ -31,15 +33,16 @@ module kb_unicycler {
     @optional min_contig_length
     @optional num_linear_seqs
     @optional bridging_mode
+    @optional no_correct
     */
 
     typedef structure {
-
         string workspace_name;
         string output_contigset_name;
         list<paired_lib> short_paired_libraries;
         list<unpaired_lib> short_unpaired_libraries;
         string long_reads_library;
+	boolean no_correct;
 
         int min_contig_length;
         int num_linear_seqs;

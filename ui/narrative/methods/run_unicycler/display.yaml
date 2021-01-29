@@ -69,6 +69,12 @@ parameters :
         short-hint : |
             conservative = smaller contigs, lowest misassembly rate, normal = moderate contig size and misassembly rate, bold = longest contigs, higher misassembly rate (default: normal)
 
+    no_correct :
+        ui-name : |
+            Disable SPAdes read correction
+        short-hint : |
+            Unicycler uses SPAdes' built-in read correction step before assembling the Illumina reads. This can be disabled with --no_correct if your Illumina reads are very high quality or you've already performed read QC. (default: true, i.e., correction disabled)
+
 description : |
     <p>This is a KBase wrapper for <a href="https://github.com/rrwick/Unicycler"> Unicycler, an assembly pipeline for bacterial genomes</a>. Unicycler can assemble Illumina-only read sets where it functions as a SPAdes-optimiser. It can also assembly long-read-only sets (PacBio or Nanopore) where it runs a miniasm+Racon pipeline. For the best possible assemblies, give it both Illumina reads and long reads, and it will conduct a hybrid assembly.
 

@@ -1,5 +1,5 @@
 {
-    "ver": "1.0.0",
+    "ver": "1.0.1",
     "authors": [
         "jmc"
     ],
@@ -92,6 +92,18 @@
             }
         },
         {
+            "id": "no_correct",
+            "optional": false,
+            "advanced": true,
+            "allow_multiple": false,
+            "default_values": [ 1 ],
+            "field_type" : "checkbox",
+            "checkbox_options":{
+		"checked_value": 1,
+		"unchecked_value": 0
+            }
+	},
+        {
             "id": "output_contigset_name",
             "optional": false,
             "advanced": false,
@@ -141,6 +153,10 @@
                 {
                     "input_parameter": "bridging_mode",
                     "target_property": "bridging_mode"
+                },
+                {
+                    "input_parameter": "no_correct",
+                    "target_property": "no_correct"
                 }
             ],
             "output_mapping": [

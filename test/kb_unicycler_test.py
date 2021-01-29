@@ -17,6 +17,7 @@ from kb_unicycler.kb_unicyclerImpl import kb_unicycler
 from installed_clients.ReadsUtilsClient import ReadsUtils
 from kb_unicycler.kb_unicyclerServer import MethodContext
 from installed_clients.WorkspaceClient import Workspace
+from installed_clients.DataFileUtilClient import DataFileUtil
 
 class unicyclerTest(unittest.TestCase):
 
@@ -64,6 +65,7 @@ class unicyclerTest(unittest.TestCase):
         cls.serviceImpl = kb_unicycler(cls.cfg)
 
         cls.readUtilsImpl = ReadsUtils(cls.callbackURL, token=cls.token)
+        cls.dfuClient = DataFileUtil(url=cls.callbackURL, token=cls.token)
         cls.staged = {}
         cls.nodes_to_delete = []
         cls.handles_to_delete = []
@@ -100,57 +102,24 @@ class unicyclerTest(unittest.TestCase):
                         allow_redirects=True)
         print('Deleted shock node ' + node_id)
 
-    # Helper script borrowed from the transform service, logger removed
-    @classmethod
-    def upload_file_to_shock(cls, file_path):
-        """
-        Use HTTP multi-part POST to save a file to a SHOCK instance.
-        """
-
-        header = dict()
-        header["Authorization"] = "Oauth {0}".format(cls.token)
-
-        if file_path is None:
-            raise Exception("No file given for upload to SHOCK!")
-
-        with open(os.path.abspath(file_path), 'rb') as dataFile:
-            files = {'upload': dataFile}
-            print('POSTing data')
-            response = requests.post(
-                cls.shockURL + '/node', headers=header, files=files,
-                stream=True, allow_redirects=True)
-            print('got response')
-
-        if not response.ok:
-            response.raise_for_status()
-
-        result = response.json()
-
-        if result['error']:
-            raise Exception(result['error'][0])
-        else:
-            return result["data"]
-
     @classmethod
     def upload_file_to_shock_and_get_handle(cls, test_file):
         '''
         Uploads the file in test_file to shock and returns the node and a
         handle to the node.
         '''
+        # file can't be in /kb/module/test or dfu won't find it
+        temp_file = os.path.join("/kb/module/work/tmp", os.path.basename(test_file))
+        shutil.copy(os.path.join("/kb/module/test", test_file), temp_file)
+
         print('loading file to shock: ' + test_file)
-        node = cls.upload_file_to_shock(test_file)
-        pprint(node)
-        cls.nodes_to_delete.append(node['id'])
+        fts = cls.dfuClient.file_to_shock({'file_path': temp_file,
+                                           'make_handle':True})
 
-        print('creating handle for shock id ' + node['id'])
-        handle_id = cls.hs.persist_handle({'id': node['id'],
-                                           'type': 'shock',
-                                           'url': cls.shockURL
-                                           })
-        cls.handles_to_delete.append(handle_id)
+        cls.nodes_to_delete.append(fts['shock_id'])
+        cls.handles_to_delete.append(fts['handle']['hid'])
 
-        md5 = node['file']['checksum']['md5']
-        return node['id'], handle_id, md5, node['file']['size']
+        return fts['shock_id'], fts['handle']['hid'], fts['size']
 
     @classmethod
     def upload_reads(cls, wsobjname, object_body, fwd_reads,
@@ -168,7 +137,7 @@ class unicyclerTest(unittest.TestCase):
         print('\n===============staging data for object ' + wsobjname +
               '================')
         print('uploading forward reads file ' + fwd_reads['file'])
-        fwd_id, fwd_handle_id, fwd_md5, fwd_size = \
+        fwd_id, fwd_handle_id, fwd_size = \
             cls.upload_file_to_shock_and_get_handle(fwd_reads['file'])
 
         ob['fwd_id'] = fwd_id
@@ -176,7 +145,7 @@ class unicyclerTest(unittest.TestCase):
         rev_handle_id = None
         if rev_reads:
             print('uploading reverse reads file ' + rev_reads['file'])
-            rev_id, rev_handle_id, rev_md5, rev_size = \
+            rev_id, rev_handle_id, rev_size = \
                 cls.upload_file_to_shock_and_get_handle(rev_reads['file'])
             ob['rev_id'] = rev_id
         obj_ref = cls.readUtilsImpl.upload_reads(ob)
@@ -189,109 +158,6 @@ class unicyclerTest(unittest.TestCase):
                                  'rev_node_id': rev_id,
                                  'fwd_handle_id': fwd_handle_id,
                                  'rev_handle_id': rev_handle_id
-                                 }
-
-    @classmethod
-    def upload_assembly(cls, wsobjname, object_body, fwd_reads,
-                        rev_reads=None, kbase_assy=False,
-                        single_end=False, sequencing_tech='Illumina'):
-        if single_end and rev_reads:
-            raise ValueError('u r supr dum')
-
-        print('\n===============staging data for object ' + wsobjname +
-              '================')
-        print('uploading forward reads file ' + fwd_reads['file'])
-        fwd_id, fwd_handle_id, fwd_md5, fwd_size = \
-            cls.upload_file_to_shock_and_get_handle(fwd_reads['file'])
-        fwd_handle = {
-                      'hid': fwd_handle_id,
-                      'file_name': fwd_reads['name'],
-                      'id': fwd_id,
-                      'url': cls.shockURL,
-                      'type': 'shock',
-                      'remote_md5': fwd_md5
-                      }
-
-        ob = dict(object_body)  # copy
-        ob['sequencing_tech'] = sequencing_tech
-        if kbase_assy:
-            if single_end:
-                wstype = 'KBaseAssembly.SingleEndLibrary'
-                ob['handle'] = fwd_handle
-            else:
-                wstype = 'KBaseAssembly.PairedEndLibrary'
-                ob['handle_1'] = fwd_handle
-        else:
-            if single_end:
-                wstype = 'KBaseFile.SingleEndLibrary'
-                obkey = 'lib'
-            else:
-                wstype = 'KBaseFile.PairedEndLibrary'
-                obkey = 'lib1'
-            ob[obkey] = \
-                {'file': fwd_handle,
-                 'encoding': 'UTF8',
-                 'type': fwd_reads['type'],
-                 'size': fwd_size
-                 }
-
-        rev_id = None
-        rev_handle_id = None
-        if rev_reads:
-            print('uploading reverse reads file ' + rev_reads['file'])
-            rev_id, rev_handle_id, rev_md5, rev_size = \
-                cls.upload_file_to_shock_and_get_handle(rev_reads['file'])
-            rev_handle = {
-                          'hid': rev_handle_id,
-                          'file_name': rev_reads['name'],
-                          'id': rev_id,
-                          'url': cls.shockURL,
-                          'type': 'shock',
-                          'remote_md5': rev_md5
-                          }
-            if kbase_assy:
-                ob['handle_2'] = rev_handle
-            else:
-                ob['lib2'] = \
-                    {'file': rev_handle,
-                     'encoding': 'UTF8',
-                     'type': rev_reads['type'],
-                     'size': rev_size
-                     }
-
-        print('Saving object data')
-        objdata = cls.wsClient.save_objects({
-            'workspace': cls.getWsName(),
-            'objects': [
-                        {
-                         'type': wstype,
-                         'data': ob,
-                         'name': wsobjname
-                         }]
-            })[0]
-        print('Saved object objdata: ')
-        pprint(objdata)
-        print('Saved object ob: ')
-        pprint(ob)
-        cls.staged[wsobjname] = {'info': objdata,
-                                 'ref': cls.make_ref(objdata),
-                                 'fwd_node_id': fwd_id,
-                                 'rev_node_id': rev_id,
-                                 'fwd_handle_id': fwd_handle_id,
-                                 'rev_handle_id': rev_handle_id
-                                 }
-
-    @classmethod
-    def upload_empty_data(cls, wsobjname):
-        objdata = cls.wsClient.save_objects({
-            'workspace': cls.getWsName(),
-            'objects': [{'type': 'Empty.AType',
-                         'data': {},
-                         'name': 'empty'
-                         }]
-            })[0]
-        cls.staged[wsobjname] = {'info': objdata,
-                                 'ref': cls.make_ref(objdata),
                                  }
 
     @classmethod
@@ -353,7 +219,8 @@ class unicyclerTest(unittest.TestCase):
                   'output_contigset_name': output_contigset_name,
                   'min_contig_length': min_contig_length,
                   'num_linear_seqs': num_linear_seqs,
-                  'bridging_mode': bridging_mode
+                  'bridging_mode': bridging_mode,
+                  'no_correct': 1
                   }
 
         ret = self.getImpl().run_unicycler(self.ctx, params)[0]
@@ -399,14 +266,14 @@ class unicyclerTest(unittest.TestCase):
                             long_reads_library='shigella_long_high')
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test test_shigella_hybrid_low_kbfile")
+    @unittest.skip("skipped test test_shigella_hybrid_low_kbfile")
     def test_shigella_hybrid_low_kbfile(self):
         self.run_unicycler( 'shigella_hybrid_low_out',
                             short_paired_libraries=['shigella_short'],
                             long_reads_library='shigella_long_low')
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test test_shigella_hybrid_high_kbfile")
+    @unittest.skip("skipped test test_shigella_hybrid_high_kbfile")
     def test_shigella_hybrid_high_kbfile(self):
         self.run_unicycler( 'shigella_hybrid_high_out',
                             short_paired_libraries=['shigella_short'],

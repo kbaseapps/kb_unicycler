@@ -493,7 +493,9 @@ A wrapper for the unicycler assembler
         cmd += ' --linear_seqs '+str(params['num_linear_seqs'])
         cmd += ' --mode '+str(params['bridging_mode'])
         cmd += ' --keep 0'
-        cmd += ' --no_correct' # for debugging
+
+        if ('no_correct' in params and (params['no_correct']==1)):
+            cmd += ' --no_correct'
 
         # output directory
         outputDir = os.path.join(self.scratch,"unicycler_"+str(uuid.uuid4()))
