@@ -266,14 +266,14 @@ class unicyclerTest(unittest.TestCase):
                             long_reads_library='shigella_long_high')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test test_shigella_hybrid_low_kbfile")
+    # @unittest.skip("skipped test test_shigella_hybrid_low_kbfile")
     def test_shigella_hybrid_low_kbfile(self):
         self.run_unicycler( 'shigella_hybrid_low_out',
                             short_paired_libraries=['shigella_short'],
                             long_reads_library='shigella_long_low')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test test_shigella_hybrid_high_kbfile")
+    # @unittest.skip("skipped test test_shigella_hybrid_high_kbfile")
     def test_shigella_hybrid_high_kbfile(self):
         self.run_unicycler( 'shigella_hybrid_high_out',
                             short_paired_libraries=['shigella_short'],
