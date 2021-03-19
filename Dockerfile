@@ -25,7 +25,7 @@ RUN pip install --upgrade pip \
     && python --version
 
 ENV UNICYCLER_VERSION='0.4.8'
-ENV SPADES_VERSION='3.13.2'
+ENV SPADES_VERSION='3.15.2'
 ENV RACON_VERSION='1.4.13'
 ENV PILON_VERSION='1.23'
 
