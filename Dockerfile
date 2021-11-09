@@ -8,36 +8,38 @@ MAINTAINER KBase Developer
 
 RUN echo "start building docker image"
 
+# SPAdes needs newer libstdc++, so move from stretch to buster
+RUN echo "deb http://deb.debian.org/debian stable main contrib" > /etc/apt/sources.list
+
 RUN apt-get update \
-    && apt-get -y install python3-dev \
-    && apt-get -y install wget \
-    && apt-get -y install gcc \
-    && apt-get -y install cmake \
-    && apt-get -y install build-essential \
-    && apt-get -y install zlib1g-dev \
-    && apt-get -y install bowtie \
-    && apt-get -y install bowtie2 \
-    && apt-get -y install ncbi-blast+ \
-    && apt-get -y install samtools
+    && apt-get -y --allow-unauthenticated install python3-dev \
+    && apt-get -y --allow-unauthenticated install wget \
+    && apt-get -y --allow-unauthenticated install gcc \
+    && apt-get -y --allow-unauthenticated install build-essential \
+    && apt-get -y --allow-unauthenticated install zlib1g-dev \
+    && apt-get -y --allow-unauthenticated install bowtie \
+    && apt-get -y --allow-unauthenticated install bowtie2 \
+    && apt-get -y --allow-unauthenticated install ncbi-blast+ \
+    && apt-get -y --allow-unauthenticated install samtools
 
 RUN pip install --upgrade pip \
-    && pip3 install psutil \
+    && pip3 install psutil cmake \
     && python --version
 
 ENV UNICYCLER_VERSION='0.4.8'
-ENV SPADES_VERSION='3.15.2'
-ENV RACON_VERSION='1.4.13'
-ENV PILON_VERSION='1.23'
+ENV SPADES_VERSION='3.15.3'
+ENV RACON_VERSION='1.4.21'
+ENV PILON_VERSION='1.24'
 
 # use conda version of SPAdes instead of authors' version,
 # because spades-hammer from the latter crashes on some linux distros,
 # including Debian and Arch
 RUN cd /opt \
-    && wget https://anaconda.org/bioconda/spades/${SPADES_VERSION}/download/linux-64/spades-${SPADES_VERSION}-h2d02072_0.tar.bz2 \
+    && wget https://anaconda.org/bioconda/spades/${SPADES_VERSION}/download/linux-64/spades-${SPADES_VERSION}-h95f258a_0.tar.bz2 \
     && mkdir spades-${SPADES_VERSION} \
     && cd spades-${SPADES_VERSION} \
-    && tar -xvjf ../spades-${SPADES_VERSION}-h2d02072_0.tar.bz2 \
-    && rm ../spades-${SPADES_VERSION}-h2d02072_0.tar.bz2
+    && tar -xvjf ../spades-${SPADES_VERSION}-h95f258a_0.tar.bz2 \
+    && rm ../spades-${SPADES_VERSION}-h95f258a_0.tar.bz2
 
 RUN cd /opt \
     && wget https://github.com/lbcb-sci/racon/releases/download/${RACON_VERSION}/racon-v${RACON_VERSION}.tar.gz \
@@ -57,14 +59,20 @@ RUN cd /opt/ \
 
 ENV PATH $PATH:/opt/spades-${SPADES_VERSION}/bin:/opt/racon-v${RACON_VERSION}/bin:/opt/pilon/
 
-RUN cd /opt \
-    && wget https://github.com/rrwick/Unicycler/archive/v${UNICYCLER_VERSION}.tar.gz \
-    && tar -xvzf v${UNICYCLER_VERSION}.tar.gz \
-    && rm v${UNICYCLER_VERSION}.tar.gz \
-    && cd Unicycler-${UNICYCLER_VERSION} \
-    && python3 setup.py install
+# use conda version of unicycler instead of git version
+# so it is compatible with conda SPAdes
 
-# -----------------------------------------
+RUN cd /opt \
+    && wget https://anaconda.org/bioconda/unicycler/0.4.8/download/linux-64/unicycler-${UNICYCLER_VERSION}-py36hd181a71_3.tar.bz2 \
+    && mkdir Unicycler-${UNICYCLER_VERSION} \
+    && cd Unicycler-${UNICYCLER_VERSION} \
+    && tar -xvjf ../unicycler-${UNICYCLER_VERSION}-py36hd181a71_3.tar.bz2 \
+    && rm ../unicycler-${UNICYCLER_VERSION}-py36hd181a71_3.tar.bz2 \
+    && mkdir -p /opt/conda/conda-bld/unicycler_1604335941209/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_pla/bin/ \
+    && ln -s /miniconda/bin/python /opt/conda/conda-bld/unicycler_1604335941209/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_pla/bin/python 
+
+ENV PATH $PATH:/opt/Unicycler-${UNICYCLER_VERSION}/bin
+ENV PYTHONPATH $PYTHONPATH:/opt/Unicycler-${UNICYCLER_VERSION}/lib/python3.6/site-packages/:/opt/Unicycler-${UNICYCLER_VERSION}/lib/python3.6/site-packages/unicycler
 
 COPY ./ /kb/module
 RUN mkdir -p /kb/module/work

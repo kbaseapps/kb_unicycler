@@ -1,3 +1,10 @@
+### Version 1.11
+__Changes__
+- Updated to Unicycler 0.4.8; use conda version for SPAdes compatibility
+- Updated to SPAdes 3.15.3; new download URL
+- Updated to RACON 1.4.21
+- Updated to Pilon 1.24
+
 ### Version 1.1
 __Changes__
 - Updated to SPAdes 3.15.2
