@@ -14,6 +14,8 @@ import time
 import zipfile
 from pprint import pformat
 import sys
+from html import escape
+from shutil import copy, copytree
 
 from installed_clients.WorkspaceClient import Workspace
 from installed_clients.ReadsUtilsClient import ReadsUtils  # @IgnorePep8
@@ -104,6 +106,26 @@ A wrapper for the unicycler assembler
             else:
                 raise
 
+    def read_template(self, template_name):
+        '''
+        read in a template file and escape all html content
+        used to display template contents
+        '''
+        with open(os.path.join(self.appdir, 'templates', template_name)) as file:
+            lines = file.read()
+
+        # escape all the html, display the results
+        escaped_lines = escape(lines, quote=True)
+        return escaped_lines
+    
+    def read_html(self, html_file):
+        '''
+        read in a html file
+        '''
+        with open(html_file) as file:
+            lines = file.read()
+        return lines
+
     # from kb_SPAdes/utils/spades_utils.py:
     def zip_folder(self, folder_path, output_path):
         """
@@ -145,7 +167,8 @@ A wrapper for the unicycler assembler
         return output_files
 
 
-    # from kb_SPAdes/utils/spades_utils.py:
+    # adapted from kb_SPAdes/utils/spades_utils.py;
+    # add templated report
     def generate_report(self, console, fa_file_name, params, out_dir, wsname):
         """
         Generating and saving report
@@ -175,22 +198,52 @@ A wrapper for the unicycler assembler
         kbq = kb_quast(self.callbackURL)
         quastret = kbq.run_QUAST(
             {'files': [{'path': fa_file_with_path, 'label': params['output_contigset_name']}]})
+        self.log(console,'quastret = '+pformat(quastret))
 
         # delete assembly file to keep it out of zip
         os.remove(fa_file_with_path)
 
         output_files = self.generate_output_file_list(console, out_dir)
 
+        # render template
+        template_file='unicycler_tabs.tt'
+        tmpl_data = {
+            'page_title': 'test Unicycler templated output',
+        }
+        tmpl_data['quast_output'] = self.read_html(os.path.join(quastret['quast_path'],'report.html'))
+        tmpl_data['template_content'] = self.read_template(template_file)
+            
+
+        # save report
         self.log(console,'Saving report')
+        report_file = 'unicycler_report.html'
+
+        # copy the templates into 'scratch', where they can be accessed by KBaseReport
+        copytree(
+            os.path.join(self.appdir, 'templates'),
+            os.path.join(self.scratch, 'templates')
+        )
+        
         reportClient = KBaseReport(self.callbackURL)
+        template_output = reportClient.render_template({
+            'template_file': os.path.join(self.scratch, 'templates', template_file),
+            'template_data_json': json.dumps(tmpl_data),
+            'output_file': os.path.join(out_dir, report_file)
+        })
+
         report_output = reportClient.create_extended_report(
             {'message': report_text,
              'objects_created': [{'ref': assembly_ref, 'description': 'Assembled contigs'}],
              'direct_html_link_index': 0,
              'file_links': output_files,
-             'html_links': [{'shock_id': quastret['shock_id'],
+             'html_links': [{'path': out_dir,
+                             'name': report_file,
+                             'description': 'description of template report'
+                             },                 
+                            {'shock_id': quastret['shock_id'],
                              'name': 'report.html',
-                             'label': 'QUAST report'}
+                             'label': 'QUAST report'
+                            }
              ],
              'report_object_name': 'kb_unicycler_report_' + str(uuid.uuid4()),
              'workspace_name': params['workspace_name']})
@@ -401,6 +454,7 @@ A wrapper for the unicycler assembler
         self.scratch = os.path.abspath(config['scratch'])
         if not os.path.exists(self.scratch):
             os.makedirs(self.scratch)
+        self.appdir = os.path.abspath(config['appdir'])
         #END_CONSTRUCTOR
         pass
 

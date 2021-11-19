@@ -54,7 +54,7 @@ RUN cd /opt/ \
     && cd pilon \
     && wget https://github.com/broadinstitute/pilon/releases/download/v${PILON_VERSION}/pilon-${PILON_VERSION}.jar \
     && echo '#!/bin/bash' > pilon \
-    && echo "java -Xmx64G -jar /opt/pilon/pilon-${PILON_VERSION}.jar \$@" >> pilon \
+    && echo "/usr/bin/java -Xmx16G -jar /opt/pilon/pilon-${PILON_VERSION}.jar \$@" >> pilon \
     && chmod +x pilon
 
 ENV PATH $PATH:/opt/spades-${SPADES_VERSION}/bin:/opt/racon-v${RACON_VERSION}/bin:/opt/pilon/

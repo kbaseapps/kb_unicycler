@@ -1,0 +1,33 @@
+[%
+  table_id           = 'unicycler-table';
+  include_datatables = 1;
+  template_debug_view = 0;
+
+  PROCESS 'views/inc/macros.tt';
+  PROCESS 'views/inc/js.tt';
+  WRAPPER 'views/inc/page_wrapper.tt';
+
+    page_content = [
+      {
+        name    => 'QUAST report',
+        name_lc => 'quast_tab',
+        rendered_content => quast_output,
+      },
+      {
+        name    => 'More info',
+        name_lc => 'table_tab',
+        content => 'table',
+        table_config  => {
+          id                => 'data_dump-table',
+          for_datatables_js => 1,
+        },
+      },
+    ];
+
+    tabbed_layout;
+
+    PROCESS default_datatables_js;
+
+  END; # end page wrapper
+
+%]
