@@ -1,11 +1,11 @@
-### Version 1.11
+### Version 1.1.1
 __Changes__
 - Updated to Unicycler 0.4.8; use conda version for SPAdes compatibility
 - Updated to SPAdes 3.15.3; new download URL
 - Updated to RACON 1.4.21
 - Updated to Pilon 1.24
 
-### Version 1.1
+### Version 1.1.0
 __Changes__
 - Updated to SPAdes 3.15.2
 - Report circularization of contigs, using templated report
@@ -15,6 +15,6 @@ __Changes__
 __Changes__
 - exposed Unicycler --no_correct option (default: true, as recommended by Torben Nielsen)
 
-### Version 1.0
+### Version 1.0.0
 __Changes__
 - initial version, forked from kb_SPAdes 1.2.5
