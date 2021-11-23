@@ -219,11 +219,14 @@ A wrapper for the unicycler assembler
         report_file = 'unicycler_report.html'
 
         # copy the templates into 'scratch', where they can be accessed by KBaseReport
-        copytree(
-            os.path.join(self.appdir, 'templates'),
-            os.path.join(self.scratch, 'templates')
-        )
-        
+        try:
+            copytree(
+                os.path.join(self.appdir, 'templates'),
+                os.path.join(self.scratch, 'templates')
+            )
+        except Exception as e:
+            self.log(console,'Exception copying tree. '+str(e))
+            
         reportClient = KBaseReport(self.callbackURL)
         template_output = reportClient.render_template({
             'template_file': os.path.join(self.scratch, 'templates', template_file),
