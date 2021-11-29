@@ -203,16 +203,29 @@ A wrapper for the unicycler assembler
         # delete assembly file to keep it out of zip
         os.remove(fa_file_with_path)
 
+        # check circularization and make data table for report
+        contig_data = []
+        for contig_id in fasta_stats:
+            contig_data.append({'contig_id': contig_id,
+                                'circular': 'N',
+                                'length': fasta_stats[contig_id]})
+
         output_files = self.generate_output_file_list(console, out_dir)
 
         # render template
         template_file='unicycler_tabs.tt'
         tmpl_data = {
-            'page_title': 'test Unicycler templated output',
+            'page_title': 'Unicycler Report',
+            'data_array': contig_data,
+            'cols': [
+                { 'data': 'contig_id',  'title': 'Contig ID' },
+                { 'data': 'circular',   'title': 'Circular?' },
+                { 'data': 'length',   'title': 'Length (bp)' }
+            ]
         }
         tmpl_data['quast_output'] = self.read_html(os.path.join(quastret['quast_path'],'report.html'))
         tmpl_data['template_content'] = self.read_template(template_file)
-            
+        tmpl_data['unicycler_log'] = '<p>'+'<br>'.join(console)+'</p>'
 
         # save report
         self.log(console,'Saving report')
@@ -241,12 +254,9 @@ A wrapper for the unicycler assembler
              'file_links': output_files,
              'html_links': [{'path': out_dir,
                              'name': report_file,
+                             'label': 'Unicycler reports',
                              'description': 'description of template report'
-                             },                 
-                            {'shock_id': quastret['shock_id'],
-                             'name': 'report.html',
-                             'label': 'QUAST report'
-                            }
+                             }
              ],
              'report_object_name': 'kb_unicycler_report_' + str(uuid.uuid4()),
              'workspace_name': params['workspace_name']})

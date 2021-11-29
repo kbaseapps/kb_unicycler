@@ -9,18 +9,23 @@
 
     page_content = [
       {
-        name    => 'QUAST report',
+        name    => 'QUAST Report',
         name_lc => 'quast_tab',
         rendered_content => quast_output,
       },
       {
-        name    => 'More info',
-        name_lc => 'table_tab',
+        name    => 'Circularization Report',
+        name_lc => 'circle_tab',
         content => 'table',
         table_config  => {
           id                => 'data_dump-table',
           for_datatables_js => 1,
         },
+      },
+      {
+        name    => 'Unicycler Log',
+        name_lc => 'log_tab',
+        rendered_content => unicycler_log,
       },
     ];
 
