@@ -18,7 +18,7 @@
         name_lc => 'circle_tab',
         content => 'table',
         table_config  => {
-          id                => 'data_dump-table',
+          id                => table_id,
           for_datatables_js => 1,
         },
       },

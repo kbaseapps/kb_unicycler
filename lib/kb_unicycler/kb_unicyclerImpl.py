@@ -210,6 +210,8 @@ A wrapper for the unicycler assembler
                                 'circular': 'N',
                                 'length': fasta_stats[contig_id]})
 
+        self.log(console,'contig_data = '+pformat(contig_data))
+
         output_files = self.generate_output_file_list(console, out_dir)
 
         # render template
@@ -225,7 +227,7 @@ A wrapper for the unicycler assembler
         }
         tmpl_data['quast_output'] = self.read_html(os.path.join(quastret['quast_path'],'report.html'))
         tmpl_data['template_content'] = self.read_template(template_file)
-        tmpl_data['unicycler_log'] = '<p>'+'<br>'.join(console)+'</p>'
+        tmpl_data['unicycler_log'] = '<p>'+'<br>'.join(filter(lambda line: not (line.startswith('tput') or line.startswith('0 / ')),console))+'</p>'
 
         # save report
         self.log(console,'Saving report')
