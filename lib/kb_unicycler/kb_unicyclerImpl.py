@@ -208,7 +208,7 @@ A wrapper for the unicycler assembler
         for contig_id in fasta_stats:
             contig_data.append({'contig_id': contig_id,
                                 'circular': 'N',
-                                'length': fasta_stats[contig_id]})
+                                'length': str(fasta_stats[contig_id])})
 
         self.log(console,'contig_data = '+pformat(contig_data))
 
