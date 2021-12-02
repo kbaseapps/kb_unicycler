@@ -1,7 +1,7 @@
 [%
   table_id           = 'unicycler-table';
   include_datatables = 1;
-  template_debug_view = 0;
+  template_debug_view = 1;
 
   PROCESS 'views/inc/macros.tt';
   PROCESS 'views/inc/js.tt';
@@ -15,7 +15,7 @@
       },
       {
         name    => 'Circularization Report',
-        name_lc => 'circle_tab',
+        name_lc => 'table_tab',
         content => 'table',
         table_config  => {
           id                => table_id,
