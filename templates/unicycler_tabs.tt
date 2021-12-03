@@ -1,5 +1,5 @@
 [%
-  table_id           = 'unicycler-table';
+  table_id           = 'unicycler_table';
   include_datatables = 1;
   template_debug_view = 1;
 
