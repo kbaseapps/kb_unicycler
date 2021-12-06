@@ -225,14 +225,10 @@ A wrapper for the unicycler assembler
                 { 'data': 'length',   'title': 'Length (bp)' }
             ]
         }
-        tmpl_data['quast_output'] = self.read_html(os.path.join(quastret['quast_path'],'report.html'))
+        tmpl_data['quast_output'] = '<iframe>'+self.read_html(os.path.join(quastret['quast_path'],'report.html'))+'</iframe>'
         tmpl_data['tmpl_vars'] = json.dumps(tmpl_data, sort_keys=True, indent=2)
         tmpl_data['template_content'] = self.read_template(template_file)
         tmpl_data['unicycler_log'] = '<p>'+'<br>'.join(filter(lambda line: not (line.startswith('tput') or line.lstrip().startswith('0 / ')),console))+'</p>'
-
-        # for line in console:
-        # if '0 / ' in line:
-        # self.log(console,'sus line = '+pformat(line))
 
         # save report
         self.log(console,'Saving report')
