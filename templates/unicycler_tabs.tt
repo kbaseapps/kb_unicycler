@@ -14,7 +14,7 @@
         rendered_content => quast_output,
       },
       {
-        name    => 'Circularization Report',
+        name    => 'Contigs Report',
         name_lc => 'table_tab',
         content => 'table',
         table_config  => {

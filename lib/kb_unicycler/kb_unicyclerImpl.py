@@ -64,7 +64,9 @@ A wrapper for the unicycler assembler
         with open(input_file_name, 'r') as input_file_handle:
             contig_id = None
             sequence_len = 0
-            fasta_dict = dict()
+            length_dict = dict()
+            coverage_dict = dict()
+            circ_dict = dict()
             first_header_found = False
             # Pattern for replacing white space
             pattern = re.compile(r'\s+')
@@ -75,21 +77,31 @@ A wrapper for the unicycler assembler
                     if not first_header_found:
                         first_header_found = True
                     else:
-                        fasta_dict[contig_id] = sequence_len
+                        length_dict[contig_id] = sequence_len
                         sequence_len = 0
                     fasta_header = current_line.replace('>', '').strip()
+                    self.log(console, 'fasta header = '+fasta_header)
                     try:
-                        contig_id = fasta_header.strip().split(' ', 1)[0]
+                        fields = fasta_header.strip().split(' ')
+                        contig_id = fields[0]
+                        sequence_len = int(fields[1][7:]) if (fields[1].startswith('length=')) else 0
+                        coverage = float(fields[2][6:-1]) if (fields[2].startswith('depth=')) else 0.0
+                        circ = 'Y' if ((len(fields) > 2) and ('circular=true' in fields[3])) else 'N'
+                        length_dict[contig_id] = sequence_len
+                        coverage_dict[contig_id] = coverage
+                        circ_dict[contig_id] = circ
                     except (IndexError, ValueError, KeyError):
                         contig_id = fasta_header.strip()
+                        coverage_dict[contig_id] = 0
+                        circ_dict[contig_id] = 'N'
                 else:
                     sequence_len += len(re.sub(pattern, '', current_line))
         # wrap up last fasta sequence
         if not first_header_found:
             raise Exception("There are no contigs in this file")
         else:
-            fasta_dict[contig_id] = sequence_len
-        return fasta_dict
+            length_dict[contig_id] = sequence_len
+        return [length_dict, coverage_dict, circ_dict]
 
     # from kb_SPAdes/utils/spades_utils.py:
     def mkdir_p(self, path):
@@ -176,8 +188,8 @@ A wrapper for the unicycler assembler
         self.log(console, 'Generating and saving report')
 
         fa_file_with_path = os.path.join(out_dir, fa_file_name)
-        fasta_stats = self.load_stats(console, fa_file_with_path)
-        lengths = [fasta_stats[contig_id] for contig_id in fasta_stats]
+        [length_stats, coverage_stats, circ_stats] = self.load_stats(console, fa_file_with_path)
+        lengths = [length_stats[contig_id] for contig_id in length_stats]
 
         assembly_ref = wsname + '/' + params['output_contigset_name']
 
@@ -205,10 +217,11 @@ A wrapper for the unicycler assembler
 
         # check circularization and make data table for report
         contig_data = []
-        for contig_id in fasta_stats:
+        for contig_id in length_stats:
             contig_data.append({'contig_id': contig_id,
-                                'circular': 'N',
-                                'length': str(fasta_stats[contig_id])})
+                                'circular': circ_stats[contig_id],
+                                'coverage': coverage_stats[contig_id],
+                                'length': length_stats[contig_id]})
 
         self.log(console,'contig_data = '+pformat(contig_data))
 
@@ -222,10 +235,12 @@ A wrapper for the unicycler assembler
             'cols': [
                 { 'data': 'contig_id',  'title': 'Contig ID' },
                 { 'data': 'circular',   'title': 'Circular?' },
+                { 'data': 'coverage',   'title': 'Coverage (x)' },
                 { 'data': 'length',   'title': 'Length (bp)' }
             ]
         }
-        tmpl_data['quast_output'] = '<iframe>'+self.read_html(os.path.join(quastret['quast_path'],'report.html'))+'</iframe>'
+        # tmpl_data['quast_output'] = '<iframe>'+self.read_html(os.path.join(quastret['quast_path'],'report.html'))+'</iframe>'
+        tmpl_data['quast_output'] = '<iframe src="'+os.path.join(quastret['quast_path'],'report.html')+'"></iframe>'
         tmpl_data['tmpl_vars'] = json.dumps(tmpl_data, sort_keys=True, indent=2)
         tmpl_data['template_content'] = self.read_template(template_file)
         tmpl_data['unicycler_log'] = '<p>'+'<br>'.join(filter(lambda line: not (line.startswith('tput') or line.lstrip().startswith('0 / ')),console))+'</p>'
