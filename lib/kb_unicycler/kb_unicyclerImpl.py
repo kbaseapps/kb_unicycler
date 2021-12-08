@@ -84,10 +84,11 @@ A wrapper for the unicycler assembler
                     try:
                         fields = fasta_header.strip().split(' ')
                         contig_id = fields[0]
-                        sequence_len = int(fields[1][7:]) if (fields[1].startswith('length=')) else 0
+                        # don't trust length from header, we look at seqence:
+                        # sequence_len = int(fields[1][7:]) if (fields[1].startswith('length=')) else 0
                         coverage = float(fields[2][6:-1]) if (fields[2].startswith('depth=')) else 0.0
-                        circ = 'Y' if ((len(fields) > 2) and ('circular=true' in fields[3])) else 'N'
-                        length_dict[contig_id] = sequence_len
+                        circ = 'Y' if ((len(fields) > 3) and ('circular=true' in fields[3])) else 'N'
+                        # length_dict[contig_id] = sequence_len
                         coverage_dict[contig_id] = coverage
                         circ_dict[contig_id] = circ
                     except (IndexError, ValueError, KeyError):
@@ -215,6 +216,20 @@ A wrapper for the unicycler assembler
         # delete assembly file to keep it out of zip
         os.remove(fa_file_with_path)
 
+        # check starting genes
+        in_start = False
+        ic = iter(console)
+        for line in ic:
+            if line.startswith('Rotating completed replicons'):
+                while not line.startswith('Assembly complete'):
+                    line = next(ic)
+                    # self.log(console,'debug line = '+line)
+                    fields = line.strip().split()
+                    if len(fields) > 3 and fields[0] in circ_stats and circ_stats[fields[0]]=='Y':
+                        if fields[3]=='none':
+                            fields[3] = 'none found'
+                        circ_stats[fields[0]] = 'Y, '+fields[3]
+                        
         # check circularization and make data table for report
         contig_data = []
         for contig_id in length_stats:
@@ -234,13 +249,14 @@ A wrapper for the unicycler assembler
             'data_array': contig_data,
             'cols': [
                 { 'data': 'contig_id',  'title': 'Contig ID' },
-                { 'data': 'circular',   'title': 'Circular?' },
+                { 'data': 'circular',   'title': 'Circular, Starting Gene' },
                 { 'data': 'coverage',   'title': 'Coverage (x)' },
                 { 'data': 'length',   'title': 'Length (bp)' }
             ]
         }
         # tmpl_data['quast_output'] = '<iframe>'+self.read_html(os.path.join(quastret['quast_path'],'report.html'))+'</iframe>'
-        tmpl_data['quast_output'] = '<iframe src="'+os.path.join(quastret['quast_path'],'report.html')+'"></iframe>'
+        # tmpl_data['quast_output'] = '<iframe frameborder="0" width="100%" height="100%" src="'+os.path.join(quastret['quast_path'],'report.html')+'"></iframe>'
+        tmpl_data['quast_output'] = '<iframe frameborder="0" width="100%" height="100%" src="report.html"></iframe>'
         tmpl_data['tmpl_vars'] = json.dumps(tmpl_data, sort_keys=True, indent=2)
         tmpl_data['template_content'] = self.read_template(template_file)
         tmpl_data['unicycler_log'] = '<p>'+'<br>'.join(filter(lambda line: not (line.startswith('tput') or line.lstrip().startswith('0 / ')),console))+'</p>'
@@ -272,9 +288,13 @@ A wrapper for the unicycler assembler
              'file_links': output_files,
              'html_links': [{'path': out_dir,
                              'name': report_file,
-                             'label': 'Unicycler reports',
+                             'label': 'Unicycler report',
                              'description': 'description of template report'
-                             }
+                             },
+                            {'shock_id': quastret['shock_id'],
+                             'name': 'report.html',
+                             'label': 'QUAST report'
+                            }
              ],
              'report_object_name': 'kb_unicycler_report_' + str(uuid.uuid4()),
              'workspace_name': params['workspace_name']})
@@ -464,10 +484,28 @@ A wrapper for the unicycler assembler
                 result = ruClient.download_reads ({'read_libraries': [lib_ref],
                                                    'interleaved': 'false'})
                 long_reads_path = result['files'][lib_ref]['files']['fwd']
+                self.filter_short_fastq(console, long_reads_path, 100)
 
         except Exception as e:
             raise ValueError('Unable to download long reads\n' + str(e))
         return long_reads_path
+
+    # examine fastq files
+    def filter_short_fastq(self, console, fastq_path, min_length):
+        n_reads = 0
+        n_reads_short = 0
+        with open(fastq_path, 'r') as input_file_handle:
+            for current_line in input_file_handle:
+                if (current_line[0] == '@'):
+                    self.log(console, 'fastq header = '+current_line)
+                    n_reads += 1
+                    seq = next(input_file_handle)
+                    if len(seq) < min_length:
+                        n_reads_short += 1
+                    next(input_file_handle)
+                    next(input_file_handle)
+            self.log(console, str(n_reads)+' long reads found, '+str(n_reads_short)+' under '+str(min_length)+' bp')
+        return [n_reads, n_reads_short]
 
     #END_CLASS_HEADER
 
