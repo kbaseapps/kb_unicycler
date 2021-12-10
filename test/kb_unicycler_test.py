@@ -199,6 +199,7 @@ class unicyclerTest(unittest.TestCase):
                       short_unpaired_libraries=None,
                       long_reads_library=None,
                       min_contig_length=100,
+                      min_long_read_length=100,
                       num_linear_seqs=0,
                       bridging_mode="normal"):
         """
@@ -218,6 +219,7 @@ class unicyclerTest(unittest.TestCase):
                   'long_reads_library': long_reads_library,
                   'output_contigset_name': output_contigset_name,
                   'min_contig_length': min_contig_length,
+                  'min_long_read_length': min_long_read_length,
                   'num_linear_seqs': num_linear_seqs,
                   'bridging_mode': bridging_mode,
                   'no_correct': 1

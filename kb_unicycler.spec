@@ -45,6 +45,7 @@ module kb_unicycler {
 	boolean no_correct;
 
         int min_contig_length;
+        int min_long_read_length;
         int num_linear_seqs;
         string bridging_mode;
     } UnicyclerParams;

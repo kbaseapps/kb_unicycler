@@ -57,6 +57,12 @@ parameters :
         short-hint : |
             The shortest contig to accept in the resulting assembly object (default: 100)
 
+    min_long_read_length :
+        ui-name : |
+            Minimum Long Read Length
+        short-hint : |
+            The shortest "long" read to accept without warning the user (default: 100)
+
     num_linear_seqs :
         ui-name : |
             Expected Number of Linear Contigs

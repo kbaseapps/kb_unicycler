@@ -80,7 +80,7 @@ A wrapper for the unicycler assembler
                         length_dict[contig_id] = sequence_len
                         sequence_len = 0
                     fasta_header = current_line.replace('>', '').strip()
-                    self.log(console, 'fasta header = '+fasta_header)
+                    # self.log(console, 'fasta header = '+fasta_header)
                     try:
                         fields = fasta_header.strip().split(' ')
                         contig_id = fields[0]
@@ -182,7 +182,7 @@ A wrapper for the unicycler assembler
 
     # adapted from kb_SPAdes/utils/spades_utils.py;
     # add templated report
-    def generate_report(self, console, fa_file_name, params, out_dir, wsname):
+    def generate_report(self, console, warnings, fa_file_name, params, out_dir, wsname):
         """
         Generating and saving report
         """
@@ -211,7 +211,7 @@ A wrapper for the unicycler assembler
         kbq = kb_quast(self.callbackURL)
         quastret = kbq.run_QUAST(
             {'files': [{'path': fa_file_with_path, 'label': params['output_contigset_name']}]})
-        self.log(console,'quastret = '+pformat(quastret))
+        # self.log(console,'quastret = '+pformat(quastret))
 
         # delete assembly file to keep it out of zip
         os.remove(fa_file_with_path)
@@ -260,7 +260,7 @@ A wrapper for the unicycler assembler
         }
         # tmpl_data['quast_output'] = '<iframe>'+self.read_html(os.path.join(quastret['quast_path'],'report.html'))+'</iframe>'
         # tmpl_data['quast_output'] = '<iframe frameborder="0" width="100%" height="100%" src="'+os.path.join(quastret['quast_path'],'report.html')+'"></iframe>'
-        tmpl_data['quast_output'] = '<iframe frameborder="0" width="100%" height="100%" src="quast_report.html"></iframe>'
+        tmpl_data['quast_output'] = '<iframe style="display:block; width:100%; height:100vh; border:none;" src="quast_report.html"></iframe>'
         tmpl_data['tmpl_vars'] = json.dumps(tmpl_data, sort_keys=True, indent=2)
         tmpl_data['template_content'] = self.read_template(template_file)
         tmpl_data['unicycler_log'] = '<p>'+'<br>'.join(filter(lambda line: not (line.startswith('tput') or line.lstrip().startswith('0 / ')),console))+'</p>'
@@ -296,6 +296,7 @@ A wrapper for the unicycler assembler
                              'description': 'description of template report'
                              }
              ],
+             'warnings': warnings,
              'report_object_name': 'kb_unicycler_report_' + str(uuid.uuid4()),
              'workspace_name': params['workspace_name']})
 
@@ -455,7 +456,7 @@ A wrapper for the unicycler assembler
         return short_unpaired_path
 
     # get long reads
-    def download_long(self, console, token, wsname, lib):
+    def download_long(self, console, warnings, token, wsname, lib, min_long_read_length):
         try:
             # object info
             try:
@@ -477,6 +478,7 @@ A wrapper for the unicycler assembler
                 dfuClient = DataFileUtil(url=self.callbackURL, token=token)
                 contigFile = auClient.get_assembly_as_fasta({'ref':lib_ref}).get('path')
                 long_reads_path = dfuClient.unpack_file({'file_path': contig_file})['file_path']
+                self.log(warnings,"Long reads in FASTA format; short read check not done.")
 
             else:
                 ruClient = ReadsUtils(url=self.callbackURL, token=token)
@@ -484,7 +486,9 @@ A wrapper for the unicycler assembler
                 result = ruClient.download_reads ({'read_libraries': [lib_ref],
                                                    'interleaved': 'false'})
                 long_reads_path = result['files'][lib_ref]['files']['fwd']
-                self.filter_short_fastq(console, long_reads_path, 100)
+                [n_reads, n_reads_short] = self.filter_short_fastq(console, long_reads_path, min_long_read_length)
+                if (n_reads_short > 0):
+                    self.log(warnings,"Of "+str(n_reads)+" long reads, "+str(n_reads_short)+" are shorter than "+min_long_read_length+"; consider using filtlong")
 
         except Exception as e:
             raise ValueError('Unable to download long reads\n' + str(e))
@@ -561,6 +565,7 @@ A wrapper for the unicycler assembler
         # return variables are: output
         #BEGIN run_unicycler
         console = []
+        warnings = []
         self.log(console, 'Running run_unicycler with params:\n{}'.format(
             json.dumps(params, indent=1)))
         token = self.cfg['KB_AUTH_TOKEN']
@@ -608,7 +613,7 @@ A wrapper for the unicycler assembler
 
         # download long library
         if 'long_reads_library' in params and params['long_reads_library'] is not None:
-            longLib = self.download_long(console, token, params['workspace_name'], params['long_reads_library'])
+            longLib = self.download_long(console, warnings, token, params['workspace_name'], params['long_reads_library'], params['min_long_read_length'])
             cmd += ' -l '+longLib
 
         # other params
@@ -646,7 +651,7 @@ A wrapper for the unicycler assembler
             raise ValueError('Error saving assembly\n' + str(e))
 
         # make report
-        report_name, report_ref = self.generate_report(console, contigsPath, params, outputDir, params['workspace_name'])
+        report_name, report_ref = self.generate_report(console, warnings, contigsPath, params, outputDir, params['workspace_name'])
         output = {'report_name': report_name,
                   'report_ref': report_ref}
 
