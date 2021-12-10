@@ -488,7 +488,7 @@ A wrapper for the unicycler assembler
                 long_reads_path = result['files'][lib_ref]['files']['fwd']
                 [n_reads, n_reads_short] = self.filter_short_fastq(console, long_reads_path, min_long_read_length)
                 if (n_reads_short > 0):
-                    self.log(warnings,"Of "+str(n_reads)+" long reads, "+str(n_reads_short)+" are shorter than "+min_long_read_length+"; consider using filtlong")
+                    self.log(warnings,"Of "+str(n_reads)+" long reads, "+str(n_reads_short)+" are shorter than "+str(min_long_read_length)+"; consider using filtlong.")
 
         except Exception as e:
             raise ValueError('Unable to download long reads\n' + str(e))
