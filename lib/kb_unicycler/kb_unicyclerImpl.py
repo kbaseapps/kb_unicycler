@@ -478,7 +478,7 @@ A wrapper for the unicycler assembler
                 dfuClient = DataFileUtil(url=self.callbackURL, token=token)
                 contigFile = auClient.get_assembly_as_fasta({'ref':lib_ref}).get('path')
                 long_reads_path = dfuClient.unpack_file({'file_path': contig_file})['file_path']
-                self.log(warnings,"Long reads in FASTA format; short read check not done.")
+                self.log(warnings,"Warning:  Long reads are in FASTA format, so short read check was not performed.")
 
             else:
                 ruClient = ReadsUtils(url=self.callbackURL, token=token)
@@ -488,7 +488,7 @@ A wrapper for the unicycler assembler
                 long_reads_path = result['files'][lib_ref]['files']['fwd']
                 [n_reads, n_reads_short] = self.filter_short_fastq(console, long_reads_path, min_long_read_length)
                 if (n_reads_short > 0):
-                    self.log(warnings,"Of "+str(n_reads)+" long reads, "+str(n_reads_short)+" are shorter than "+str(min_long_read_length)+"; consider using filtlong.")
+                    self.log(warnings,"Warning:  Of "+str(n_reads)+" long reads, "+str(n_reads_short)+" are shorter than "+str(min_long_read_length)+"; consider using the filtlong app to filter out shorter reads.")
 
         except Exception as e:
             raise ValueError('Unable to download long reads\n' + str(e))
