@@ -15,7 +15,7 @@ import zipfile
 from pprint import pformat
 import sys
 from html import escape
-from shutil import copy, copytree
+from shutil import copy, copytree, move
 
 from installed_clients.WorkspaceClient import Workspace
 from installed_clients.ReadsUtilsClient import ReadsUtils  # @IgnorePep8
@@ -240,6 +240,10 @@ A wrapper for the unicycler assembler
 
         self.log(console,'contig_data = '+pformat(contig_data))
 
+        # move quast output into main out_dir
+        move(os.path.join(quastret['quast_path'],'report.html'),
+             os.path.join(out_dir,'quast_report.html'))
+                                 
         output_files = self.generate_output_file_list(console, out_dir)
 
         # render template
@@ -256,7 +260,7 @@ A wrapper for the unicycler assembler
         }
         # tmpl_data['quast_output'] = '<iframe>'+self.read_html(os.path.join(quastret['quast_path'],'report.html'))+'</iframe>'
         # tmpl_data['quast_output'] = '<iframe frameborder="0" width="100%" height="100%" src="'+os.path.join(quastret['quast_path'],'report.html')+'"></iframe>'
-        tmpl_data['quast_output'] = '<iframe frameborder="0" width="100%" height="100%" src="report.html"></iframe>'
+        tmpl_data['quast_output'] = '<iframe frameborder="0" width="100%" height="100%" src="quast_report.html"></iframe>'
         tmpl_data['tmpl_vars'] = json.dumps(tmpl_data, sort_keys=True, indent=2)
         tmpl_data['template_content'] = self.read_template(template_file)
         tmpl_data['unicycler_log'] = '<p>'+'<br>'.join(filter(lambda line: not (line.startswith('tput') or line.lstrip().startswith('0 / ')),console))+'</p>'
@@ -290,11 +294,7 @@ A wrapper for the unicycler assembler
                              'name': report_file,
                              'label': 'Unicycler report',
                              'description': 'description of template report'
-                             },
-                            {'shock_id': quastret['shock_id'],
-                             'name': 'report.html',
-                             'label': 'QUAST report'
-                            }
+                             }
              ],
              'report_object_name': 'kb_unicycler_report_' + str(uuid.uuid4()),
              'workspace_name': params['workspace_name']})
@@ -497,7 +497,7 @@ A wrapper for the unicycler assembler
         with open(fastq_path, 'r') as input_file_handle:
             for current_line in input_file_handle:
                 if (current_line[0] == '@'):
-                    self.log(console, 'fastq header = '+current_line)
+                    # self.log(console, 'fastq header = '+current_line)
                     n_reads += 1
                     seq = next(input_file_handle)
                     if len(seq) < min_length:
