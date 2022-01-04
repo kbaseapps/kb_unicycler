@@ -1,5 +1,6 @@
 ### Version 1.1.1
 __Changes__
+- Include more stats in templated report, as well as cleaned up log
 - Updated to Unicycler 0.4.8; use conda version for SPAdes compatibility
 - Updated to SPAdes 3.15.3; new download URL
 - Updated to RACON 1.4.21
