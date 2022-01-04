@@ -86,8 +86,10 @@ A wrapper for the unicycler assembler
                         contig_id = fields[0]
                         # don't trust length from header, we look at seqence:
                         # sequence_len = int(fields[1][7:]) if (fields[1].startswith('length=')) else 0
-                        coverage = float(fields[2][6:-1]) if (fields[2].startswith('depth=')) else 0.0
-                        circ = 'Y' if ((len(fields) > 3) and ('circular=true' in fields[3])) else 'N'
+                        coverage = float(
+                            fields[2][6:-1]) if (fields[2].startswith('depth=')) else 0.0
+                        circ = 'Y' if ((len(fields) > 3) and (
+                            'circular=true' in fields[3])) else 'N'
                         # length_dict[contig_id] = sequence_len
                         coverage_dict[contig_id] = coverage
                         circ_dict[contig_id] = circ
@@ -130,7 +132,7 @@ A wrapper for the unicycler assembler
         # escape all the html, display the results
         escaped_lines = escape(lines, quote=True)
         return escaped_lines
-    
+
     def read_html(self, html_file):
         '''
         read in a html file
@@ -179,9 +181,9 @@ A wrapper for the unicycler assembler
 
         return output_files
 
-
     # adapted from kb_SPAdes/utils/spades_utils.py;
     # add templated report
+
     def generate_report(self, console, warnings, fa_file_name, params, out_dir, wsname):
         """
         Generating and saving report
@@ -207,7 +209,7 @@ A wrapper for the unicycler assembler
         for c in range(bins):
             report_text += ('   ' + str(counts[c]) + '\t--\t' + str(edges[c]) + ' to ' +
                             str(edges[c + 1]) + ' bp\n')
-        self.log(console,'Running QUAST')
+        self.log(console, 'Running QUAST')
         kbq = kb_quast(self.callbackURL)
         quastret = kbq.run_QUAST(
             {'files': [{'path': fa_file_with_path, 'label': params['output_contigset_name']}]})
@@ -225,11 +227,11 @@ A wrapper for the unicycler assembler
                     line = next(ic)
                     # self.log(console,'debug line = '+line)
                     fields = line.strip().split()
-                    if len(fields) > 3 and fields[0] in circ_stats and circ_stats[fields[0]]=='Y':
-                        if fields[3]=='none':
+                    if len(fields) > 3 and fields[0] in circ_stats and circ_stats[fields[0]] == 'Y':
+                        if fields[3] == 'none':
                             fields[3] = 'none found'
                         circ_stats[fields[0]] = 'Y, '+fields[3]
-                        
+
         # check circularization and make data table for report
         contig_data = []
         for contig_id in length_stats:
@@ -238,24 +240,24 @@ A wrapper for the unicycler assembler
                                 'coverage': coverage_stats[contig_id],
                                 'length': length_stats[contig_id]})
 
-        self.log(console,'contig_data = '+pformat(contig_data))
+        self.log(console, 'contig_data = '+pformat(contig_data))
 
         # move quast output into main out_dir
-        move(os.path.join(quastret['quast_path'],'report.html'),
-             os.path.join(out_dir,'quast_report.html'))
-                                 
+        move(os.path.join(quastret['quast_path'], 'report.html'),
+             os.path.join(out_dir, 'quast_report.html'))
+
         output_files = self.generate_output_file_list(console, out_dir)
 
         # render template
-        template_file='unicycler_tabs.tt'
+        template_file = 'unicycler_tabs.tt'
         tmpl_data = {
             'page_title': 'Unicycler Report',
             'data_array': contig_data,
             'cols': [
-                { 'data': 'contig_id',  'title': 'Contig ID' },
-                { 'data': 'circular',   'title': 'Circular, Starting Gene' },
-                { 'data': 'coverage',   'title': 'Coverage (x)' },
-                { 'data': 'length',   'title': 'Length (bp)' }
+                {'data': 'contig_id',  'title': 'Contig ID'},
+                {'data': 'circular',   'title': 'Circular, Starting Gene'},
+                {'data': 'coverage',   'title': 'Coverage (x)'},
+                {'data': 'length',   'title': 'Length (bp)'}
             ]
         }
         # tmpl_data['quast_output'] = '<iframe>'+self.read_html(os.path.join(quastret['quast_path'],'report.html'))+'</iframe>'
@@ -263,10 +265,11 @@ A wrapper for the unicycler assembler
         tmpl_data['quast_output'] = '<iframe style="display:block; width:100%; height:100vh; border:none;" src="quast_report.html"></iframe>'
         tmpl_data['tmpl_vars'] = json.dumps(tmpl_data, sort_keys=True, indent=2)
         tmpl_data['template_content'] = self.read_template(template_file)
-        tmpl_data['unicycler_log'] = '<p>'+'<br>'.join(filter(lambda line: not (line.startswith('tput') or line.lstrip().startswith('0 / ')),console))+'</p>'
+        tmpl_data['unicycler_log'] = '<p>'+'<br>'.join(filter(lambda line: not (
+            line.startswith('tput') or line.lstrip().startswith('0 / ')), console))+'</p>'
 
         # save report
-        self.log(console,'Saving report')
+        self.log(console, 'Saving report')
         report_file = 'unicycler_report.html'
 
         # copy the templates into 'scratch', where they can be accessed by KBaseReport
@@ -276,8 +279,8 @@ A wrapper for the unicycler assembler
                 os.path.join(self.scratch, 'templates')
             )
         except Exception as e:
-            self.log(console,'Exception copying tree. '+str(e))
-            
+            self.log(console, 'Exception copying tree. '+str(e))
+
         reportClient = KBaseReport(self.callbackURL)
         template_output = reportClient.render_template({
             'template_file': os.path.join(self.scratch, 'templates', template_file),
@@ -295,19 +298,19 @@ A wrapper for the unicycler assembler
                              'label': 'Unicycler report',
                              'description': 'description of template report'
                              }
-             ],
+                            ],
              'warnings': warnings,
              'report_object_name': 'kb_unicycler_report_' + str(uuid.uuid4()),
              'workspace_name': params['workspace_name']})
 
         return report_output['name'], report_output['ref']
 
-
     # get short paired reads, and combine into forward and reverse files
+
     def download_short_paired(self, console, token, wsname, short_paired_libraries):
         try:
             ruClient = ReadsUtils(url=self.callbackURL, token=token)
-            
+
             # first, unpack any ReadsSets into the actual PairedEndLibrary referencs
             reads_refs = []
             # object info
@@ -315,44 +318,50 @@ A wrapper for the unicycler assembler
                 wsClient = Workspace(self.workspaceURL, token=token)
             except Exception as e:
                 raise ValueError("unable to instantiate wsClient. "+str(e))
-            
-            [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple           
+
+            [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I,
+                WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple
             for lib in short_paired_libraries:
                 try:
                     obj_id = {'ref': lib if '/' in lib else (wsname + '/' + lib)}
-                    lib_obj_info = wsClient.get_object_info_new({'objects':[obj_id]})[0]
+                    lib_obj_info = wsClient.get_object_info_new({'objects': [obj_id]})[0]
                     lib_obj_type = lib_obj_info[TYPE_I]
-                    lib_obj_type = re.sub ('-[0-9]+\.[0-9]+$', "", lib_obj_type)  # remove trailing version
-                    lib_ref = str(lib_obj_info[WSID_I])+'/'+str(lib_obj_info[OBJID_I])+'/'+str(lib_obj_info[VERSION_I])
+                    # remove trailing version
+                    lib_obj_type = re.sub('-[0-9]+\.[0-9]+$', "", lib_obj_type)
+                    lib_ref = str(lib_obj_info[WSID_I])+'/' + \
+                        str(lib_obj_info[OBJID_I])+'/'+str(lib_obj_info[VERSION_I])
                     if lib_obj_type == 'KBaseSets.ReadsSet':
                         # unpack it
                         try:
                             setAPIClient = SetAPI(url=self.serviceWizardURL, token=token)
-                            self.log(console,'getting reads set '+lib_ref)
-                            readsSet = setAPIClient.get_reads_set_v1({'ref':lib_ref,'include_item_info':1})
+                            self.log(console, 'getting reads set '+lib_ref)
+                            readsSet = setAPIClient.get_reads_set_v1(
+                                {'ref': lib_ref, 'include_item_info': 1})
                         except Exception as e:
-                            raise ValueError('SetAPI FAILURE: Unable to get read library set object: (' + lib_ref+ ')\n' + str(e))
+                            raise ValueError(
+                                'SetAPI FAILURE: Unable to get read library set object: (' + lib_ref + ')\n' + str(e))
                         for readsLibrary in readsSet['data']['items']:
                             reads_refs.append(readsLibrary['ref'])
                     else:
                         # use other reads objects "as is"
                         reads_refs.append(lib_ref)
                 except Exception as e:
-                    raise ValueError('Unable to get read library object: (' + str(lib) +')' + str(e))
+                    raise ValueError(
+                        'Unable to get read library object: (' + str(lib) + ')' + str(e))
 
             # download all reads refs in one call, in separate files
-            self.log(console,"Getting short paired end reads.\n");
-            result = ruClient.download_reads ({'read_libraries': reads_refs,
-                                               'interleaved': 'false'})
-            
+            self.log(console, "Getting short paired end reads.\n")
+            result = ruClient.download_reads({'read_libraries': reads_refs,
+                                              'interleaved': 'false'})
+
             # combine outputs
-            short_fwd_path = os.path.join(self.scratch,"short_fwd_"+str(uuid.uuid4())+".fastq")
-            short_rev_path = os.path.join(self.scratch,"short_rev_"+str(uuid.uuid4())+".fastq")
-            self.log(console,"Combining short paired end reads.\n");
+            short_fwd_path = os.path.join(self.scratch, "short_fwd_"+str(uuid.uuid4())+".fastq")
+            short_rev_path = os.path.join(self.scratch, "short_rev_"+str(uuid.uuid4())+".fastq")
+            self.log(console, "Combining short paired end reads.\n")
 
             for reads_ref in reads_refs:
                 files = result['files'][reads_ref]['files']
-                self.log(console,'files = '+pformat(files))
+                self.log(console, 'files = '+pformat(files))
 
                 if 'fwd' in files:
                     path = files['fwd']
@@ -360,8 +369,9 @@ A wrapper for the unicycler assembler
                         cmd = 'gzip -dc '+path+' >> '+short_fwd_path
                     else:
                         cmd = 'cat '+path+' >> '+short_fwd_path
-                    self.log(console,"command: "+cmd)
-                    cmdProcess = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+                    self.log(console, "command: "+cmd)
+                    cmdProcess = subprocess.Popen(
+                        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
                     cmdProcess.wait()
                     if cmdProcess.returncode != 0:
                         raise ValueError('Error running '+cmd)
@@ -374,8 +384,9 @@ A wrapper for the unicycler assembler
                         cmd = 'gzip -dc '+path+' >> '+short_rev_path
                     else:
                         cmd = 'cat '+path+' >> '+short_rev_path
-                    self.log(console,"command: "+cmd)
-                    cmdProcess = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+                    self.log(console, "command: "+cmd)
+                    cmdProcess = subprocess.Popen(
+                        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
                     cmdProcess.wait()
                     if cmdProcess.returncode != 0:
                         raise ValueError('Error running '+cmd)
@@ -385,13 +396,13 @@ A wrapper for the unicycler assembler
 
         except Exception as e:
             raise ValueError('Unable to download short paired reads\n' + str(e))
-        
+
         return short_fwd_path, short_rev_path
 
     # get short unpaired reads, and combine into one file
     def download_short_unpaired(self, console, token, wsname, short_unpaired_libraries):
         try:
-            self.log(console,"Getting short unpaired reads.\n");
+            self.log(console, "Getting short unpaired reads.\n")
             ruClient = ReadsUtils(url=self.callbackURL, token=token)
 
             # first, unpack any ReadsSets into the actual SingleEndLibrary referencs
@@ -401,37 +412,44 @@ A wrapper for the unicycler assembler
                 wsClient = Workspace(self.workspaceURL, token=token)
             except Exception as e:
                 raise ValueError("unable to instantiate wsClient. "+str(e))
-            
-            [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple           
+
+            [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I,
+                WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple
             for lib in short_unpaired_libraries:
                 try:
                     obj_id = {'ref': lib if '/' in lib else (wsname + '/' + lib)}
-                    lib_obj_info = wsClient.get_object_info_new({'objects':[obj_id]})[0]
+                    lib_obj_info = wsClient.get_object_info_new({'objects': [obj_id]})[0]
                     lib_obj_type = lib_obj_info[TYPE_I]
-                    lib_obj_type = re.sub ('-[0-9]+\.[0-9]+$', "", lib_obj_type)  # remove trailing version
-                    lib_ref = str(lib_obj_info[WSID_I])+'/'+str(lib_obj_info[OBJID_I])+'/'+str(lib_obj_info[VERSION_I])
+                    # remove trailing version
+                    lib_obj_type = re.sub('-[0-9]+\.[0-9]+$', "", lib_obj_type)
+                    lib_ref = str(lib_obj_info[WSID_I])+'/' + \
+                        str(lib_obj_info[OBJID_I])+'/'+str(lib_obj_info[VERSION_I])
                     if lib_obj_type == 'KBaseSets.ReadsSet':
                         # unpack it
                         try:
                             setAPIClient = SetAPI(url=self.serviceWizardURL, token=token)
-                            self.log(console,'getting reads set '+lib_ref)
-                            readsSet = setAPIClient.get_reads_set_v1({'ref':lib_ref,'include_item_info':1})
+                            self.log(console, 'getting reads set '+lib_ref)
+                            readsSet = setAPIClient.get_reads_set_v1(
+                                {'ref': lib_ref, 'include_item_info': 1})
                         except Exception as e:
-                            raise ValueError('SetAPI FAILURE: Unable to get read library set object: (' + lib_ref+ ')\n' + str(e))
+                            raise ValueError(
+                                'SetAPI FAILURE: Unable to get read library set object: (' + lib_ref + ')\n' + str(e))
                         for readsLibrary in readsSet['data']['items']:
                             reads_refs.append(readsLibrary['ref'])
                     else:
                         # use other reads objects "as is"
                         reads_refs.append(lib_ref)
                 except Exception as e:
-                    raise ValueError('Unable to get read library object: (' + str(lib) +')' + str(e))
+                    raise ValueError(
+                        'Unable to get read library object: (' + str(lib) + ')' + str(e))
 
-            result = ruClient.download_reads ({'read_libraries': reads_refs,
-                                               'interleaved': 'false'})
+            result = ruClient.download_reads({'read_libraries': reads_refs,
+                                              'interleaved': 'false'})
             # combine outputs
-            short_unpaired_path = os.path.join(self.scratch,"short_unpaired_"+str(uuid.uuid4())+".fastq")
-                                       
-            self.log(console,"Combining short unpaired reads.\n");
+            short_unpaired_path = os.path.join(
+                self.scratch, "short_unpaired_"+str(uuid.uuid4())+".fastq")
+
+            self.log(console, "Combining short unpaired reads.\n")
 
             for reads_ref in reads_refs:
                 files = result['files'][reads_ref]['files']
@@ -442,8 +460,9 @@ A wrapper for the unicycler assembler
                         cmd = 'gzip -dc '+path+' >> '+short_unpaired_path
                     else:
                         cmd = 'cat '+path+' >> '+short_unpaired_path
-                    self.log(console,"command: "+cmd)
-                    cmdProcess = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+                    self.log(console, "command: "+cmd)
+                    cmdProcess = subprocess.Popen(
+                        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
                     cmdProcess.wait()
                     if cmdProcess.returncode != 0:
                         raise ValueError('Error running '+cmd)
@@ -464,31 +483,36 @@ A wrapper for the unicycler assembler
             except Exception as e:
                 raise ValueError("unable to instantiate wsClient. "+str(e))
 
-            [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple           
+            [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I,
+                WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple
 
             obj_id = {'ref': lib if '/' in lib else (wsname + '/' + lib)}
-            lib_obj_info = wsClient.get_object_info_new({'objects':[obj_id]})[0]
+            lib_obj_info = wsClient.get_object_info_new({'objects': [obj_id]})[0]
             lib_obj_type = lib_obj_info[TYPE_I]
-            lib_obj_type = re.sub ('-[0-9]+\.[0-9]+$', "", lib_obj_type)  # remove trailing version
-            lib_ref = str(lib_obj_info[WSID_I])+'/'+str(lib_obj_info[OBJID_I])+'/'+str(lib_obj_info[VERSION_I])
+            lib_obj_type = re.sub('-[0-9]+\.[0-9]+$', "", lib_obj_type)  # remove trailing version
+            lib_ref = str(lib_obj_info[WSID_I])+'/' + \
+                str(lib_obj_info[OBJID_I])+'/'+str(lib_obj_info[VERSION_I])
             if lib_obj_type == 'KBaseGenomes.ContigSet' or lib_obj_type == 'KBaseGenomeAnnotations.Assembly':
                 # download using assembly util / data file util
-                self.log(console,"Getting long reads (from contigs object).\n");
+                self.log(console, "Getting long reads (from contigs object).\n")
                 auClient = AssemblyUtil(url=self.callbackURL, token=token)
                 dfuClient = DataFileUtil(url=self.callbackURL, token=token)
-                contigFile = auClient.get_assembly_as_fasta({'ref':lib_ref}).get('path')
+                contigFile = auClient.get_assembly_as_fasta({'ref': lib_ref}).get('path')
                 long_reads_path = dfuClient.unpack_file({'file_path': contig_file})['file_path']
-                self.log(warnings,"Warning:  Long reads are in FASTA format, so short read check was not performed.")
+                self.log(
+                    warnings, "Warning:  Long reads are in FASTA format, so short read check was not performed.")
 
             else:
                 ruClient = ReadsUtils(url=self.callbackURL, token=token)
-                self.log(console,"Getting long reads (from reads library object).\n");
-                result = ruClient.download_reads ({'read_libraries': [lib_ref],
-                                                   'interleaved': 'false'})
+                self.log(console, "Getting long reads (from reads library object).\n")
+                result = ruClient.download_reads({'read_libraries': [lib_ref],
+                                                  'interleaved': 'false'})
                 long_reads_path = result['files'][lib_ref]['files']['fwd']
-                [n_reads, n_reads_short] = self.filter_short_fastq(console, long_reads_path, min_long_read_length)
+                [n_reads, n_reads_short] = self.filter_short_fastq(
+                    console, long_reads_path, min_long_read_length)
                 if (n_reads_short > 0):
-                    self.log(warnings,"Warning:  Of "+str(n_reads)+" long reads, "+str(n_reads_short)+" are shorter than "+str(min_long_read_length)+"; consider using the filtlong app to filter out shorter reads.")
+                    self.log(warnings, "Warning:  Of "+str(n_reads)+" long reads, "+str(n_reads_short)+" are shorter than " +
+                             str(min_long_read_length)+"; consider using the filtlong app to filter out shorter reads.")
 
         except Exception as e:
             raise ValueError('Unable to download long reads\n' + str(e))
@@ -508,7 +532,8 @@ A wrapper for the unicycler assembler
                         n_reads_short += 1
                     next(input_file_handle)
                     next(input_file_handle)
-            self.log(console, str(n_reads)+' long reads found, '+str(n_reads_short)+' under '+str(min_length)+' bp')
+            self.log(console, str(n_reads)+' long reads found, ' +
+                     str(n_reads_short)+' under '+str(min_length)+' bp')
         return [n_reads, n_reads_short]
 
     #END_CLASS_HEADER
@@ -530,7 +555,6 @@ A wrapper for the unicycler assembler
         self.appdir = os.path.abspath(config['appdir'])
         #END_CONSTRUCTOR
         pass
-
 
     def run_unicycler(self, ctx, params):
         """
@@ -571,18 +595,18 @@ A wrapper for the unicycler assembler
         token = self.cfg['KB_AUTH_TOKEN']
 
         # param checks
-        required_params = [ 'workspace_name',
-                            'output_contigset_name',
-                            'min_contig_length',
-                            'num_linear_seqs',
-                            'bridging_mode' ]
+        required_params = ['workspace_name',
+                           'output_contigset_name',
+                           'min_contig_length',
+                           'num_linear_seqs',
+                           'bridging_mode']
         for required_param in required_params:
             if required_param not in params or params[required_param] is None:
-                raise ValueError ("Must define required param: '"+required_param+"'")
+                raise ValueError("Must define required param: '"+required_param+"'")
 
         # needs either short paired or long
-        if ('short_paired_libraries' not in params or params['short_paired_libraries'] is None or len(params['short_paired_libraries'])==0) and ('long_reads_library' not in params or params['long_reads_library'] is None):
-            raise ValueError ("Must define either short_paired_libraries or long_reads_library")
+        if ('short_paired_libraries' not in params or params['short_paired_libraries'] is None or len(params['short_paired_libraries']) == 0) and ('long_reads_library' not in params or params['long_reads_library'] is None):
+            raise ValueError("Must define either short_paired_libraries or long_reads_library")
 
         # load provenance
         provenance = [{}]
@@ -591,9 +615,9 @@ A wrapper for the unicycler assembler
         if 'input_ws_objects' not in provenance[0]:
             provenance[0]['input_ws_objects'] = []
 
-        if 'short_paired_libraries' in params and params['short_paired_libraries'] is not None and len(params['short_paired_libraries'])>0:
+        if 'short_paired_libraries' in params and params['short_paired_libraries'] is not None and len(params['short_paired_libraries']) > 0:
             provenance[0]['input_ws_objects'].extend(params['short_paired_libraries'])
-        if 'short_unpaired_libraries' in params and params['short_unpaired_libraries'] is not None and len(params['short_unpaired_libraries'])>0:
+        if 'short_unpaired_libraries' in params and params['short_unpaired_libraries'] is not None and len(params['short_unpaired_libraries']) > 0:
             provenance[0]['input_ws_objects'].extend(params['short_unpaired_libraries'])
         if 'long_reads_library' in params and params['long_reads_library'] is not None:
             provenance[0]['input_ws_objects'].append(params['long_reads_library'])
@@ -602,18 +626,21 @@ A wrapper for the unicycler assembler
         cmd = 'unicycler'
 
         # download, split, and recombine short paired libraries
-        if 'short_paired_libraries' in params and params['short_paired_libraries'] is not None and len(params['short_paired_libraries'])>0:
-            short1, short2 = self.download_short_paired(console, token, params['workspace_name'], params['short_paired_libraries'])
+        if 'short_paired_libraries' in params and params['short_paired_libraries'] is not None and len(params['short_paired_libraries']) > 0:
+            short1, short2 = self.download_short_paired(
+                console, token, params['workspace_name'], params['short_paired_libraries'])
             cmd += ' -1 '+short1+' -2 '+short2
-        
+
         # download and combine short unpaired libraries
-        if 'short_unpaired_libraries' in params and params['short_unpaired_libraries'] is not None and len(params['short_unpaired_libraries'])>0:
-            unpaired = self.download_short_unpaired(console, token, params['workspace_name'], params['short_unpaired_libraries'])
+        if 'short_unpaired_libraries' in params and params['short_unpaired_libraries'] is not None and len(params['short_unpaired_libraries']) > 0:
+            unpaired = self.download_short_unpaired(
+                console, token, params['workspace_name'], params['short_unpaired_libraries'])
             cmd += ' -s '+unpaired
 
         # download long library
         if 'long_reads_library' in params and params['long_reads_library'] is not None:
-            longLib = self.download_long(console, warnings, token, params['workspace_name'], params['long_reads_library'], params['min_long_read_length'])
+            longLib = self.download_long(
+                console, warnings, token, params['workspace_name'], params['long_reads_library'], params['min_long_read_length'])
             cmd += ' -l '+longLib
 
         # other params
@@ -622,36 +649,38 @@ A wrapper for the unicycler assembler
         cmd += ' --mode '+str(params['bridging_mode'])
         cmd += ' --keep 0'
 
-        if ('no_correct' in params and (params['no_correct']==1)):
+        if ('no_correct' in params and (params['no_correct'] == 1)):
             cmd += ' --no_correct'
 
         # output directory
-        outputDir = os.path.join(self.scratch,"unicycler_"+str(uuid.uuid4()))
+        outputDir = os.path.join(self.scratch, "unicycler_"+str(uuid.uuid4()))
         self.mkdir_p(outputDir)
         cmd += ' -o '+outputDir
 
         # run it
-        self.log(console,"command: "+cmd)
-        cmdProcess = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        self.log(console, "command: "+cmd)
+        cmdProcess = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                      stderr=subprocess.STDOUT, shell=True)
         for line in cmdProcess.stdout:
-            self.log(console,line.decode("utf-8").rstrip())
+            self.log(console, line.decode("utf-8").rstrip())
         cmdProcess.wait()
         if cmdProcess.returncode != 0:
             raise ValueError('Error running '+cmd)
 
         # save assembly
         try:
-            contigsPath = os.path.join(outputDir,'assembly.fasta')
+            contigsPath = os.path.join(outputDir, 'assembly.fasta')
             auClient = AssemblyUtil(url=self.callbackURL, token=token, service_ver='release')
             auClient.save_assembly_from_fasta(
-                {'file': {'path': contigsPath },
+                {'file': {'path': contigsPath},
                  'workspace_name': params['workspace_name'],
                  'assembly_name': params['output_contigset_name']})
         except Exception as e:
             raise ValueError('Error saving assembly\n' + str(e))
 
         # make report
-        report_name, report_ref = self.generate_report(console, warnings, contigsPath, params, outputDir, params['workspace_name'])
+        report_name, report_ref = self.generate_report(
+            console, warnings, contigsPath, params, outputDir, params['workspace_name'])
         output = {'report_name': report_name,
                   'report_ref': report_ref}
 
@@ -663,6 +692,7 @@ A wrapper for the unicycler assembler
                              'output is not type dict as required.')
         # return the results
         return [output]
+
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",
