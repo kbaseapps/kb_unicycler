@@ -240,7 +240,7 @@ A wrapper for the unicycler assembler
                                 'coverage': coverage_stats[contig_id],
                                 'length': length_stats[contig_id]})
 
-        self.log(console, 'contig_data = '+pformat(contig_data))
+        # self.log(console, 'contig_data = '+pformat(contig_data))
 
         # move quast output into main out_dir
         move(os.path.join(quastret['quast_path'], 'report.html'),
