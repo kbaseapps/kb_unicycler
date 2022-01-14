@@ -265,8 +265,8 @@ A wrapper for the unicycler assembler
         tmpl_data['quast_output'] = '<iframe style="display:block; width:100%; height:100vh; border:none;" src="quast_report.html"></iframe>'
         tmpl_data['tmpl_vars'] = json.dumps(tmpl_data, sort_keys=True, indent=2)
         tmpl_data['template_content'] = self.read_template(template_file)
-        tmpl_data['unicycler_log'] = '<p>'+'<br>'.join(filter(lambda line: not (
-            line.startswith('tput') or line.lstrip().startswith('0 / ')), console))+'</p>'
+        tmpl_data['unicycler_log'] = '<p><pre>'+'<br>'.join(filter(lambda line: not (
+            line.startswith('tput') or line.lstrip().startswith('0 / ')), console))+'</pre></p>'
 
         # save report
         self.log(console, 'Saving report')
