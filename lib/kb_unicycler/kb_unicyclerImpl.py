@@ -306,7 +306,6 @@ A wrapper for the unicycler assembler
         return report_output['name'], report_output['ref']
 
     # get short paired reads, and combine into forward and reverse files
-
     def download_short_paired(self, console, token, wsname, short_paired_libraries):
         try:
             ruClient = ReadsUtils(url=self.callbackURL, token=token)
