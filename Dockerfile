@@ -9,7 +9,7 @@ MAINTAINER KBase Developer
 RUN echo "start building docker image"
 
 # SPAdes needs newer libstdc++, so move from stretch to buster
-RUN echo "deb http://deb.debian.org/debian stable main contrib" > /etc/apt/sources.list
+RUN echo "deb http://deb.debian.org/debian buster main contrib" > /etc/apt/sources.list
 
 RUN apt-get update \
     && apt-get -y --allow-unauthenticated install python3-dev \
