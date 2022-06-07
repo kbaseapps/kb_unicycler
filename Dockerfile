@@ -10,6 +10,7 @@ RUN echo "start building docker image"
 
 # SPAdes needs newer libstdc++, so move from stretch to buster
 RUN echo "deb http://deb.debian.org/debian buster main contrib" > /etc/apt/sources.list
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138 0E98404D386FA1D9 DCC9EFBF77E11517
 
 RUN apt-get update \
     && apt-get -y --allow-unauthenticated install python3-dev \

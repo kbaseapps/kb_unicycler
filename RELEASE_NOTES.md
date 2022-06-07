@@ -1,3 +1,8 @@
+### Version 1.1.2
+__Changes__
+- Fix bug in circularization of contigs report
+- Lowered hard limit on long reads from 10 GBase to 1 GBase
+
 ### Version 1.1.1
 __Changes__
 - Include more stats in templated report, as well as cleaned up log

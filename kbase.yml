@@ -2,13 +2,13 @@ module-name:
     kb_unicycler
 
 module-description:
-    Unicycler wrapper - https://github.com/rrwick/Unicycler - Running Unicycler 0.4.8 and SPAdes 3.15.2
+    Unicycler wrapper - https://github.com/rrwick/Unicycler - Running Unicycler 0.4.8 and SPAdes 3.15.3
 
 service-language:
     python
 
 module-version:
-    1.1.1
+    1.1.2
 
 owners:
     [jmc]

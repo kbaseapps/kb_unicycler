@@ -80,7 +80,7 @@ A wrapper for the unicycler assembler
                         length_dict[contig_id] = sequence_len
                         sequence_len = 0
                     fasta_header = current_line.replace('>', '').strip()
-                    # self.log(console, 'fasta header = '+fasta_header)
+                    self.log(console, 'fasta header = '+fasta_header)
                     try:
                         fields = fasta_header.strip().split(' ')
                         contig_id = fields[0]
@@ -491,6 +491,7 @@ A wrapper for the unicycler assembler
             lib_obj_type = re.sub('-[0-9]+\.[0-9]+$', "", lib_obj_type)  # remove trailing version
             lib_ref = str(lib_obj_info[WSID_I])+'/' + \
                 str(lib_obj_info[OBJID_I])+'/'+str(lib_obj_info[VERSION_I])
+            total_read_length = 0
             if lib_obj_type == 'KBaseGenomes.ContigSet' or lib_obj_type == 'KBaseGenomeAnnotations.Assembly':
                 # download using assembly util / data file util
                 self.log(console, "Getting long reads (from contigs object).\n")
@@ -507,20 +508,24 @@ A wrapper for the unicycler assembler
                 result = ruClient.download_reads({'read_libraries': [lib_ref],
                                                   'interleaved': 'false'})
                 long_reads_path = result['files'][lib_ref]['files']['fwd']
-                [n_reads, n_reads_short] = self.filter_short_fastq(
+                [n_reads, n_reads_short, total_read_length] = self.filter_short_fastq(
                     console, long_reads_path, min_long_read_length)
+
                 if (n_reads_short > 0):
                     self.log(warnings, "Warning:  Of "+str(n_reads)+" long reads, "+str(n_reads_short)+" are shorter than " +
                              str(min_long_read_length)+"; consider using the filtlong app to filter out shorter reads.")
 
         except Exception as e:
             raise ValueError('Unable to download long reads\n' + str(e))
+        if (total_read_length > 100):
+            raise ValueError('Too many long reads; total length is limited to 1GB and you have '+str(total_read_length)+'B.  Use filtlong app to filter out lower quality reads.')
         return long_reads_path
 
-    # examine fastq files
+    # examine fastq files, count total read length
     def filter_short_fastq(self, console, fastq_path, min_length):
         n_reads = 0
         n_reads_short = 0
+        total_read_length = 0
         with open(fastq_path, 'r') as input_file_handle:
             for current_line in input_file_handle:
                 if (current_line[0] == '@'):
@@ -529,11 +534,12 @@ A wrapper for the unicycler assembler
                     seq = next(input_file_handle)
                     if len(seq) < min_length:
                         n_reads_short += 1
+                    total_read_length += len(seq)
                     next(input_file_handle)
                     next(input_file_handle)
             self.log(console, str(n_reads)+' long reads found, ' +
                      str(n_reads_short)+' under '+str(min_length)+' bp')
-        return [n_reads, n_reads_short]
+        return [n_reads, n_reads_short, total_read_length]
 
     #END_CLASS_HEADER
 
