@@ -1,3 +1,7 @@
+### Version 1.1.3
+__Changes__
+- Changed output label 'Coverage' to 'Relative Coverage'
+
 ### Version 1.1.2
 __Changes__
 - Fix bug in circularization of contigs report

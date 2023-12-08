@@ -58,7 +58,7 @@ A wrapper for the unicycler assembler
     # from kb_SPAdes/utils/spades_utils.py:
     def load_stats(self, console, input_file_name):
         self.log(console, 'Starting conversion of FASTA to KBaseGenomeAnnotations.Assembly')
-        self.log(console, 'Building Object.')
+        # self.log(console, 'Building Object.')
         if not os.path.isfile(input_file_name):
             raise Exception('The input file name {0} is not a file!'.format(input_file_name))
         with open(input_file_name, 'r') as input_file_handle:
@@ -80,7 +80,7 @@ A wrapper for the unicycler assembler
                         length_dict[contig_id] = sequence_len
                         sequence_len = 0
                     fasta_header = current_line.replace('>', '').strip()
-                    self.log(console, 'fasta header = '+fasta_header)
+                    # self.log(console, 'fasta header = '+fasta_header)
                     try:
                         fields = fasta_header.strip().split(' ')
                         contig_id = fields[0]
@@ -256,7 +256,7 @@ A wrapper for the unicycler assembler
             'cols': [
                 {'data': 'contig_id',  'title': 'Contig ID'},
                 {'data': 'circular',   'title': 'Circular, Starting Gene'},
-                {'data': 'coverage',   'title': 'Coverage (x)'},
+                {'data': 'coverage',   'title': 'Relative Coverage (x)'},
                 {'data': 'length',   'title': 'Length (bp)'}
             ]
         }
