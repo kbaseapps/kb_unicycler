@@ -1,3 +1,7 @@
+### Version 1.1.4
+__Changes__
+- Fixed build and updated to python 3.8
+
 ### Version 1.1.3
 __Changes__
 - Changed output label 'Coverage' to 'Relative Coverage'

@@ -1,4 +1,4 @@
-FROM kbase/sdkbase2:python
+FROM kbase/sdkpython:3.8.10
 MAINTAINER KBase Developer
 # -----------------------------------------
 # In this section, you can install any system dependencies required
@@ -8,23 +8,11 @@ MAINTAINER KBase Developer
 
 RUN echo "start building docker image"
 
-# SPAdes needs newer libstdc++, so move from stretch to buster
-RUN echo "deb http://deb.debian.org/debian buster main contrib" > /etc/apt/sources.list
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138 0E98404D386FA1D9 DCC9EFBF77E11517
-
-RUN apt-get update \
-    && apt-get -y --allow-unauthenticated install python3-dev \
-    && apt-get -y --allow-unauthenticated install wget \
-    && apt-get -y --allow-unauthenticated install gcc \
-    && apt-get -y --allow-unauthenticated install build-essential \
-    && apt-get -y --allow-unauthenticated install zlib1g-dev \
-    && apt-get -y --allow-unauthenticated install bowtie \
-    && apt-get -y --allow-unauthenticated install bowtie2 \
-    && apt-get -y --allow-unauthenticated install ncbi-blast+ \
-    && apt-get -y --allow-unauthenticated install samtools
+RUN apt update \
+    && apt install -y python3-dev wget gcc build-essential zlib1g-dev bowtie bowtie2 ncbi-blast+ samtools
 
 RUN pip install --upgrade pip \
-    && pip3 install psutil cmake \
+    && pip3 install psutil cmake numpy pyyaml \
     && python --version
 
 ENV UNICYCLER_VERSION='0.4.8'
@@ -63,14 +51,16 @@ ENV PATH $PATH:/opt/spades-${SPADES_VERSION}/bin:/opt/racon-v${RACON_VERSION}/bi
 # use conda version of unicycler instead of git version
 # so it is compatible with conda SPAdes
 
+# wtf...?
+ENV INSANE_CONDA_DIR /opt/conda/conda-bld/unicycler_1604335941209/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_pla/bin/
 RUN cd /opt \
     && wget https://anaconda.org/bioconda/unicycler/0.4.8/download/linux-64/unicycler-${UNICYCLER_VERSION}-py36hd181a71_3.tar.bz2 \
     && mkdir Unicycler-${UNICYCLER_VERSION} \
     && cd Unicycler-${UNICYCLER_VERSION} \
     && tar -xvjf ../unicycler-${UNICYCLER_VERSION}-py36hd181a71_3.tar.bz2 \
-    && rm ../unicycler-${UNICYCLER_VERSION}-py36hd181a71_3.tar.bz2 \
-    && mkdir -p /opt/conda/conda-bld/unicycler_1604335941209/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_pla/bin/ \
-    && ln -s /miniconda/bin/python /opt/conda/conda-bld/unicycler_1604335941209/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_pla/bin/python 
+    && rm ../unicycler-${UNICYCLER_VERSION}-py36hd181a71_3.tar.bz2
+RUN mkdir -p $INSANE_CONDA_DIR \
+    && ln -s /opt/conda3/bin/python $INSANE_CONDA_DIR/python 
 
 ENV PATH $PATH:/opt/Unicycler-${UNICYCLER_VERSION}/bin
 ENV PYTHONPATH $PYTHONPATH:/opt/Unicycler-${UNICYCLER_VERSION}/lib/python3.6/site-packages/:/opt/Unicycler-${UNICYCLER_VERSION}/lib/python3.6/site-packages/unicycler

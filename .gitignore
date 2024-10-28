@@ -1,2 +1,5 @@
 sdk.cfg
 test_local
+/bin/
+/.classpath
+/.project
