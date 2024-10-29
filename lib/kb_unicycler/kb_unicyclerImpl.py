@@ -497,7 +497,7 @@ A wrapper for the unicycler assembler
                 self.log(console, "Getting long reads (from contigs object).\n")
                 auClient = AssemblyUtil(url=self.callbackURL, token=token)
                 dfuClient = DataFileUtil(url=self.callbackURL, token=token)
-                contigFile = auClient.get_assembly_as_fasta({'ref': lib_ref}).get('path')
+                contig_file = auClient.get_assembly_as_fasta({'ref': lib_ref}).get('path')
                 long_reads_path = dfuClient.unpack_file({'file_path': contig_file})['file_path']
                 self.log(
                     warnings, "Warning:  Long reads are in FASTA format, so short read check was not performed.")

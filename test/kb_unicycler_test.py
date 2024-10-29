@@ -15,6 +15,7 @@ import requests
 from installed_clients.AbstractHandleClient import AbstractHandle as HandleService
 from kb_unicycler.kb_unicyclerImpl import kb_unicycler
 from installed_clients.ReadsUtilsClient import ReadsUtils
+from installed_clients.AssemblyUtilClient import AssemblyUtil
 from kb_unicycler.kb_unicyclerServer import MethodContext
 from installed_clients.WorkspaceClient import Workspace
 from installed_clients.DataFileUtilClient import DataFileUtil
@@ -65,6 +66,7 @@ class unicyclerTest(unittest.TestCase):
         cls.serviceImpl = kb_unicycler(cls.cfg)
 
         cls.readUtilsImpl = ReadsUtils(cls.callbackURL, token=cls.token)
+        cls.assy_util = AssemblyUtil(cls.callbackURL, token=cls.token)
         cls.dfuClient = DataFileUtil(url=cls.callbackURL, token=cls.token)
         cls.staged = {}
         cls.nodes_to_delete = []
@@ -108,18 +110,23 @@ class unicyclerTest(unittest.TestCase):
         Uploads the file in test_file to shock and returns the node and a
         handle to the node.
         '''
-        # file can't be in /kb/module/test or dfu won't find it
-        temp_file = os.path.join("/kb/module/work/tmp", os.path.basename(test_file))
-        shutil.copy(os.path.join("/kb/module/test", test_file), temp_file)
-
         print('loading file to shock: ' + test_file)
+
+        temp_file = cls.move_test_file_to_shared_scratch(test_file)
         fts = cls.dfuClient.file_to_shock({'file_path': temp_file,
-                                           'make_handle':True})
+                                           'make_handle': True})
 
         cls.nodes_to_delete.append(fts['shock_id'])
         cls.handles_to_delete.append(fts['handle']['hid'])
 
         return fts['shock_id'], fts['handle']['hid'], fts['size']
+
+    @classmethod
+    def move_test_file_to_shared_scratch(cls, test_file):
+        # file can't be in /kb/module/test or dfu won't find it
+        temp_file = os.path.join("/kb/module/work/tmp", os.path.basename(test_file))
+        shutil.copy(os.path.join("/kb/module/test", test_file), temp_file)
+        return temp_file
 
     @classmethod
     def upload_reads(cls, wsobjname, object_body, fwd_reads,
@@ -161,6 +168,20 @@ class unicyclerTest(unittest.TestCase):
                                  }
 
     @classmethod
+    def upload_assembly(cls, wsobjname, file, name):
+        file = cls.move_test_file_to_shared_scratch(file)
+        cls.assy_util.save_assembly_from_fasta2({
+            "file": {
+                "path": file,
+                "assembly_name": name
+            },
+            "workspace_id": cls.wsinfo[0],
+            "assembly_name": wsobjname,
+            "type": "isolate",
+            # ideally would set other fields here if this was an actual upload
+        })
+
+    @classmethod
     def setupTestData(cls):
         print('Shock url ' + cls.shockURL)
         # print('WS url ' + cls.wsClient.url)
@@ -186,6 +207,11 @@ class unicyclerTest(unittest.TestCase):
                          single_end=True, sequencing_tech="PacBio")
         cls.upload_reads('shigella_long_high', {'single_genome': 1}, long_reads_high_depth,
                          single_end=True, sequencing_tech="PacBio")
+        cls.upload_assembly(
+            'shigella_assy',
+            'data/long_reads_high_depth_headers_fixed.fasta.gz',
+            'long_reads_high_depth.fasta.gz'
+        )
         print('Data staged.')
 
     @classmethod
@@ -280,5 +306,12 @@ class unicyclerTest(unittest.TestCase):
         self.run_unicycler( 'shigella_hybrid_high_out',
                             short_paired_libraries=['shigella_short'],
                             long_reads_library='shigella_long_high')
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test test_shigella_hybrid_with_assembly")
+    def test_shigella_hybrid_with_assembly(self):
+        self.run_unicycler( 'shigella_hybrid_assembly_out',
+                            short_paired_libraries=['shigella_short'],
+                            long_reads_library='shigella_assy')
 
     # ########################End of passed tests######################
