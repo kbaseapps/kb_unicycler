@@ -3,3 +3,5 @@ test_local
 /bin/
 /.classpath
 /.project
+/.settings/
+/.pydevproject

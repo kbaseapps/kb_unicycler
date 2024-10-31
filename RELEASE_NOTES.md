@@ -1,6 +1,7 @@
 ### Version 1.1.4
 __Changes__
 - Fixed build and updated to python 3.8
+- Fixed a bug that causes a failure when long read input is an assembly
 
 ### Version 1.1.3
 __Changes__
