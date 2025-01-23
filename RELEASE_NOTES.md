@@ -1,3 +1,8 @@
+### Version 1.1.5
+__Changes__
+- Updates fasta header names to look like contig_{integer} instead of {integer}, which
+  causes some downstream apps to break.
+
 ### Version 1.1.4
 __Changes__
 - Fixed build and updated to python 3.8

@@ -12,6 +12,7 @@ import numpy as np
 import yaml
 import time
 import zipfile
+from pathlib import Path
 from pprint import pformat
 import sys
 from html import escape
@@ -540,6 +541,23 @@ A wrapper for the unicycler assembler
             self.log(console, str(n_reads)+' long reads found, ' +
                      str(n_reads_short)+' under '+str(min_length)+' bp')
         return [n_reads, n_reads_short, total_read_length]
+    
+    def _rewrite_headers(self, fasta_path: Path) -> str:
+        """
+        Rewrite the fasta file so that the fasta header names aren't integers, which
+        causes some programs *cough*DRAM*cough* to choke.
+        
+        Assumes the fasta file is formatted correctly.
+        """
+        out = fasta_path.parent / f"{fasta_path.stem}.rewrite_headers{fasta_path.suffix}"
+        with open(fasta_path) as infile, open(out, "w") as outfile:
+            for l in infile:
+                if l.startswith(">"):
+                    l = "> contig_" + l[1:].lstrip()
+                outfile.write(l)
+        # could delete the original file here? leave it for debugging, should get cleaned up by
+        # the job runner
+        return str(out)
 
     #END_CLASS_HEADER
 
@@ -613,6 +631,8 @@ A wrapper for the unicycler assembler
         if ('short_paired_libraries' not in params or params['short_paired_libraries'] is None or len(params['short_paired_libraries']) == 0) and ('long_reads_library' not in params or params['long_reads_library'] is None):
             raise ValueError("Must define either short_paired_libraries or long_reads_library")
 
+        # TODO this seems like it shouldn't be necessary, the system should handle provenence
+        #      for you, check into this. Not sure if the ctx provenance is even used
         # load provenance
         provenance = [{}]
         if 'provenance' in ctx:
@@ -675,6 +695,7 @@ A wrapper for the unicycler assembler
         # save assembly
         try:
             contigsPath = os.path.join(outputDir, 'assembly.fasta')
+            contigsPath = self._rewrite_headers(Path(contigsPath))
             auClient = AssemblyUtil(url=self.callbackURL, token=token, service_ver='release')
             auClient.save_assembly_from_fasta(
                 {'file': {'path': contigsPath},
