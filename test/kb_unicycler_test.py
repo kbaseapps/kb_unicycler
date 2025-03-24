@@ -221,6 +221,7 @@ class unicyclerTest(unittest.TestCase):
 
     def run_unicycler(self,
                       output_contigset_name,
+                      expected_contigs,
                       short_paired_libraries=None,
                       short_unpaired_libraries=None,
                       long_reads_library=None,
@@ -252,9 +253,9 @@ class unicyclerTest(unittest.TestCase):
                   }
 
         ret = self.getImpl().run_unicycler(self.ctx, params)[0]
-        self.assertReportAssembly(ret, output_contigset_name)
+        self.assertReportAssembly(ret, output_contigset_name, expected_contigs)
 
-    def assertReportAssembly(self, ret_obj, assembly_name):
+    def assertReportAssembly(self, ret_obj, assembly_name, expected_contigs):
         """
         assertReportAssembly: given a report object, check the object existence
         """
@@ -275,6 +276,11 @@ class unicyclerTest(unittest.TestCase):
         self.assertEqual('KBaseGenomeAnnotations.Assembly', assembly['info'][2].split('-')[0])
         self.assertEqual(1, len(assembly['provenance']))
         self.assertEqual(assembly_name, assembly['data']['assembly_id'])
+        
+        # check that contig names are correctly updated
+        expected_contig_names = {f"contig_{c}" for c in range(1, expected_contigs + 1)}
+        got_contig_names = set(assembly["data"]["contigs"].keys())
+        self.assertEqual(expected_contig_names, got_contig_names)
 
         temp_handle_info = self.hs.hids_to_handles([assembly['data']['fasta_handle_ref']])
         assembly_fasta_node = temp_handle_info[0]['id']
@@ -283,34 +289,34 @@ class unicyclerTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test test_shigella_short_kbfile")
     def test_shigella_short_kbfile(self):
-        self.run_unicycler( 'shigella_short_out',
+        self.run_unicycler( 'shigella_short_out', 27,
                             short_paired_libraries=['shigella_short'])
 
     # Uncomment to skip this test
     # doesn't work due to miniasm not getting a result
     @unittest.skip("skipped test test_shigella_long_kbfile")
     def test_shigella_long_kbfile(self):
-        self.run_unicycler( 'shigella_long_out',
+        self.run_unicycler( 'shigella_long_out', 5314,
                             long_reads_library='shigella_long_high')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test test_shigella_hybrid_low_kbfile")
     def test_shigella_hybrid_low_kbfile(self):
-        self.run_unicycler( 'shigella_hybrid_low_out',
+        self.run_unicycler( 'shigella_hybrid_low_out', 19,
                             short_paired_libraries=['shigella_short'],
                             long_reads_library='shigella_long_low')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test test_shigella_hybrid_high_kbfile")
     def test_shigella_hybrid_high_kbfile(self):
-        self.run_unicycler( 'shigella_hybrid_high_out',
+        self.run_unicycler( 'shigella_hybrid_high_out', 8,
                             short_paired_libraries=['shigella_short'],
                             long_reads_library='shigella_long_high')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test test_shigella_hybrid_with_assembly")
     def test_shigella_hybrid_with_assembly(self):
-        self.run_unicycler( 'shigella_hybrid_assembly_out',
+        self.run_unicycler( 'shigella_hybrid_assembly_out', 8,
                             short_paired_libraries=['shigella_short'],
                             long_reads_library='shigella_assy')
 
