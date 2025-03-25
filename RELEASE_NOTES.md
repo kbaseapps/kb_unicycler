@@ -1,3 +1,7 @@
+### Version 1.1.6
+__Changes__
+- DRAM still doesn't like the header; modifying to remove the space between header delineator and header name
+  
 ### Version 1.1.5
 __Changes__
 - Updates fasta header names to look like contig_{integer} instead of {integer}, which
