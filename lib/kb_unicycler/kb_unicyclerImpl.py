@@ -553,7 +553,7 @@ A wrapper for the unicycler assembler
         with open(fasta_path) as infile, open(out, "w") as outfile:
             for l in infile:
                 if l.startswith(">"):
-                    l = "> contig_" + l[1:].lstrip()
+                    l = ">contig_" + l[1:].lstrip()
                 outfile.write(l)
         # could delete the original file here? leave it for debugging, should get cleaned up by
         # the job runner
